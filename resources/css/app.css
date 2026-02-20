@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   BASE
+========================= */
+body {
+  @apply bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen;
+}
+
+[x-cloak] {
+  display: none !important;
+}
+
+/* =========================
+   FORM ELEMENTS
+========================= */
+input,
+select,
+textarea {
+  @apply border border-gray-300 rounded-lg px-3 py-2
+         focus:outline-none focus:ring-2 focus:ring-blue-500
+         focus:border-transparent w-full;
+}
+
+/* =========================
+   BUTTON VARIANTS
+========================= */
+.btn {
+  @apply inline-flex items-center justify-center
+         px-4 py-2 rounded-lg font-medium
+         transition text-sm;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+}
+
+.btn-warning {
+  @apply bg-yellow-500 text-white hover:bg-yellow-600;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.btn-outline {
+  @apply border border-gray-300 text-gray-700 hover:bg-gray-100;
+}
+
+.btn-sm {
+  @apply px-3 py-1 text-xs rounded;
+}
+
+/* =========================
+   CARD
+========================= */
+.card {
+  @apply bg-white rounded-lg border shadow-sm;
+}

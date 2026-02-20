@@ -1,0 +1,218 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard')
+
+@section('content')
+
+@php
+    // =========================
+    // DUMMY USER
+    // =========================
+    $user = [
+        'name' => 'Widia',
+        'role' => 'admin', // admin | tenant_relation | departemen | penghuni
+    ];
+
+    // =========================
+    // DUMMY STATS
+    // =========================
+    $stats = [
+        'total' => 12,
+        'active' => 5,
+        'completed' => 7,
+        'pending' => 3,
+        'units' => 20,
+        'activeUnits' => 15,
+    ];
+
+    // =========================
+    // DUMMY COMPLAINTS
+    // =========================
+    $recentComplaints = [
+        [
+            'ticket' => 'CMP-001',
+            'title' => 'AC Tidak Dingin',
+            'desc' => 'AC di ruang tamu tidak mengeluarkan udara dingin.',
+            'status' => 'diproses',
+            'priority' => 'tinggi',
+            'unit' => 'A-101',
+            'building' => 'Tower A',
+            'date' => '2026-02-10',
+        ],
+        [
+            'ticket' => 'CMP-002',
+            'title' => 'Lampu Mati',
+            'desc' => 'Lampu kamar mandi mati sejak kemarin.',
+            'status' => 'baru',
+            'priority' => 'sedang',
+            'unit' => 'B-203',
+            'building' => 'Tower B',
+            'date' => '2026-02-09',
+        ],
+    ];
+
+    // =========================
+    // DUMMY WORK ORDERS
+    // =========================
+    $recentWorkOrders = [
+        [
+            'wo' => 'WO-001',
+            'ticket' => 'CMP-001',
+            'title' => 'Perbaikan AC',
+            'desc' => 'Cek freon dan unit indoor.',
+            'status' => 'dalam_pengerjaan',
+            'priority' => 'tinggi',
+            'dept' => 'Maintenance',
+            'date' => '2026-02-10',
+        ],
+    ];
+
+    // =========================
+    // HELPER BADGE
+    // =========================
+    function badge($text, $color) {
+        return "<span class='px-2 py-1 rounded-full text-xs font-medium bg-$color-100 text-$color-700'>$text</span>";
+    }
+@endphp
+
+<div class="space-y-6">
+
+    {{-- HEADER --}}
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-gray-600 mt-1">
+            Selamat datang, {{ $user['name'] }}
+        </p>
+    </div>
+
+    {{-- STAT CARDS --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        {{-- TOTAL --}}
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm text-gray-600">
+                        {{ $user['role'] === 'departemen' ? 'Total Work Order' : 'Total Keluhan' }}
+                    </p>
+                    <p class="text-3xl font-bold mt-2">{{ $stats['total'] }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    📄
+                </div>
+            </div>
+        </div>
+
+        {{-- AKTIF --}}
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm text-gray-600">Aktif</p>
+                    <p class="text-3xl font-bold mt-2">{{ $stats['active'] }}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    ⏳
+                </div>
+            </div>
+        </div>
+
+        {{-- SELESAI --}}
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm text-gray-600">Selesai</p>
+                    <p class="text-3xl font-bold mt-2">{{ $stats['completed'] }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    ✅
+                </div>
+            </div>
+        </div>
+
+        {{-- PENDING --}}
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm text-gray-600">Pending</p>
+                    <p class="text-3xl font-bold mt-2">{{ $stats['pending'] }}</p>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-full">
+                    ⚠️
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ADMIN EXTRA --}}
+    @if(in_array($user['role'], ['admin','tenant_relation']))
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <p class="text-sm text-gray-600">Total Unit</p>
+            <p class="text-3xl font-bold mt-2">{{ $stats['units'] }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+            <p class="text-sm text-gray-600">Unit Terisi</p>
+            <p class="text-3xl font-bold mt-2">{{ $stats['activeUnits'] }}</p>
+        </div>
+    </div>
+    @endif
+
+    {{-- KELUHAN TERBARU --}}
+    @if($user['role'] !== 'departemen')
+    <div class="bg-white rounded-lg shadow-sm border">
+        <div class="p-6 border-b flex justify-between">
+            <h2 class="text-lg font-semibold">Keluhan Terbaru</h2>
+            <a href="#" class="text-sm text-blue-600">Lihat Semua</a>
+        </div>
+
+        <div class="divide-y">
+            @forelse($recentComplaints as $c)
+            <div class="p-6 hover:bg-gray-50">
+                <div class="flex items-center space-x-2 mb-2">
+                    <span class="font-medium">{{ $c['ticket'] }}</span>
+                    {!! badge(ucfirst($c['status']), 'blue') !!}
+                    {!! badge(ucfirst($c['priority']), 'red') !!}
+                </div>
+                <h3 class="font-medium">{{ $c['title'] }}</h3>
+                <p class="text-sm text-gray-600">{{ $c['desc'] }}</p>
+                <p class="text-xs text-gray-500 mt-2">
+                    Unit {{ $c['unit'] }} - {{ $c['building'] }} • {{ $c['date'] }}
+                </p>
+            </div>
+            @empty
+            <p class="p-6 text-center text-gray-500">Belum ada keluhan</p>
+            @endforelse
+        </div>
+    </div>
+    @endif
+
+    {{-- WORK ORDER --}}
+    @if(in_array($user['role'], ['tenant_relation','departemen']))
+    <div class="bg-white rounded-lg shadow-sm border">
+        <div class="p-6 border-b flex justify-between">
+            <h2 class="text-lg font-semibold">Work Order Terbaru</h2>
+            <a href="#" class="text-sm text-blue-600">Lihat Semua</a>
+        </div>
+
+        <div class="divide-y">
+            @foreach($recentWorkOrders as $wo)
+            <div class="p-6 hover:bg-gray-50">
+                <div class="flex items-center space-x-2 mb-2">
+                    <span class="font-medium">{{ $wo['wo'] }}</span>
+                    {!! badge(str_replace('_',' ', $wo['status']), 'purple') !!}
+                </div>
+                <h3 class="font-medium">{{ $wo['title'] }}</h3>
+                <p class="text-sm text-gray-600">{{ $wo['desc'] }}</p>
+                <p class="text-xs text-gray-500 mt-2">
+                    Ticket {{ $wo['ticket'] }} • {{ $wo['dept'] }} • {{ $wo['date'] }}
+                </p>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+</div>
+
+@endsection
