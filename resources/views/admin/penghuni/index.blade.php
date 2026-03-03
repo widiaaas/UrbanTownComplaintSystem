@@ -7,13 +7,18 @@
 <div x-data="{ 
         openEdit:false, 
         openDetail:false, 
+        openCreate:false,
         selectedTenant:null 
     }" class="p-6 space-y-6">
 
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-900">Kelola Penghuni</h1>
-        <a href="/CreateTenants" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Tambah Penghuni</a>
+        <button 
+            @click="openCreate = true"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            + Tambah Penghuni
+        </button>
     </div>
 
     {{-- ================= FILTER ================= --}}
@@ -76,6 +81,113 @@
         </table>
     </div>
 
+    {{-- ================= MODAL TAMBAH PENGHUNI ================= --}}
+    <div x-show="openCreate" x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+
+        <div 
+            @click.outside="openCreate=false"
+            class="bg-white w-full max-w-md rounded-lg shadow-lg p-6 space-y-5">
+
+            {{-- HEADER --}}
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">
+                    Tambah Penghuni Baru
+                </h2>
+                <button 
+                    @click="openCreate=false"
+                    class="text-gray-400 hover:text-gray-600 text-xl">
+                    &times;
+                </button>
+            </div>
+
+            {{-- FORM --}}
+            <form class="space-y-4">
+
+                {{-- Nama --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Nama Penghuni
+                    </label>
+                    <input 
+                        type="text"
+                        placeholder="Nama lengkap"
+                        class="w-full mt-1 border rounded-lg px-3 py-2
+                            focus:ring focus:ring-blue-200 focus:border-blue-500">
+                </div>
+
+                {{-- Unit --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Unit
+                    </label>
+                    <select
+                        class="w-full mt-1 border rounded-lg px-3 py-2
+                            focus:ring focus:ring-blue-200 focus:border-blue-500">
+                        <option value="">-- Pilih Unit --</option>
+                        <option>A-101</option>
+                        <option>A-102</option>
+                        <option>B-201</option>
+                    </select>
+                </div>
+
+                {{-- Email --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
+                    <input 
+                        type="email"
+                        placeholder="email@example.com"
+                        class="w-full mt-1 border rounded-lg px-3 py-2
+                            focus:ring focus:ring-blue-200 focus:border-blue-500">
+                </div>
+
+                {{-- Telepon --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Nomor Telepon
+                    </label>
+                    <input 
+                        type="text"
+                        placeholder="08xxxxxxxxxx"
+                        class="w-full mt-1 border rounded-lg px-3 py-2
+                            focus:ring focus:ring-blue-200 focus:border-blue-500">
+                </div>
+
+                {{-- Status --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Status
+                    </label>
+                    <select
+                        class="w-full mt-1 border rounded-lg px-3 py-2
+                            focus:ring focus:ring-blue-200 focus:border-blue-500">
+                        <option value="aktif">Aktif</option>
+                        <option value="nonaktif">Nonaktif</option>
+                    </select>
+                </div>
+
+                {{-- FOOTER --}}
+                <div class="flex justify-end gap-3 pt-6 border-t">
+                    <button
+                        type="button"
+                        @click="openCreate=false"
+                        class="px-4 py-2 border rounded-lg hover:bg-gray-100">
+                        Batal
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Simpan
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
     {{-- ================= MODAL DETAIL PENGHUNI ================= --}}
     <div x-show="openDetail" x-cloak
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -105,8 +217,23 @@
                     <input type="text" class="input input-bordered w-full" value="Widiawati">
                 </div>
                 <div>
-                    <label class="label">Unit</label>
-                    <input type="text" class="input input-bordered w-full" value="A-101">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Unit
+                    </label>
+
+                    <input 
+                        list="unitList"
+                        value="A-101"
+                        placeholder="Ketik atau pilih unit"
+                        class="w-full mt-1 border rounded-lg px-3 py-2
+                            focus:ring focus:ring-blue-200 focus:border-blue-500">
+
+                    <datalist id="unitList">
+                        <option value="A-101">
+                        <option value="A-102">
+                        <option value="B-201">
+                        <option value="B-202">
+                    </datalist>
                 </div>
                 <div>
                     <label class="label">Email</label>
@@ -116,6 +243,17 @@
                     <label class="label">Telepon</label>
                     <input type="text" class="input input-bordered w-full" value="081234567890">
                 </div>
+                <div>
+                <label class="block text-sm font-medium text-gray-700">
+                    Status Penghuni
+                </label>
+                <select 
+                    class="w-full mt-1 border rounded-lg px-3 py-2
+                           focus:ring focus:ring-blue-200 focus:border-blue-500">
+                    <option value="aktif" selected>Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                </select>
+            </div>
                 <div class="flex justify-end gap-2 pt-4">
                     <button class="btn" @click="openEdit=false">Batal</button>
                     <button class="btn btn-primary">Simpan</button>

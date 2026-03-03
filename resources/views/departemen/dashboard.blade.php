@@ -6,9 +6,9 @@
 
 @php
     // =========================
-    // DUMMY USER (SIMULASI AUTH)
+    // DUMMY USER
     // =========================
-    $user = [ 
+    $user = [
         'name' => 'Jun',
         'role' => 'departemen',
     ];
@@ -18,9 +18,10 @@
     // =========================
     $statsWO = [
         'total' => 4,
-        'active' => 2,
-        'pending' => 1,
-        'completed' => 1,
+        'open' => 1,
+        'on_progress' => 2,
+        'waiting' => 1,
+        'close' => 0,
     ];
 
     // =========================
@@ -32,8 +33,7 @@
             'ticket' => 'CMP-001',
             'title' => 'Perbaikan AC',
             'description' => 'Cek freon dan unit indoor.',
-            'status' => 'dalam_pengerjaan',
-            'priority' => 'tinggi',
+            'status' => 'on_progress',
             'department' => 'Maintenance',
             'date' => '2026-02-10',
         ],
@@ -42,27 +42,24 @@
             'ticket' => 'CMP-002',
             'title' => 'Ganti Lampu',
             'description' => 'Penggantian lampu kamar mandi.',
-            'status' => 'pending',
-            'priority' => 'sedang',
+            'status' => 'waiting',
             'department' => 'Electrical',
             'date' => '2026-02-09',
         ],
     ];
 
     // =========================
-    // HELPER BADGE
+    // HELPER BADGE STATUS WO
     // =========================
-    function badge($label, $type) {
+    function badgeWO($status) {
         $map = [
-            'pending' => 'bg-orange-100 text-orange-700',
-            'dalam_pengerjaan' => 'bg-yellow-100 text-yellow-700',
-            'selesai' => 'bg-green-100 text-green-700',
-            'tinggi' => 'bg-red-100 text-red-700',
-            'sedang' => 'bg-orange-100 text-orange-700',
-            'rendah' => 'bg-gray-100 text-gray-700',
+            'open' => ['Open', 'bg-blue-100 text-blue-700'],
+            'on_progress' => ['On Progress', 'bg-yellow-100 text-yellow-700'],
+            'waiting' => ['Waiting', 'bg-orange-100 text-orange-700'],
+            'close' => ['Close', 'bg-green-100 text-green-700'],
         ];
 
-        $class = $map[$type] ?? 'bg-gray-100 text-gray-700';
+        [$label, $class] = $map[$status] ?? ['Unknown', 'bg-gray-100 text-gray-700'];
 
         return "<span class='px-2 py-1 rounded-full text-xs font-medium $class'>$label</span>";
     }
@@ -86,29 +83,34 @@
     <div class="bg-white p-6 rounded-lg border shadow-sm">
         <h2 class="text-lg font-semibold mb-4">Statistik Work Order</h2>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="p-4 rounded-lg bg-blue-50">
                 <p class="text-sm text-gray-600">Total</p>
                 <p class="text-2xl font-bold">{{ $statsWO['total'] }}</p>
             </div>
 
+            <div class="p-4 rounded-lg bg-blue-50">
+                <p class="text-sm text-gray-600">Open</p>
+                <p class="text-2xl font-bold">{{ $statsWO['open'] }}</p>
+            </div>
+
             <div class="p-4 rounded-lg bg-yellow-50">
-                <p class="text-sm text-gray-600">Aktif</p>
-                <p class="text-2xl font-bold">{{ $statsWO['active'] }}</p>
+                <p class="text-sm text-gray-600">On Progress</p>
+                <p class="text-2xl font-bold">{{ $statsWO['on_progress'] }}</p>
             </div>
 
             <div class="p-4 rounded-lg bg-orange-50">
-                <p class="text-sm text-gray-600">Pending</p>
-                <p class="text-2xl font-bold">{{ $statsWO['pending'] }}</p>
+                <p class="text-sm text-gray-600">Waiting</p>
+                <p class="text-2xl font-bold">{{ $statsWO['waiting'] }}</p>
             </div>
 
             <div class="p-4 rounded-lg bg-green-50">
-                <p class="text-sm text-gray-600">Selesai</p>
-                <p class="text-2xl font-bold">{{ $statsWO['completed'] }}</p>
+                <p class="text-sm text-gray-600">Close</p>
+                <p class="text-2xl font-bold">{{ $statsWO['close'] }}</p>
             </div>
         </div>
     </div>
-
+<!-- 
     {{-- ========================= --}}
     {{-- WORK ORDER TERBARU --}}
     {{-- ========================= --}}
@@ -123,15 +125,16 @@
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <span class="font-semibold">{{ $wo['wo'] }}</span>
-                            {!! badge($wo['status'], $wo['status']) !!}
-                            {!! badge($wo['priority'], $wo['priority']) !!}
+                            {!! badgeWO($wo['status']) !!}
                         </div>
 
                         <p class="font-medium">{{ $wo['title'] }}</p>
                         <p class="text-sm text-gray-600">{{ $wo['description'] }}</p>
 
                         <p class="text-xs text-gray-500 mt-1">
-                            Ticket {{ $wo['ticket'] }} • {{ $wo['department'] }} • {{ $wo['date'] }}
+                            Ticket {{ $wo['ticket'] }}
+                            • {{ $wo['department'] }}
+                            • {{ $wo['date'] }}
                         </p>
                     </div>
                 </div>
@@ -141,7 +144,7 @@
                 </div>
             @endforelse
         </div>
-    </div>
+    </div> -->
 
 </div>
 @endsection

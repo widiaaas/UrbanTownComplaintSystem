@@ -38,109 +38,88 @@
     </div>
 
     {{-- ================= DESKRIPSI ================= --}}
-    <div class="bg-white p-6 rounded-xl shadow space-y-3">
+    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+        {{-- JUDUL SECTION --}}
         <div class="flex justify-between items-center">
-            <p class="font-semibold">Deskripsi Keluhan</p>
-            <button
-                @click="openRiwayat = true"
-                class="text-sm text-blue-600 hover:underline">
-                Lihat Riwayat
-            </button>
+            <p class="font-semibold">Keluhan</p>
         </div>
 
-        <div class="bg-gray-100 rounded-lg p-3 text-sm"
-             x-text="keluhan.deskripsi"></div>
+        <div class="pl-4 space-y-4">
 
-        <div>
-            <p class="text-sm font-medium mb-1">Lampiran Keluhan</p>
-            <div class="flex gap-2 flex-wrap">
-                <template x-for="file in keluhan.lampiranKeluhan">
-                    <span class="px-3 py-1 bg-gray-200 rounded text-xs" x-text="file"></span>
-                </template>
+            {{-- JUDUL KELUHAN --}}
+            <div>
+                <p class="text-sm font-medium mb-1">
+                    Judul Keluhan
+                </p>
+                <p class="text-gray-600"
+                x-text="keluhan.judul">
+                </p>
+            </div>
+
+            {{-- DESKRIPSI --}}
+            <div>
+                <p class="text-sm font-medium mb-1">
+                    Deskripsi Keluhan
+                </p>
+                <p
+                    class="text-gray-600"
+                    x-text="keluhan.deskripsi">
+                </p>
+            </div>
+
+            {{-- LAMPIRAN --}}
+            <div>
+                <p class="text-sm font-medium mb-1">
+                    Lampiran Keluhan
+                </p>
+                <div class="flex gap-2 flex-wrap">
+                    <template x-for="file in keluhan.lampiranKeluhan" :key="file">
+                        <span
+                            class="px-3 py-1 bg-gray-200 rounded text-xs text-gray-700"
+                            x-text="file">
+                        </span>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- ================= INFORMASI & KIRIM KONFIRMASI PENGHUNI ================= --}}
-    <div class="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 class="font-semibold">Konfirmasi Penghuni</h3>
-        
-        {{-- Tampilkan informasi konfirmasi jika sudah ada --}}
-        <template x-if="keluhan.konfirmasiPenghuni">
-            <div class="space-y-3 mb-4">
-                <div class="p-4 rounded-lg" 
-                    :class="{
-                        'bg-green-50 border border-green-200': keluhan.konfirmasiPenghuni.status === 'Puas',
-                        'bg-red-50 border border-red-200': keluhan.konfirmasiPenghuni.status === 'Tidak Puas'
-                    }">
-                    
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="font-medium">Status Konfirmasi:</span>
-                        <span class="text-sm px-2 py-1 rounded"
-                            :class="{
-                                'bg-green-200 text-green-800': keluhan.konfirmasiPenghuni.status === 'Puas',
-                                'bg-red-200 text-red-800': keluhan.konfirmasiPenghuni.status === 'Tidak Puas'
-                            }"
-                            x-text="keluhan.konfirmasiPenghuni.status">
-                        </span>
-                    </div>
-                    
-                    <p class="text-sm mb-2">
-                        <span class="font-medium">Catatan:</span> 
-                        <span x-text="keluhan.konfirmasiPenghuni.catatan || '-'"></span>
-                    </p>
-                    
-                    <p class="text-xs text-gray-500">
-                        Dikonfirmasi pada: <span x-text="keluhan.konfirmasiPenghuni.waktu"></span>
-                    </p>
-                </div>
-            </div>
-        </template>
+    {{-- STATUS KELUHAN --}}
+    <div class="bg-white p-4 rounded-xl border space-y-2">
+        <h3 class="font-semibold text-sm">Status Keluhan</h3>
 
-        {{-- Tampilkan pesan jika belum ada konfirmasi --}}
-        <template x-if="!keluhan.konfirmasiPenghuni">
-            <p class="text-sm text-gray-500 italic mb-4">
-                Belum ada konfirmasi dari penghuni.
-            </p>
-        </template>
+        <select x-model="keluhan.status"
+            class="w-full border rounded-lg px-3 py-2">
+            <option>Open</option>
+            <option>On Progress</option>
+            <option>Close</option>
+        </select>
 
-        {{-- Tombol Kirim Konfirmasi (hanya tampil jika status belum Close) --}}
-        <div x-show="keluhan.status !== 'Close'" class="border-t pt-4">
-            <p class="text-sm text-gray-600 mb-3">
-                Kirim permintaan konfirmasi kepada penghuni untuk mengetahui apakah keluhan sudah selesai atau masih ada kendala.
-            </p>
-            
-            <div class="flex gap-3">
-                <button 
-                    @click="kirimPermintaanKonfirmasi()" 
-                    class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
-                    Kirim Permintaan Konfirmasi
-                </button>
-            </div>
-
-            {{-- Riwayat pengiriman konfirmasi --}}
-            <template x-if="riwayatKonfirmasi.length > 0">
-                <div class="mt-4">
-                    <p class="text-sm font-medium mb-2">Riwayat Pengiriman Konfirmasi:</p>
-                    <div class="space-y-2">
-                        <template x-for="(item, index) in riwayatKonfirmasi" :key="index">
-                            <div class="text-xs text-gray-600 border-l-2 border-blue-300 pl-3 py-1">
-                                <span x-text="item.waktu"></span> - 
-                                <span x-text="item.keterangan"></span>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </template>
-        </div>
+        <p class="text-xs text-gray-500">
+            Status ini akan langsung terlihat oleh penghuni
+        </p>
     </div>
 
     {{-- ================= WORK ORDER ================= --}}
-    <template x-if="workOrders.length">
-        <div class="bg-white p-6 rounded-xl shadow space-y-5">
-            <h3 class="font-semibold">Riwayat Work Order</h3>
+    <div class="bg-white p-6 rounded-xl shadow space-y-5">
 
-            <template x-for="(wo, index) in workOrders" :key="wo.id">
+        {{-- HEADER --}}
+        <div class="flex justify-between items-center">
+            <h3 class="font-semibold">Work Order</h3>
+
+            {{-- Tombol Buat WO --}}
+            <button
+                x-show="keluhan.status !== 'Close' && workOrdersByTiket.length === 0"
+                @click="openWO = true"
+                class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                + Buat Work Order
+            </button>
+        </div>
+
+        {{-- LIST WO --}}
+        <template x-if="workOrdersByTiket.length">
+            <template x-for="(wo, index) in workOrdersByTiket" :key="wo.id">
                 <div class="border rounded-lg p-4 space-y-2">
                     
                     <div class="flex justify-between items-center">
@@ -152,40 +131,45 @@
                         <span
                             class="text-xs px-2 py-1 rounded"
                             :class="{
+                                'bg-blue-100 text-blue-800': wo.status === 'Open',
                                 'bg-yellow-100 text-yellow-800': wo.status === 'On Progress',
-                                'bg-green-100 text-green-800': wo.status === 'Selesai'
+                                'bg-orange-100 text-orange-800': wo.status === 'Waiting',
+                                'bg-green-100 text-green-800': wo.status === 'Close'
                             }"
                             x-text="wo.status">
                         </span>
                     </div>
 
                     <p class="text-sm">
-                        <b>Departemen:</b>
-                        <span x-text="wo.dept"></span>
+                        <b>Departemen:</b> <span x-text="wo.dept"></span>
                     </p>
 
                     <p class="text-sm">
-                        <b>Tanggal Dibuat:</b>
-                        <span x-text="wo.tanggal"></span>
+                        <b>Tanggal:</b> <span x-text="wo.tanggal"></span>
                     </p>
 
                     <p class="text-sm text-gray-600">
-                        <b>Instruksi:</b>
-                        <span x-text="wo.instruksi"></span>
+                        <b>Instruksi:</b> <span x-text="wo.instruksi"></span>
                     </p>
 
-                    <div class="flex flex-wrap gap-2 mt-3">
-                        <button
-                            @click="bukaLaporanWO(wo)"
-                            class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                            Lihat Laporan Penyelesaian
-                        </button>
-                    </div>
+                    <button
+                        @click="bukaLaporanWO(wo)"
+                        class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                        Lihat Laporan
+                    </button>
                 </div>
             </template>
-        </div>
-    </template>
-                        
+        </template>
+
+        {{-- JIKA BELUM ADA WO --}}
+        <template x-if="!workOrdersByTiket.length">
+            <p class="text-sm text-gray-500 italic">
+                Belum ada Work Order untuk tiket ini.
+            </p>
+        </template>
+
+    </div>
+
     {{-- ================= MODAL RIWAYAT PENANGANAN ================= --}}
     <div
         x-show="openRiwayat"
@@ -212,8 +196,14 @@
             <div class="px-6 py-4 space-y-4 text-sm max-h-[400px] overflow-y-auto">
 
                 <template x-for="(r, index) in riwayat" :key="index">
-                    <div class="relative pl-5 border-l-4 border-blue-500">
-                        <p class="font-medium" x-text="r.judul"></p>
+                    <div
+                        class="relative pl-5 py-3 rounded-md"
+                        :class="{
+                            'border-l-4 border-blue-500 bg-blue-50/30': r.tipe === 'tr',
+                            'border-l-4 border-green-500 bg-green-50/30': r.tipe === 'penghuni'
+                        }"
+                    >
+                        <p class="font-medium text-gray-800" x-text="r.judul"></p>
                         <p class="text-gray-600 mt-1" x-text="r.ket"></p>
                         <p class="text-xs text-gray-400 mt-1" x-text="r.waktu"></p>
                     </div>
@@ -232,93 +222,173 @@
             <div class="px-6 py-4 border-t flex justify-end">
                 <button
                     @click="openRiwayat = false"
-                    class="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
-                >
+                    class="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700">
                     Tutup
                 </button>
             </div>
 
         </div>
     </div>
-
-    {{-- ================= UPDATE PENANGANAN TR ================= --}}
-{{-- Hanya tampil jika status belum Close --}}
-<template x-if="keluhan.status !== 'Close'">
+    {{-- ================= KEPUTUSAN PENANGANAN TR ================= --}}
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 class="font-semibold">Update Penanganan (TR)</h3>
 
-        {{-- CATATAN --}}
-        <div>
-            <label class="text-sm font-medium mb-1 block">
-                Catatan Penanganan
-            </label>
-            <textarea
-                x-model="updateTR.catatan"
-                class="w-full border rounded-lg px-3 py-2 text-sm"
-                rows="3"
-                placeholder="Tuliskan aktivitas, hasil pengecekan, atau tindak lanjut TR...">
-            </textarea>
-        </div>
+        {{-- HEADER --}}
+        <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Keputusan Penanganan</h3>
 
-        {{-- UPLOAD FOTO --}}
-        <div>
-            <label class="text-sm font-medium mb-1 block">
-                Lampiran Dokumentasi (Opsional)
-            </label>
+            <div class="flex gap-4 items-center">
+                {{-- LINK KNOWLEDGE BASE --}}
+                <button
+                    @click="openKnowledgeBase = true"
+                    class="text-sm text-green-600 hover:underline">
+                    Lihat Knowledge Base
+                </button>
 
-            <input
-                type="file"
-                accept="image/*"
-                multiple
-                @change="handleUploadTR($event)"
-                class="text-sm"
-            />
-
-            {{-- PREVIEW --}}
-            <div class="flex gap-2 mt-2 flex-wrap">
-                <template x-for="(img, index) in updateTR.lampiran">
-                    <div class="relative">
-                        <img :src="img" class="w-20 h-20 object-cover rounded border">
-                        <button
-                            @click="hapusLampiranTR(index)"
-                            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5">
-                            ✕
-                        </button>
-                    </div>
-                </template>
+                {{-- RIWAYAT --}}
+                <button
+                    @click="openRiwayat = true"
+                    class="text-sm text-blue-600 hover:underline">
+                    Lihat Riwayat
+                </button>
             </div>
         </div>
 
-        {{-- ACTION --}}
-        <div class="flex gap-3 pt-2">
-            <button
-                @click="simpanUpdateTR"
-                class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                Simpan Update
-            </button>
+        {{-- INFO JIKA SUDAH CLOSE --}}
+        <template x-if="keluhan.status === 'Close'">
+            <div class="space-y-3">
+                <div class="text-sm text-gray-500 italic bg-gray-50 border rounded-lg p-3">
+                    Keluhan sudah ditutup. Riwayat keputusan tetap dapat dilihat,
+                    namun tidak dapat menambahkan keputusan baru.
+                </div>
 
-            <button
-                @click="openWO = true"
-                class="bg-green-600 text-white px-4 py-2 rounded text-sm">
-                Buat Work Order
-            </button>
+                {{-- SIMPAN KE KNOWLEDGE BASE --}}
+                <div class="flex justify-end">
+                    <button
+                        @click="openSimpanKB = true"
+                        class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                        Simpan Solusi ke Knowledge Base
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        {{-- FORM UPDATE PENANGANAN (HANYA JIKA BELUM CLOSE) --}}
+        <template x-if="keluhan.status !== 'Close'">
+            <div class="pl-4 space-y-4">
+
+                {{-- JUDUL Penanganan --}}
+                <div>
+                    <label class="text-sm font-medium mb-1 block">
+                        Judul Penanganan
+                    </label>
+                    <input
+                        type="text"
+                        x-model="keputusan.judul"
+                        class="w-full border rounded-lg px-3 py-2 text-sm"
+                        placeholder="Masukkan judul keputusan"
+                    >
+                </div>
+
+                {{-- CATATAN KEPUTUSAN --}}
+                <div>
+                    <label class="text-sm font-medium mb-1 block">
+                        Catatan Penanganan
+                    </label>
+                    <textarea
+                        x-model="keputusan.catatan"
+                        class="w-full border rounded-lg px-3 py-2 text-sm"
+                        rows="3"
+                        placeholder="Masukkan catatan keputusan"
+                    ></textarea>
+                </div>
+
+                {{-- LAMPIRAN Penanganan --}}
+                <div>
+                    <label class="text-sm font-medium mb-1 block">
+                        Lampiran Dokumentasi
+                    </label>
+
+                    <input
+                        type="file"
+                        multiple
+                        @change="handleUploadKeputusan($event)"
+                        class="text-sm"
+                    >
+
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <template x-for="(file, index) in keputusan.lampiran" :key="index">
+                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50">
+                                <span x-text="file.name"></span>
+                                <button
+                                    @click="hapusLampiranKeputusan(index)"
+                                    class="ml-2 text-red-500 hover:text-red-700">
+                                    ✕
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- {{-- UBAH STATUS --}}
+                <div>
+                    <label class="text-sm font-medium mb-1 block">
+                        Ubah Status Keluhan
+                    </label>
+                    <select
+                        x-model="keputusan.status"
+                        class="w-full border rounded-lg px-3 py-2 text-sm">
+                        <option value="Open">Open</option>
+                        <option value="On Progress">On Progress</option>
+                        <option value="Close">Close</option>
+                    </select>
+                </div> -->
+
+                {{-- ACTION --}}
+                <div class="flex gap-3 pt-2">
+                    <button
+                        @click="simpanKeputusan"
+                        class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                        Update Penanganan
+                    </button>
+                </div>
+
+            </div>
+        </template>
+    </div>    
+
+    {{-- ================= KEPUTUSAN UNTUK PENGHUNI ================= --}}
+    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+        <h3 class="font-semibold">Keputusan / Solusi untuk Penghuni</h3>
+
+        <div class="space-y-3">
+            <input type="text"
+                x-model="keputusanAkhir.judul"
+                placeholder="Judul keputusan"
+                class="w-full border rounded-lg px-3 py-2 text-sm">
+
+            <textarea
+                x-model="keputusanAkhir.solusi"
+                placeholder="Solusi / hasil akhir penanganan"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+                rows="3"></textarea>
+
+            <input type="file" multiple>
+
+            <div class="flex justify-between">
+                <button
+                    @click="openSimpanKB = true"
+                    class="text-green-600 text-sm hover:underline">
+                    Simpan ke Knowledge Base
+                </button>
+
+                <button
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
+                    Simpan Keputusan
+                </button>
+            </div>
         </div>
     </div>
-</template>
-
-{{-- Tampilkan pesan jika status sudah Close --}}
-<template x-if="keluhan.status === 'Close'">
-    <div class="bg-white p-6 rounded-xl shadow">
-        <div class="flex items-center gap-3 text-gray-500">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <p class="text-sm">
-                Keluhan telah ditutup. Tidak dapat melakukan update penanganan.
-            </p>
-        </div>
-    </div>
-</template>
 
     {{-- ================= MODAL LAPORAN WO ================= --}}
     <div x-show="openLaporan" x-cloak
@@ -379,8 +449,10 @@
                     <span
                         class="inline-block text-xs px-2 py-1 rounded"
                         :class="{
+                            'bg-blue-100 text-blue-800': selectedWO.status === 'Open',
                             'bg-yellow-100 text-yellow-800': selectedWO.status === 'On Progress',
-                            'bg-green-100 text-green-800': selectedWO.status === 'Selesai'
+                            'bg-orange-100 text-orange-800': selectedWO.status === 'Waiting',
+                            'bg-green-100 text-green-800': selectedWO.status === 'Close'
                         }"
                         x-text="selectedWO.status">
                     </span>
@@ -391,7 +463,7 @@
             <div class="border rounded-lg p-4 text-sm space-y-1">
                 <p class="font-medium">Lokasi</p>
                 <p>
-                    Blok: <b>TB</b> |
+                    Tower: <b>A</b> |
                     Lantai: <b>10</b> |
                     Unit: <b x-text="keluhan.unit"></b>
                 </p>
@@ -405,14 +477,37 @@
                 </div>
             </div>
 
-            {{-- LAPORAN PEKERJAAN --}}
-            <div class="space-y-1">
-                <p class="font-medium text-sm"> Laporan Pekerjaan</p>
-                <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm"
-                    x-text="selectedWO.laporan || 'Belum ada laporan pekerjaan.'">
-                </div>
-            </div>
+            {{-- RIWAYAT PENANGANAN PEKERJAAN (WO) --}}
+            <div class="space-y-3">
+                <p class="font-medium text-sm">Riwayat Penanganan Pekerjaan</p>
 
+                <template x-if="selectedWO.laporan && selectedWO.laporan.length">
+                    <div class="space-y-3">
+
+                        <template x-for="(lapor, index) in selectedWO.laporan" :key="index">
+                            <div
+                                class="relative pl-5 py-3 rounded-md"
+                                :class="{
+                                    'border-l-4 border-blue-500 bg-blue-50/30': lapor.status === 'On Progress',
+                                    'border-l-4 border-orange-500 bg-orange-50/30': lapor.status === 'Waiting',
+                                    'border-l-4 border-green-500 bg-green-50/30': lapor.status === 'Close'
+                                }"
+                            >
+                                <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
+                                <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
+                                <p class="text-xs text-gray-400 mt-1" x-text="lapor.waktu"></p>
+                            </div>
+                        </template>
+
+                    </div>
+                </template>
+
+                <template x-if="!selectedWO.laporan || !selectedWO.laporan.length">
+                    <p class="text-sm text-gray-400 italic">
+                        Belum ada laporan pekerjaan dari departemen.
+                    </p>
+                </template>
+            </div>
             {{-- LAMPIRAN --}}
             <div>
                 <p class="font-medium text-sm mb-1">Lampiran Pekerjaan</p>
@@ -438,8 +533,7 @@
         x-show="openWO"
         x-cloak
         x-transition
-        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-    >
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
         <div class="bg-white w-full max-w-3xl rounded-xl p-6 space-y-5 overflow-y-auto max-h-[90vh]">
 
             <h3 class="text-lg font-semibold text-gray-800">
@@ -458,14 +552,14 @@
                     >
                 </div>
 
-                <div>
+                <!-- <div>
                     <label class="font-medium">Tanggal WO</label>
                     <input
                         class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
                         value="14 Feb 2026 10:30"
                         disabled
                     >
-                </div>
+                </div> -->
 
                 <div>
                     <label class="font-medium">Ticket</label>
@@ -486,6 +580,15 @@
                 </div>
 
                 <div>
+                    <label class="font-medium">Nomor Telepon</label>
+                    <input
+                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                        x-model="keluhan.telepon"
+                        disabled
+                    >
+                </div>
+
+                <div>
                     <label class="font-medium">Department</label>
                     <select
                         class="w-full border rounded px-3 py-1"
@@ -501,32 +604,37 @@
             </div>
 
             {{-- LOKASI --}}
-            <div class="grid grid-cols-3 gap-4 text-sm">
+            <div class="space-y-3">
 
+            {{-- JUDUL --}}
+            <h4 class="text-sm font-semibold tracking-wide">
+                Lokasi
+            </h4>
+            <div class="grid grid-cols-3 gap-4 text-sm pl-4">
                 <div>
-                    <label class="font-medium">Blok</label>
+                    <label class="font-medium">Tower</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
-                        value="TB"
-                        disabled
+                        class="w-full border rounded px-3 py-1"
+                        value=" "
+                        
                     >
                 </div>
 
                 <div>
                     <label class="font-medium">Lantai</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
-                        value="10"
-                        disabled
+                        class="w-full border rounded px-3 py-1"
+                        value=" "
+                        
                     >
                 </div>
 
                 <div>
-                    <label class="font-medium">Unit</label>
+                    <label class="font-medium">No</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
-                        x-model="keluhan.unit"
-                        disabled
+                        class="w-full border rounded px-3 py-1 "
+                        x-model="keluhan.no"
+                        
                     >
                 </div>
 
@@ -534,15 +642,15 @@
 
             {{-- NOTES --}}
             <div>
-                <label class="font-medium text-sm">Notes</label>
+                <label class="font-medium text-sm">Instruksi</label>
                 <textarea
-                    x-model="woForm.notes"
+                    x-model="woForm.instruction"
                     class="w-full border rounded px-3 py-2 text-sm"
-                    placeholder="Catatan awal / permintaan khusus..."
+                    placeholder="Instruksi pekerjaan untuk departemen"
                 ></textarea>
             </div>
 
-            {{-- DETAIL INSTRUCTION --}}
+            <!-- {{-- DETAIL INSTRUCTION --}}
             <div>
                 <label class="font-medium text-sm">Detail Instruksi</label>
                 <textarea
@@ -550,7 +658,7 @@
                     class="w-full border rounded px-3 py-2 text-sm"
                     placeholder="Instruksi pekerjaan untuk departemen..."
                 ></textarea>
-            </div>
+            </div> -->
 
             {{-- ACTION --}}
             <div class="flex justify-end gap-2 pt-3">
@@ -567,70 +675,454 @@
                     Kirim Work Order
                 </button>
             </div>
-
+            </div>
         </div>
     </div>
+
+    {{-- ================= MODAL KNOWLEDGE BASE ================= --}}
+    <div
+        x-show="openKnowledgeBase"
+        x-cloak
+        x-transition
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    >
+        <div class="bg-white w-full max-w-4xl rounded-xl shadow-lg overflow-hidden">
+
+            {{-- HEADER --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        Knowledge Base Solusi Keluhan
+                    </h3>
+                    <p class="text-xs text-gray-500">
+                        Referensi solusi untuk membantu penanganan keluhan
+                    </p>
+                </div>
+                <button
+                    @click="openKnowledgeBase = false"
+                    class="text-gray-500 hover:text-gray-700 text-xl">
+                    ✕
+                </button>
+            </div>
+
+            {{-- SEARCH --}}
+            <div class="px-6 py-3 border-b">
+                <input
+                    type="text"
+                    x-model="kbSearch"
+                    placeholder="Cari solusi (contoh: AC, lampu, kran)..."
+                    class="w-full border rounded-lg px-3 py-2 text-sm"
+                >
+            </div>
+
+            {{-- BODY --}}
+            <div class="px-6 py-4 grid grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
+
+                {{-- LIST SOLUSI --}}
+                <div class="col-span-1 space-y-2">
+                    <template x-for="item in filteredKnowledgeBase" :key="item.id">
+                        <button
+                            @click="selectKB(item)"
+                            class="w-full text-left border rounded-lg p-3 hover:bg-gray-50"
+                            :class="{
+                                'border-green-500 bg-green-50': selectedKB && selectedKB.id === item.id
+                            }"
+                        >
+                            <p class="font-medium text-sm" x-text="item.judul"></p>
+                            <p class="text-xs text-gray-500 mt-1" x-text="item.dept"></p>
+                        </button>
+                    </template>
+
+                    <template x-if="filteredKnowledgeBase.length === 0">
+                        <p class="text-sm text-gray-400 italic text-center py-4">
+                            Solusi tidak ditemukan
+                        </p>
+                    </template>
+                </div>
+
+                {{-- DETAIL SOLUSI --}}
+                <div class="col-span-2 border rounded-lg p-4 space-y-3">
+
+                    <template x-if="!selectedKB">
+                        <p class="text-sm text-gray-400 italic text-center py-10">
+                            Pilih solusi untuk melihat detail
+                        </p>
+                    </template>
+
+                    <template x-if="selectedKB">
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-semibold text-gray-800"
+                                x-text="selectedKB.judul"></p>
+                                <p class="text-xs text-gray-500"
+                                x-text="'Departemen: ' + selectedKB.dept"></p>
+                            </div>
+
+                            <div class="bg-gray-50 border rounded-lg p-3 text-sm text-gray-700"
+                                x-text="selectedKB.deskripsi">
+                            </div>
+
+                            {{-- LAMPIRAN --}}
+                            <div>
+                                <p class="text-sm font-medium mb-1">
+                                    Lampiran
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <template x-for="file in selectedKB.lampiran">
+                                        <span
+                                            class="px-3 py-1 border rounded text-xs bg-gray-50"
+                                            x-text="file">
+                                        </span>
+                                    </template>
+
+                                    <template x-if="selectedKB.lampiran.length === 0">
+                                        <span class="text-xs text-gray-400">
+                                            Tidak ada lampiran
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- RIWAYAT KELUHAN TERKAIT --}}
+                    <div class="border-t pt-3">
+                        <p class="font-medium text-sm mb-2">
+                            Riwayat Keluhan Terkait
+                        </p>
+
+                        <template x-if="selectedKB.relatedKeluhan.length">
+                            <div class="space-y-2">
+                                <template x-for="rk in selectedKB.relatedKeluhan" :key="rk.id">
+                                    <div
+                                        class="flex justify-between items-center border rounded-lg px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
+                                        @click="bukaKeluhanTerkait(rk.id)"
+                                    >
+                                        <div>
+                                            <p class="font-medium" x-text="rk.tiket"></p>
+                                            <p class="text-xs text-gray-500">
+                                                Unit <span x-text="rk.unit"></span> ·
+                                                <span x-text="rk.tanggal"></span>
+                                            </p>
+                                        </div>
+
+                                        <span
+                                            class="text-xs px-2 py-1 rounded"
+                                            :class="{
+                                                'bg-blue-100 text-blue-700': rk.status === 'Open',
+                                                'bg-yellow-100 text-yellow-700': rk.status === 'On Progress',
+                                                'bg-green-100 text-green-700': rk.status === 'Close'
+                                            }"
+                                            x-text="rk.status">
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template x-if="selectedKB.relatedKeluhan.length === 0">
+                            <p class="text-xs text-gray-400 italic">
+                                Belum ada keluhan lain yang menggunakan solusi ini
+                            </p>
+                        </template>
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="px-6 py-4 border-t flex justify-end">
+                <button
+                    @click="openKnowledgeBase = false"
+                    class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+    {{-- ================= MODAL TAMBAH KNOWLEDGE BASE ================= --}}
+    <div
+        x-show="openSimpanKB"
+        x-cloak
+        x-transition
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    >
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden">
+
+            {{-- HEADER --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    Simpan ke Knowledge Base
+                </h3>
+                <button
+                    @click="openSimpanKB = false"
+                    class="text-gray-500 hover:text-gray-700 text-xl">
+                    ✕
+                </button>
+            </div>
+
+            {{-- BODY --}}
+            <div class="px-6 py-4 space-y-4 text-sm">
+
+                {{-- JUDUL --}}
+                <div>
+                    <label class="font-medium block mb-1">
+                        Judul Solusi
+                    </label>
+                    <input
+                        type="text"
+                        x-model="kbForm.judul"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Contoh: AC Tidak Dingin"
+                    >
+                </div>
+
+                {{-- DEPARTEMEN --}}
+                <div>
+                    <label class="font-medium block mb-1">
+                        Departemen Terkait
+                    </label>
+                    <select
+                        x-model="kbForm.dept"
+                        class="w-full border rounded-lg px-3 py-2"
+                    >
+                        <option value="">Pilih Departemen</option>
+                        <option>Engineering</option>
+                        <option>Operational</option>
+                        <option>Finance</option>
+                    </select>
+                </div>
+
+                {{-- DESKRIPSI --}}
+                <div>
+                    <label class="font-medium block mb-1">
+                        Deskripsi Solusi
+                    </label>
+                    <textarea
+                        x-model="kbForm.deskripsi"
+                        rows="4"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Tuliskan langkah atau solusi penanganan keluhan"
+                    ></textarea>
+                </div>
+
+                {{-- LAMPIRAN --}}
+                <div>
+                    <label class="font-medium block mb-1">
+                        Lampiran Dokumentasi
+                    </label>
+
+                    <input
+                        type="file"
+                        multiple
+                        @change="handleUploadKB($event)"
+                        class="text-sm"
+                    >
+
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <template x-for="(file, index) in kbForm.lampiran" :key="index">
+                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50">
+                                <span x-text="file.name"></span>
+                                <button
+                                    @click="hapusLampiranKB(index)"
+                                    class="ml-2 text-red-500 hover:text-red-700">
+                                    ✕
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="px-6 py-4 border-t flex justify-end gap-2">
+                <button
+                    @click="openSimpanKB = false"
+                    class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm">
+                    Batal
+                </button>
+                <button
+                    @click="simpanKeKnowledgeBase"
+                    class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
+                    Simpan
+                </button>
+            </div>
+
+        </div>
+</div>
 
 </div>
 
 <script>
 function detailKeluhanApp() {
     return {
-        /* ================= MODAL STATE ================= */
+        /* ================= STATE ================= */
         openWO: false,
         openRiwayat: false,
         openLaporan: false,
-
+        openKnowledgeBase: false,
+        openSimpanKB: false,
+        kbSearch: '',
+        selectedKB: null,
         selectedWO: {},
+        keputusanAkhir: null,
+        workOrders: [],
 
-        /* ================= DATA KELUHAN ================= */
-        keluhan: {
-            id: 1,
-            tiket: 'TCK-001',
-            unit: 'A-101',
-            nama: 'Budi Santoso',
-            telepon: '08123456789',
-            tanggal: '12 Feb 2026',
-            deskripsi: 'AC ruang tamu tidak dingin.',
-            lampiranKeluhan: ['foto_ac_1.jpg', 'foto_ac_2.jpg'],
-            status: 'On Progress',
-            konfirmasiPenghuni: null
-        },
-
-        /* ================= RIWAYAT KONFIRMASI ================= */
-        riwayatKonfirmasi: [],
-
-        /* ================= RIWAYAT ================= */
-        riwayat: [
+        /* ================= DATA SOURCE ================= */
+        detailKeluhan: [
             {
-                judul: 'Keluhan Masuk',
-                ket: 'Keluhan diterima oleh sistem',
-                waktu: '12 Feb 2026 09:00'
+                keluhan: {
+                    id: 1,
+                    tiket: 'TCK-001',
+                    unit: 'A-101',
+                    nama: 'Budi Santoso',
+                    telepon: '08123456789',
+                    tanggal: '12 Feb 2026',
+                    judul: 'AC Tidak Dingin',
+                    deskripsi: 'AC ruang tamu tidak dingin sejak pagi.',
+                    lampiranKeluhan: ['foto_ac_1.jpg', 'foto_ac_2.jpg'],
+                    status: 'Open'
+                },
+                riwayat: [
+                    {
+                        tipe: 'system',
+                        judul: 'Keluhan Masuk',
+                        ket: 'Keluhan diterima oleh sistem',
+                        waktu: '12 Feb 2026 09:00'
+                    }
+                ]
             },
             {
-                judul: 'TR Mengambil Keluhan',
-                ket: 'Keluhan di-assign ke tim TR',
-                waktu: '12 Feb 2026 09:10'
-            }
-        ],
-
-        /* ================= WORK ORDER ================= */
-        workOrders: [
+                keluhan: {
+                    id: 2,
+                    tiket: 'TCK-002',
+                    unit: 'B-205',
+                    nama: 'Siti Aminah',
+                    telepon: '08129876543',
+                    tanggal: '13 Feb 2026',
+                    judul: 'Kran bocor',
+                    deskripsi: 'Kran wasatafel kamar mandi bocor.',
+                    lampiranKeluhan: ['lampu_mati.jpg'],
+                    status: 'On Progress'
+                },
+                riwayat: [
+                    {
+                        tipe: 'system',
+                        judul: 'Keluhan Masuk',
+                        ket: 'Keluhan diterima oleh sistem',
+                        waktu: '13 Feb 2026 08:30'
+                    },
+                    {
+                        tipe: 'tr',
+                        judul: 'TR Mengambil Keluhan',
+                        ket: 'Keluhan di-assign ke tim TR',
+                        waktu: '13 Feb 2026 08:45'
+                    },
+                    {
+                        tipe: 'departemen',
+                        judul: 'Menunggu laporan Work Order departemen',
+                        ket: 'Work order sudah diberikan ke departemen teknik',
+                        waktu: '13 Feb 2026 09:30'
+                    },
+                ]
+            },
             {
-                id: 1,
-                no: 'WO-001',
-                dept: 'Teknik',
-                instruksi: 'Periksa AC dan lakukan perbaikan',
-                status: 'Selesai',
-                petugas: 'Ahmad Fauzi',
-                laporan: 'Tambah freon, AC sudah dingin kembali.',
-                lampiran: ['wo_before.jpg', 'wo_after.jpg'],
-                tanggal: '13 Feb 2026 14:00'
+                keluhan: {
+                    id: 3,
+                    tiket: 'TCK-003',
+                    unit: 'C-310',
+                    nama: 'Ahmad Rizki',
+                    telepon: '08121234567',
+                    tanggal: '14 Feb 2026',
+                    judul: 'Lampu mati',
+                    deskripsi: 'Lampu ruang tamu mati.',
+                    lampiranKeluhan: ['lampu_mati.jpg'],
+                    status: 'Close'
+                },
+                riwayat: [
+                    {
+                        tipe: 'system',
+                        judul: 'Keluhan Masuk',
+                        ket: 'Keluhan diterima oleh sistem',
+                        waktu: '14 Feb 2026 07:15'
+                    },
+                    {
+                        tipe: 'tr',
+                        judul: 'TR Mengambil Keluhan',
+                        ket: 'Keluhan di-assign ke tim TR',
+                        waktu: '14 Feb 2026 07:30'
+                    },
+                    {
+                        tipe: 'departemen',
+                        judul: 'Menunggu laporan Work Order departemen',
+                        ket: 'Work order sudah diberikan ke departemen teknik',
+                        waktu: '14 Feb 2026 07:30'
+                    },
+                    {
+                        tipe: 'tr',
+                        judul: 'TR memberi keputusan',
+                        ket: 'keputusan sudah dikirim ke penghuni ',
+                        waktu: '15 Feb 2026 07:30'
+                    },
+                    {
+                        tipe: 'tr',
+                        judul: 'Keluhan Ditutup',
+                        ket: 'Keluhan ditutup oleh TR',
+                        waktu: '15 Feb 2026 09:00'
+                    }
+                ]
             }
         ],
 
-        /* ================= UPDATE TR ================= */
-        updateTR: {
+        /* ================= DATA AKTIF ================= */
+        keluhan: {},
+        riwayat: [],
+
+        // KB
+        knowledgeBase: [
+        {
+            id: 1,
+            judul: 'AC Tidak Dingin',
+            deskripsi: 'Periksa filter AC, bersihkan evaporator, dan cek freon.',
+            dept: 'Engineering',
+            lampiran: ['ac_before.jpg'],
+            relatedKeluhan: [
+                {
+                    id: 1,
+                    tiket: 'TCK-001',
+                    unit: 'A-101',
+                    status: 'Close',
+                    tanggal: '12 Feb 2026'
+                },
+                {
+                    id: 4,
+                    tiket: 'TCK-014',
+                    unit: 'B-210',
+                    status: 'Close',
+                    tanggal: '20 Jan 2026'
+                }
+            ]
+        },
+        {
+            id: 2,
+            judul: 'Lampu Mati',
+            deskripsi: 'Cek MCB, ganti lampu, dan periksa fitting.',
+            dept: 'Engineering',
+            lampiran: [],
+            relatedKeluhan: []
+        }
+    ],
+        get workOrdersByTiket() {
+            return this.workOrders.filter(
+                wo => wo.tiket === this.keluhan.tiket
+            );
+        },
+
+        /* ================= KEPUTUSAN TR ================= */
+        keputusan: {
             status: 'On Progress',
             catatan: '',
             lampiran: []
@@ -639,182 +1131,142 @@ function detailKeluhanApp() {
         /* ================= FORM WO ================= */
         woForm: {
             dept: '',
-            notes: '',
             instruction: ''
         },
+        kbForm: {
+            judul: '',
+            dept: '',
+            deskripsi: '',
+            lampiran: []
+        },
+        keputusanAkhir: {
+            judul: '',
+            keputusan: '',
+            lampiran: [],
+            tanggal: '',
+            dibuatOleh: ''
+        },
+
+        workOrders: [
+            {
+                id: 1,
+                tiket: 'TCK-002',
+                no: 'WO-001',
+                dept: 'Engineering',
+                instruksi: 'Cek kran wastafel bocor',
+                status: 'On Progress',
+                petugas: 'Andi',
+                laporan: [],
+                lampiran: [],
+                tanggal: '13 Feb 2026 09:30'
+            }
+        ],
 
         /* ================= METHODS ================= */
-
-        // Method untuk memuat data berdasarkan ID
-        loadData(id) {
-            // Data dummy untuk berbagai kasus
-            const dataKeluhan = {
-                1: { // On Progress - Belum ada konfirmasi
-                    id: 1,
-                    tiket: 'TCK-001',
-                    unit: 'A-101',
-                    nama: 'Budi Santoso',
-                    telepon: '08123456789',
-                    tanggal: '12 Feb 2026',
-                    deskripsi: 'AC ruang tamu tidak dingin.',
-                    lampiranKeluhan: ['foto_ac_1.jpg', 'foto_ac_2.jpg'],
-                    status: 'On Progress',
-                    konfirmasiPenghuni: null
-                },
-                2: { // On Progress - Dengan riwayat konfirmasi
-                    id: 2,
-                    tiket: 'TCK-002',
-                    unit: 'B-205',
-                    nama: 'Siti Aminah',
-                    telepon: '08129876543',
-                    tanggal: '13 Feb 2026',
-                    deskripsi: 'Lampu di ruang tamu mati. Sudah diganti namun masih kedip-kedip.',
-                    lampiranKeluhan: ['foto_lampu.jpg'],
-                    status: 'On Progress',
-                    konfirmasiPenghuni: null
-                },
-                3: { // Close - Dengan konfirmasi Puas
-                    id: 3,
-                    tiket: 'TCK-003',
-                    unit: 'C-310',
-                    nama: 'Ahmad Rizki',
-                    telepon: '08121234567',
-                    tanggal: '14 Feb 2026',
-                    deskripsi: 'Kran wastafel kamar mandi bocor.',
-                    lampiranKeluhan: ['foto_kran_1.jpg', 'foto_kran_2.jpg'],
-                    status: 'Close',
-                    konfirmasiPenghuni: {
-                        status: 'Puas',
-                        catatan: 'Kran sudah tidak bocor, terima kasih',
-                        waktu: '15 Feb 2026 09:30',
-                        metode: 'Via WhatsApp'
-                    }
-                }
-            };
-
-            if (dataKeluhan[id]) {
-                this.keluhan = dataKeluhan[id];
-                
-                // Set riwayat berdasarkan data
-                this.setRiwayat(id);
-                
-                // Set riwayat konfirmasi
-                this.setRiwayatKonfirmasi(id);
-            }
+        handleUploadKB(event) {
+            const files = Array.from(event.target.files);
+            this.kbForm.lampiran.push(...files);
         },
-
-        setRiwayat(id) {
-            const riwayatData = {
-                1: [
-                    { judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '12 Feb 2026 09:00' },
-                    { judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '12 Feb 2026 09:10' }
-                ],
-                2: [
-                    { judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '13 Feb 2026 08:30' },
-                    { judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '13 Feb 2026 08:45' },
-                    { judul: 'Permintaan Konfirmasi', ket: 'Permintaan konfirmasi dikirim ke penghuni', waktu: '13 Feb 2026 10:30' }
-                ],
-                3: [
-                    { judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '14 Feb 2026 07:15' },
-                    { judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '14 Feb 2026 07:30' },
-                    { judul: 'TR Melakukan Perbaikan', ket: 'Mengganti seal kran yang bocor', waktu: '14 Feb 2026 09:00' },
-                    { judul: 'Permintaan Konfirmasi', ket: 'Permintaan konfirmasi dikirim ke penghuni', waktu: '14 Feb 2026 09:30' },
-                    { judul: 'Konfirmasi Penghuni', ket: 'Penghuni mengkonfirmasi PUAS', waktu: '15 Feb 2026 09:30' }
-                ]
-            };
-            
-            this.riwayat = riwayatData[id] || this.riwayat;
-        },
-
-        setRiwayatKonfirmasi(id) {
-            const konfirmasiData = {
-                2: [
-                    { waktu: '13 Feb 2026 10:30', keterangan: 'Permintaan konfirmasi telah dikirim ke penghuni' }
-                ],
-                3: [
-                    { waktu: '14 Feb 2026 09:30', keterangan: 'Permintaan konfirmasi telah dikirim ke penghuni' }
-                ]
-            };
-            
-            this.riwayatKonfirmasi = konfirmasiData[id] || [];
-        },
-
-        kirimPermintaanKonfirmasi() {
-            const waktu = this.now();
-            
-            this.riwayatKonfirmasi.push({
-                waktu: waktu,
-                keterangan: 'Permintaan konfirmasi telah dikirim ke penghuni'
-            });
-
-            this.riwayat.push({
-                judul: 'Permintaan Konfirmasi',
-                ket: 'Permintaan konfirmasi telah dikirim ke penghuni',
-                waktu: waktu
-            });
-
-            alert('Permintaan konfirmasi telah dikirim ke penghuni');
-        },
-
-        handleUploadTR(event) {
-            const files = event.target.files;
-            for (let file of files) {
-                this.updateTR.lampiran.push(URL.createObjectURL(file));
-            }
-        },
-
-        hapusLampiranTR(index) {
-            this.updateTR.lampiran.splice(index, 1);
-        },
-
-        simpanUpdateTR() {
-            if (this.updateTR.catatan.trim() === '') {
-                alert('Catatan TR wajib diisi');
+        simpanKeputusan() {
+            if (!this.keputusan.catatan.trim()) {
+                alert('Catatan keputusan wajib diisi');
                 return;
             }
 
-            this.keluhan.status = this.updateTR.status;
+            // SIMPAN RIWAYAT INTERNAL
+            this.riwayat.push({
+                tipe: 'tr',
+                judul: 'Keputusan TR',
+                ket: this.keputusan.catatan,
+                waktu: this.now()
+            });
 
-            if (this.updateTR.status === 'Close') {
-                if (!confirm('Anda akan menutup keluhan ini. Lanjutkan?')) {
-                    return;
-                }
-                
-                this.riwayat.push({
-                    judul: 'Keluhan Ditutup oleh TR',
-                    ket: 'Keluhan ditutup oleh petugas TR: ' + this.updateTR.catatan,
-                    waktu: this.now()
-                });
-            } else {
-                this.riwayat.push({
-                    judul: 'Update TR',
-                    ket: this.updateTR.catatan,
-                    waktu: this.now()
-                });
+            // JIKA STATUS CLOSE → SIMPAN KEPUTUSAN AKHIR
+            if (this.keputusan.status === 'Close') {
+                this.keputusanAkhir = {
+                    judul: this.keputusan.judul,
+                    solusi: this.keputusan.catatan,
+                    lampiran: this.keputusan.lampiran.map(f => f.name),
+                    tanggal: this.now(),
+                    dibuatOleh: 'Tenant Relation'
+                };
             }
 
-            this.updateTR.catatan = '';
-            this.updateTR.lampiran = [];
-            
-            alert('Update berhasil disimpan');
+            this.keluhan.status = this.keputusan.status;
+
+            this.keputusan.catatan = '';
+            this.keputusan.lampiran = [];
         },
 
-        bukaLaporanWO(wo) {
-            this.selectedWO = wo;
-            this.openLaporan = true;
+        hapusLampiranKB(index) {
+            this.kbForm.lampiran.splice(index, 1);
+        },
+
+        simpanKeKnowledgeBase() {
+            if (!this.kbForm.judul || !this.kbForm.dept || !this.kbForm.deskripsi) {
+                alert('Lengkapi semua data Knowledge Base');
+                return;
+            }
+
+            // Simpan ke list KB (UI)
+            this.knowledgeBase.push({
+                id: this.knowledgeBase.length + 1,
+                judul: this.kbForm.judul,
+                dept: this.kbForm.dept,
+                deskripsi: this.kbForm.deskripsi,
+                lampiran: this.kbForm.lampiran.map(f => f.name)
+            });
+
+            alert('Solusi berhasil disimpan ke Knowledge Base');
+
+            // Reset form
+            this.kbForm = {
+                judul: '',
+                dept: '',
+                deskripsi: '',
+                lampiran: []
+            };
+
+            this.openSimpanKB = false;
+        },
+        get filteredKnowledgeBase() {
+            return this.knowledgeBase.filter(kb =>
+                kb.judul.toLowerCase().includes(this.kbSearch.toLowerCase())
+            );
+        },
+
+        selectKB(item) {
+            this.selectedKB = item;
+        },
+        simpanKeputusan() {
+            if (!this.keputusan.catatan.trim()) {
+                alert('Catatan keputusan wajib diisi');
+                return;
+            }
+
+            this.riwayat.push({
+                tipe: 'tr',
+                judul: 'Keputusan TR',
+                ket: this.keputusan.catatan,
+                waktu: this.now()
+            });
+
+            this.keputusan.catatan = '';
+            this.keputusan.lampiran = [];
         },
 
         kirimWO() {
             if (!this.woForm.dept || !this.woForm.instruction) {
-                alert('Departemen dan instruksi wajib diisi');
+                alert('Lengkapi data WO');
                 return;
             }
 
             const id = this.workOrders.length + 1;
 
             this.workOrders.push({
-                id: id,
-                no: 'WO-' + String(id).padStart(3, '0'),
+                id,
+                tiket: this.keluhan.tiket, // 🔥 LINK KE KELUHAN
+                no: `WO-${String(id).padStart(3, '0')}`,
                 dept: this.woForm.dept,
                 instruksi: this.woForm.instruction,
                 status: 'On Progress',
@@ -825,39 +1277,49 @@ function detailKeluhanApp() {
             });
 
             this.riwayat.push({
+                tipe: 'tr',
                 judul: 'Work Order Dibuat',
                 ket: `WO dikirim ke departemen ${this.woForm.dept}`,
                 waktu: this.now()
             });
 
-            this.woForm = { dept: '', notes: '', instruction: '' };
+            this.woForm = { dept: '', instruction: '' };
             this.openWO = false;
-            
-            alert('Work Order berhasil dibuat');
+        },
+
+        bukaLaporanWO(wo) {
+            this.selectedWO = wo;
+            this.openLaporan = true;
         },
 
         now() {
             const d = new Date();
-            const hari = d.getDate();
-            const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][d.getMonth()];
-            const tahun = d.getFullYear();
-            const jam = d.getHours().toString().padStart(2, '0');
-            const menit = d.getMinutes().toString().padStart(2, '0');
-            
-            return `${hari} ${bulan} ${tahun} ${jam}:${menit}`;
+            return d.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         },
 
-        // Inisialisasi
+        /* ================= INIT ================= */
         init() {
-            // Ambil ID dari URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-            if (id) {
-                this.loadData(parseInt(id));
+            // Ambil parameter ?id= dari URL
+            const params = new URLSearchParams(window.location.search);
+            const id = parseInt(params.get('id'));
+
+            // Cari data sesuai id
+            const data = this.detailKeluhan.find(d => d.keluhan.id === id);
+
+            if (data) {
+                this.keluhan = data.keluhan;
+                this.riwayat = data.riwayat;
+            } else {
+                alert('Data keluhan tidak ditemukan');
             }
         }
     }
 }
 </script>
-
 @endsection

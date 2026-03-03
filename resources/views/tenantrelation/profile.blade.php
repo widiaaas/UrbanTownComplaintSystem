@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profile Penghuni')
+@section('title', 'Profile Tenant Relation')
 
 @section('content')
 
@@ -55,6 +55,11 @@
                     </div>
 
                     <div class="flex justify-between">
+                        <span class="font-medium text-gray-700">Departemen</span>
+                        <span>Engineering</span>
+                    </div>
+
+                    <div class="flex justify-between">
                         <span class="font-medium text-gray-700">Jenis Kelamin</span>
                         <span>Perempuan</span>
                     </div>
@@ -93,6 +98,15 @@
                         <label class="text-sm font-medium">No. Telepon</label>
                         <input type="text" class="w-full border rounded-lg px-3 py-2"
                                value="081234567890">
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium">Departemen</label>
+                        <select class="w-full border rounded-lg px-3 py-2">
+                            <option>Engineering</option>
+                            <option>Admin</option>
+                            <option>Tenant Relation</option>
+                        </select>
                     </div>
 
                     <div>

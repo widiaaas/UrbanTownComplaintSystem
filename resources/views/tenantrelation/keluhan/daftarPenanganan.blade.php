@@ -48,14 +48,14 @@
                                         Detail
                                     </a>
                                     
-                                    {{-- Tombol Ubah Status (hanya untuk status Open dan On Progress) --}}
+                                    <!-- {{-- Tombol Ubah Status (hanya untuk status Open dan On Progress) --}}
                                     <template x-if="k.status !== 'Close'">
                                         <button
                                             @click="openStatusModal(k)"
                                             class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700">
                                             Ubah Status
                                         </button>
-                                    </template>
+                                    </template> -->
                                 </div>
                             </td>
                         </tr>
@@ -65,7 +65,7 @@
         </div>
     </div>
 
-    {{-- MODAL UBAH STATUS --}}
+    <!-- {{-- MODAL UBAH STATUS --}}
     <div
         x-show="statusModalOpen"
         x-cloak
@@ -119,19 +119,6 @@
                         <option value="Close">Close (Selesai)</option>
                     </select>
                 </div>
-
-                {{-- Catatan --}}
-                <div>
-                    <label class="text-sm font-medium mb-1 block">
-                        Catatan Perubahan
-                    </label>
-                    <textarea
-                        x-model="statusCatatan"
-                        class="w-full border rounded-lg px-3 py-2 text-sm"
-                        rows="3"
-                        placeholder="Tuliskan alasan perubahan status...">
-                    </textarea>
-                </div>
             </div>
 
             {{-- FOOTER --}}
@@ -150,7 +137,7 @@
                 </button>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>
 
 <script>

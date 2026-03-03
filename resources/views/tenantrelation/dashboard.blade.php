@@ -144,7 +144,7 @@
         </div>
     </div>
 
-    {{-- ========================= --}}
+    <!-- {{-- ========================= --}}
     {{-- KELUHAN TERBARU --}}
     {{-- ========================= --}}
     <div class="bg-white rounded-lg border shadow-sm">
@@ -176,7 +176,7 @@
                 </div>
             @endforelse
         </div>
-    </div>
+    </div> -->
 
 </div>
 @endsection

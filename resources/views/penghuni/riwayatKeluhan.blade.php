@@ -5,144 +5,211 @@
 @section('content')
 
 @php
-    $user = [ 
-        'name' => 'Jun',
-        'role' => 'penghuni',
-    ];
-
-    $keluhan = [
-        [
-            'id' => 1,
-            'ticket' => 'CMP-001',
-            'title' => 'Perbaikan AC',
-            'description' => 'Cek freon dan unit indoor.',
-            'status' => 'dalam_pengerjaan',
-            'priority' => 'tinggi',
-            'date' => '2026-02-10',
-            'chat' => [
-                ['id'=>1, 'sender'=>'TR', 'message'=>'Halo, keluhan Anda sedang diproses'],
-                ['id'=>2, 'sender'=>'Penghuni', 'message'=>'Terima kasih, kapan selesai?']
-            ]
+$keluhan = [
+    [
+        'id' => 1,
+        'ticket' => 'CMP-001',
+        'title' => 'Perbaikan AC',
+        'description' => 'AC tidak dingin.',
+        'status' => 'diproses',
+        'date' => '2026-02-10',
+        'solusi' => [
+            [
+                'isi' => 'AC telah dicek dan dilakukan pengisian freon.',
+                'tanggal' => '10 Feb 2026 11:00'
+            ],
         ],
-        [
-            'id' => 2,
-            'ticket' => 'CMP-002',
-            'title' => 'Ganti Lampu',
-            'description' => 'Penggantian lampu kamar mandi.',
-            'status' => 'pending',
-            'priority' => 'sedang',
-            'date' => '2026-02-09',
-            'chat' => [
-                ['id'=>1, 'sender'=>'TR', 'message'=>'Lampu sudah diperbaiki']
-            ]
+        'konfirmasi' => null
+    ],
+    [
+        'id' => 2,
+        'ticket' => 'CMP-002',
+        'title' => 'Ganti Lampu',
+        'description' => 'Lampu kamar mandi mati.',
+        'status' => 'diproses',
+        'date' => '2026-02-09',
+        'solusi' => [
+            [
+                'isi' => 'Lampu kamar mandi telah diganti dan berfungsi normal.',
+                'tanggal' => '09 Feb 2026 14:20'
+            ],
         ],
-    ];
-
-    function badge($label, $type) {
-        $map = [
-            'pending' => 'bg-orange-100 text-orange-700',
-            'dalam_pengerjaan' => 'bg-yellow-100 text-yellow-700',
-            'selesai' => 'bg-green-100 text-green-700',
-            'tinggi' => 'bg-red-100 text-red-700',
-            'sedang' => 'bg-orange-100 text-orange-700',
-            'rendah' => 'bg-gray-100 text-gray-700',
-        ];
-        $class = $map[$type] ?? 'bg-gray-100 text-gray-700';
-        return "<span class='px-2 py-1 rounded-full text-xs font-medium $class'>$label</span>";
-    }
+        'konfirmasi' => null
+    ],
+];
 @endphp
 
-<div x-data="keluhanApp()" x-init="init()" class="space-y-6 p-6">
+<div x-data="keluhanApp()" x-init="init()" class="p-6 space-y-6">
 
     {{-- HEADER --}}
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900">Riwayat Keluhan</h1>
-    </div>
+    <h1 class="text-2xl font-bold text-gray-900">Riwayat Keluhan</h1>
 
     {{-- FILTER --}}
-    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
-        <div class="flex-1">
-            <label class="text-sm font-medium text-gray-700">Cari Keluhan / Ticket</label>
-            <input type="text" placeholder="Contoh: AC Bocor atau CMP-001"
-                   class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"
-                   x-model="search">
-        </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
 
-        <div>
-            <label class="text-sm font-medium text-gray-700">Status</label>
-            <select class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"
-                    x-model="filterStatus">
-                <option value="">Semua</option>
-                <option value="pending">Pending</option>
-                <option value="dalam_pengerjaan">Dalam Pengerjaan</option>
-                <option value="selesai">Selesai</option>
-            </select>
-        </div>
+            <div class="md:col-span-6">
+                <label class="text-sm font-medium">Cari Keluhan</label>
+                <input type="text"
+                    x-model="search"
+                    placeholder="Ticket / Judul"
+                    class="w-full border rounded-lg px-3 py-2">
+            </div>
 
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" @click="applyFilter">Filter</button>
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-100" @click="resetFilter">Reset</button>
+            <div class="md:col-span-3">
+                <label class="text-sm font-medium">Status</label>
+                <select x-model="filterStatus"
+                    class="w-full border rounded-lg px-3 py-2">
+                    <option value="">Semua</option>
+                    <option value="diproses">Diproses</option>
+                    <option value="selesai">Selesai</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-3 flex gap-2">
+                <button @click="applyFilter()"
+                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded">
+                    Filter
+                </button>
+                <button @click="resetFilter()"
+                    class="flex-1 border px-4 py-2 rounded">
+                    Reset
+                </button>
+            </div>
+
         </div>
     </div>
 
-    {{-- LIST KELUHAN --}}
-    <div class="bg-white rounded-lg border shadow-sm divide-y">
-        <template x-for="kel in filteredKeluhan" :key="kel.id">
-            <div class="p-6 hover:bg-gray-50 transition flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    {{-- LIST --}}
+    <div class="bg-white rounded-lg border divide-y">
+        <template x-for="k in filteredKeluhan" :key="k.id">
+            <div class="p-5 flex justify-between items-center hover:bg-gray-50">
                 <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="font-semibold text-gray-800" x-text="kel.ticket"></span>
-                        <span x-html="badgeHtml(kel.status, kel.status)"></span>
-                        <span x-html="badgeHtml(kel.priority, kel.priority)"></span>
+                    <div class="flex gap-2 items-center">
+                        <b x-text="k.ticket"></b>
+                        <span x-html="badgeHtml(k.status)"></span>
                     </div>
-                    <p class="font-medium" x-text="kel.title"></p>
-                    <p class="text-sm text-gray-600" x-text="kel.description"></p>
-                    <p class="text-xs text-gray-500 mt-1" x-text="'Ticket ' + kel.ticket + ' • ' + kel.date"></p>
+                    <p class="font-medium" x-text="k.title"></p>
+                    <p class="text-sm text-gray-600" x-text="k.description"></p>
                 </div>
-                <div class="flex-shrink-0">
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                            @click="openChat(kel)">Lihat Detail & Chat</button>
-                </div>
+
+                <button @click="openDetail(k)"
+                    class="bg-blue-500 text-white px-4 py-2 rounded">
+                    Detail
+                </button>
             </div>
         </template>
 
         <template x-if="filteredKeluhan.length === 0">
-            <div class="p-6 text-center text-gray-500">Tidak ada keluhan</div>
+            <p class="p-6 text-center text-gray-500">Tidak ada data</p>
         </template>
     </div>
 
-    {{-- MODAL DETAIL & CHAT --}}
-    <div x-show="openChatModal" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div @click.outside="closeChat()" class="bg-white w-full max-w-lg rounded-lg p-6 flex flex-col space-y-4 shadow-lg">
-            
-            <div class="flex justify-between items-center">
-                <h2 class="text-lg font-semibold" x-text="selectedKeluhan.title"></h2>
-                <button class="text-gray-500 hover:text-gray-700" @click="closeChat()">✕</button>
+    {{-- MODAL DETAIL --}}
+    <div x-show="openModal" x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white max-w-2xl w-full rounded-lg p-6 space-y-4"
+            @click.outside="closeModal()">
+
+            <div class="flex justify-between border-b pb-2">
+                <div>
+                    <h2 class="font-semibold text-lg" x-text="selected.title"></h2>
+                    <p class="text-xs text-gray-500">Ticket <span x-text="selected.ticket"></span></p>
+                </div>
+                <button @click="closeModal()">✕</button>
             </div>
 
-            <div class="space-y-2 border-b pb-4">
-                <p><span class="font-semibold">Ticket:</span> <span x-text="selectedKeluhan.ticket"></span></p>
-                <p><span class="font-semibold">Status:</span> <span x-html="badgeHtml(selectedKeluhan.status, selectedKeluhan.status)"></span></p>
-                <p><span class="font-semibold">Prioritas:</span> <span x-html="badgeHtml(selectedKeluhan.priority, selectedKeluhan.priority)"></span></p>
-                <p><span class="font-semibold">Tanggal:</span> <span x-text="selectedKeluhan.date"></span></p>
-                <p><span class="font-semibold">Deskripsi:</span> <span x-text="selectedKeluhan.description"></span></p>
+            <div class="grid grid-cols-2 text-sm gap-4">
+                <div>
+                    <p class="font-medium">Status</p>
+                    <span x-html="badgeHtml(selected.status)"></span>
+                </div>
+                <div>
+                    <p class="font-medium">Tanggal</p>
+                    <p x-text="selected.date"></p>
+                </div>
             </div>
 
-            <div class="flex-1 flex flex-col overflow-y-auto max-h-72 space-y-2">
-                <template x-for="msg in selectedKeluhan.chat" :key="msg.id">
-                    <div :class="msg.sender === 'Penghuni' ? 'self-end bg-blue-100 text-blue-800' : 'self-start bg-gray-100 text-gray-800'"
-                         class="px-3 py-1 rounded max-w-xs">
-                        <span x-text="msg.sender + ': ' + msg.message"></span>
+            <div>
+                <p class="font-medium">Deskripsi</p>
+                <div class="bg-gray-100 rounded p-3 text-sm"
+                    x-text="selected.description"></div>
+            </div>
+
+            {{-- SOLUSI --}}
+            <div>
+                <p class="font-medium text-sm mb-1">Solusi</p>
+
+                <template x-if="selected.solusi.length">
+                    <div class="space-y-2">
+                        <template x-for="(s,i) in selected.solusi" :key="i">
+                            <div class="border-l-4 border-green-500 pl-3">
+                                <p class="text-sm" x-text="s.isi"></p>
+                                <p class="text-xs text-gray-400" x-text="s.tanggal"></p>
+                            </div>
+                        </template>
                     </div>
+                </template>
+
+                <template x-if="!selected.solusi.length">
+                    <p class="text-sm italic text-gray-400">Belum ada solusi</p>
                 </template>
             </div>
 
-            <div class="flex gap-2 mt-2">
-                <input type="text" placeholder="Tulis pesan..." class="flex-1 border rounded px-3 py-2"
-                       x-model="newMessage" @keydown.enter="sendMessage()">
-                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" @click="sendMessage()">Kirim</button>
+            {{-- KONFIRMASI --}}
+            <template
+                x-if="
+                    selected.status === 'diproses' &&
+                    selected.solusi.length > 0 &&
+                    !selected.konfirmasi
+                "
+            >
+                <div class="border-t pt-3">
+                    <p class="text-sm mb-2">Apakah solusi sudah sesuai?</p>
+                    <div class="flex gap-2">
+                        <button @click="konfirmasiPuas()"
+                            class="bg-green-600 text-white px-4 py-2 rounded">
+                            Puas
+                        </button>
+                        <button @click="openTidakPuasModal()"
+                            class="bg-red-600 text-white px-4 py-2 rounded">
+                            Tidak Puas
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <div class="text-right">
+                <button @click="closeModal()" class="border px-4 py-2 rounded">
+                    Tutup
+                </button>
             </div>
 
+        </div>
+    </div>
+
+    {{-- MODAL TIDAK PUAS --}}
+    <div x-show="openTidakPuas" x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white max-w-md w-full rounded-lg p-6 space-y-4">
+            <h3 class="font-semibold">Keluhan Belum Selesai</h3>
+
+            <textarea x-model="alasanTidakPuas"
+                class="w-full border rounded p-2"
+                rows="4"
+                placeholder="Tuliskan alasan..."></textarea>
+
+            <div class="flex justify-end gap-2">
+                <button @click="openTidakPuas=false" class="border px-4 py-2 rounded">
+                    Batal
+                </button>
+                <button @click="kirimTidakPuas()"
+                    class="bg-red-600 text-white px-4 py-2 rounded">
+                    Kirim
+                </button>
+            </div>
         </div>
     </div>
 
@@ -153,55 +220,74 @@ function keluhanApp() {
     return {
         search: '',
         filterStatus: '',
-        openChatModal: false,
-        newMessage: '',
-        selectedKeluhan: null,
         keluhan: @json($keluhan),
         filteredKeluhan: [],
-        init() { this.filteredKeluhan = this.keluhan; },
+        openModal: false,
+        openTidakPuas: false,
+        alasanTidakPuas: '',
+        selected: {},
+
+        init() {
+            this.filteredKeluhan = this.keluhan;
+        },
+
         applyFilter() {
             this.filteredKeluhan = this.keluhan.filter(k =>
-                (this.search === '' || k.ticket.toLowerCase().includes(this.search.toLowerCase()) || k.title.toLowerCase().includes(this.search.toLowerCase())) &&
+                (this.search === '' ||
+                    k.ticket.toLowerCase().includes(this.search.toLowerCase()) ||
+                    k.title.toLowerCase().includes(this.search.toLowerCase())
+                ) &&
                 (this.filterStatus === '' || k.status === this.filterStatus)
             );
         },
+
         resetFilter() {
             this.search = '';
             this.filterStatus = '';
             this.filteredKeluhan = this.keluhan;
         },
-        openChat(kel) {
-            this.selectedKeluhan = kel;
-            this.openChatModal = true;
-            this.$nextTick(() => { 
-                const container = document.querySelector('.max-h-72');
-                if(container) container.scrollTop = container.scrollHeight;
-            });
+
+        openDetail(k) {
+            this.selected = k;
+            this.openModal = true;
         },
-        closeChat() {
-            this.openChatModal = false;
-            this.newMessage = '';
+
+        closeModal() {
+            this.openModal = false;
         },
-        sendMessage() {
-            if(this.newMessage.trim() === '') return;
-            this.selectedKeluhan.chat.push({id: Date.now(), sender:'Penghuni', message:this.newMessage});
-            this.newMessage = '';
-            this.$nextTick(() => { 
-                const container = document.querySelector('.max-h-72');
-                if(container) container.scrollTop = container.scrollHeight;
-            });
-        },
-        badgeHtml(label, type) {
-            const map = {
-                'pending':'bg-orange-100 text-orange-800',
-                'dalam_pengerjaan':'bg-yellow-100 text-yellow-800',
-                'selesai':'bg-green-100 text-green-800',
-                'tinggi':'bg-red-100 text-red-800',
-                'sedang':'bg-orange-100 text-orange-800',
-                'rendah':'bg-gray-100 text-gray-800',
+
+        konfirmasiPuas() {
+            this.selected.konfirmasi = {
+                status: 'Puas',
+                waktu: new Date().toLocaleString()
             };
-            const cls = map[type] || 'bg-gray-100 text-gray-800';
-            return `<span class="px-2 py-1 rounded-full text-xs font-medium ${cls}">${label}</span>`;
+        },
+
+        openTidakPuasModal() {
+            this.openTidakPuas = true;
+        },
+
+        kirimTidakPuas() {
+            if (!this.alasanTidakPuas) return;
+
+            this.selected.status = 'diproses';
+            this.selected.konfirmasi = {
+                status: 'Belum Puas',
+                alasan: this.alasanTidakPuas,
+                waktu: new Date().toLocaleString()
+            };
+
+            this.alasanTidakPuas = '';
+            this.openTidakPuas = false;
+            this.openModal = false;
+        },
+
+        badgeHtml(status) {
+            const map = {
+                diproses: 'bg-yellow-100 text-yellow-800',
+                selesai: 'bg-green-100 text-green-800'
+            };
+            return `<span class="px-2 py-1 text-xs rounded ${map[status]}">${status}</span>`;
         }
     }
 }

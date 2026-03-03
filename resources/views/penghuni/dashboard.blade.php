@@ -109,7 +109,7 @@
         </div>
     </div> 
 
-    {{-- ========================= --}}
+    <!-- {{-- ========================= --}}
     {{-- AKSI --}}
     {{-- ========================= --}}
     <div class="flex justify-end">
@@ -117,6 +117,6 @@
            class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
             + Ajukan Keluhan
         </a>
-    </div>
+    </div> -->
 </div>
 @endsection

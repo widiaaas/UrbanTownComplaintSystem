@@ -30,7 +30,7 @@ Route::get('/dashboardAdmin', function (){
     return view ('admin.dashboard');
 });
 // Profile
-Route::get('/ProfileAdmin', function (){
+Route::get('/profileAdmin', function (){
     return view ('admin.profile');
 });
 // Unit
@@ -62,7 +62,7 @@ Route::get('/dashboardPenghuni', function () {
 });
 
 //Profile 
-Route::get('/ProfilePenghuni', function (){
+Route::get('/profilePenghuni', function (){
     return view ('penghuni.profile');
 });
 
@@ -88,4 +88,25 @@ Route::get('/daftarPenanganan', function (){
 });
 Route::get('/detailKeluhan', function (){
     return view ('tenantRelation.keluhan.detailKeluhan');
+});
+Route::get('/rekapPenangananTR', function (){
+    return view ('tenantRelation.laporan.rekapPenanganan');
+});
+Route::get('/profileTR', function (){
+    return view ('tenantRelation.profile');
+});
+
+// ---------- DEPARTEMEN -------------------   
+// Work Order
+Route::get('/workOrderMasuk', function (){
+    return view ('departemen.workOrder.workOrderMasuk');
+});
+Route::get('/daftarWorkOrder', function (){
+    return view ('departemen.workOrder.daftarPenangananWO');
+});
+Route::get('/detailWorkOrder', function (){
+    return view ('departemen.workOrder.detailWorkOrder');
+});
+Route::get('/profileDepartemen', function (){
+    return view ('departemen.profile');
 });
