@@ -8,11 +8,30 @@
         openEdit:false, 
         openDetail:false, 
         openCreate:false,
+
+        passwordGenerated:false,
+        generatedPassword:'Tmp-9XK21',
+
+        newEmployee:{
+            id_pegawai:'',
+            nama:'', 
+            telp:'', 
+            email:'', 
+            departemen:'',
+            gender:'', 
+            status:'Aktif'
+        },
+
         selectedEmployee:{
-            nama:'', telp:'', email:'', departemen:'',
-            gender:'', status:'Aktif'
+            id_pegawai:'',
+            nama:'', 
+            telp:'', 
+            email:'', 
+            departemen:'',
+            gender:'', 
+            status:'Aktif'
         }
-    }" 
+    }"
     class="p-6 space-y-6">
 
     {{-- ================= HEADER ================= --}}
@@ -37,8 +56,7 @@
             <label class="text-sm font-medium text-gray-700">Departemen</label>
             <select class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
                 <option value="">Semua</option>
-                <option>Admin</option>
-                <option>Departemen</option>
+                <option>Engineering</option>
                 <option>Tenant Relation</option>
             </select>
         </div>
@@ -54,6 +72,7 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
+                    <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">ID Pegawai</th>
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Nama</th>
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Departemen</th>
                     <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Status</th>
@@ -62,6 +81,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 <tr class="hover:bg-gray-50 text-center align-middle">
+                    <td class="px-4 py-2">EMP001</td>
                     <td class="px-4 py-2">Widiawati Sihaloho</td>
                     <td class="px-4 py-2">Engineering</td>
                     <td class="px-4 py-2">
@@ -72,6 +92,7 @@
                         @click="
                             openDetail=true;
                             selectedEmployee={
+                                id_pegawai:'EMP001',
                                 nama:'Widiawati Sihaloho',
                                 telp:'081234567890',
                                 email:'widiawati@email.com',
@@ -88,6 +109,7 @@
                         @click="
                             openEdit=true;
                             selectedEmployee={
+                                id_pegawai:'EMP001',
                                 nama:'Widiawati Sihaloho',
                                 telp:'081234567890',
                                 email:'widiawati@email.com',
@@ -104,6 +126,7 @@
                 </tr>
 
                 <tr class="hover:bg-gray-50 text-center align-middle">
+                    <td class="px-4 py-2">EMP002</td>
                     <td class="px-4 py-2">Budi Santoso</td>
                     <td class="px-4 py-2">Tenant Relation</td>
                     <td class="px-4 py-2">
@@ -111,9 +134,30 @@
                     </td>
                     <td class="px-4 py-2 flex justify-center gap-1 flex-wrap">
                         <button class="px-2 py-1 bg-blue-400 text-white rounded hover:bg-blue-500 text-xs"
-                            @click="openDetail=true; selectedEmployee.nama">Detail</button>
+                        @click="
+                        openDetail=true;
+                        selectedEmployee={
+                            id_pegawai:'EMP002',
+                            nama:'Budi Santoso',
+                            telp:'082233445566',
+                            email:'budi@email.com',
+                            departemen:'Tenant Relation',
+                            gender:'Laki-laki',
+                            status:'Aktif'
+                        }">Detail</button>
+
                         <button class="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 text-xs"
-                            @click="openEdit=true; selectedEmployee.nama">Edit</button>
+                            @click="
+                        openEdit=true;
+                        selectedEmployee={
+                            id_pegawai:'EMP002',
+                            nama:'Budi Santoso',
+                            telp:'082233445566',
+                            email:'budi@email.com',
+                            departemen:'Tenant Relation',
+                            gender:'Laki-laki',
+                            status:'Aktif'
+                        }">Edit</button>
                         <button class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs">Hapus</button>
                     </td>
                 </tr>
@@ -133,51 +177,106 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="text-sm font-medium">Nama</label>
-                    <input type="text" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" 
+                        x-model="newEmployee.nama"
+                        class="w-full border rounded-lg px-3 py-2">
                 </div>
-
+                <div>
+                    <label class="text-sm font-medium">ID Pegawai</label>
+                    <input type="text"
+                        x-model="newEmployee.id_pegawai"
+                        class="w-full border rounded-lg px-3 py-2">
+                </div>
                 <div>
                     <label class="text-sm font-medium">No. Telepon</label>
-                    <input type="text" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" 
+                        x-model="newEmployee.telp"
+                        class="w-full border rounded-lg px-3 py-2">
                 </div>
 
                 <div>
                     <label class="text-sm font-medium">Email</label>
-                    <input type="email" class="w-full border rounded-lg px-3 py-2">
+                    <input type="email" 
+                        x-model="newEmployee.email"
+                        class="w-full border rounded-lg px-3 py-2">
                 </div>
 
                 <div>
                     <label class="text-sm font-medium">Departemen</label>
-                    <select class="w-full border rounded-lg px-3 py-2">
+                    <select 
+                        x-model="newEmployee.departemen"
+                        class="w-full border rounded-lg px-3 py-2">
+
+                        <option value="">Pilih Departemen</option>
                         <option>Admin</option>
-                        <option>Departemen</option>
+                        <option>Engineering</option>
                         <option>Tenant Relation</option>
+
                     </select>
                 </div>
 
                 <div>
                     <label class="text-sm font-medium">Jenis Kelamin</label>
-                    <select class="w-full border rounded-lg px-3 py-2">
+                    <select 
+                        x-model="newEmployee.gender"
+                        class="w-full border rounded-lg px-3 py-2">
+
+                        <option value="">Pilih Jenis Kelamin</option>
                         <option>Laki-laki</option>
                         <option>Perempuan</option>
                     </select>
                 </div>
 
-                <div>
+                <!-- <div>
                     <label class="text-sm font-medium">Status</label>
                     <select class="w-full border rounded-lg px-3 py-2">
                         <option>Aktif</option>
                         <option>Nonaktif</option>
                     </select>
-                </div>
+                </div> -->
             </div>
 
+            <template x-if="passwordGenerated">
+                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
+                    <p class="font-semibold text-yellow-800">
+                        Akun Karyawan Berhasil Dibuat
+                    </p>
+
+                    <p>
+                        <strong>ID Pegawai Login:</strong>
+                        <span x-text="newEmployee.id_pegawai"></span>
+                    </p>
+
+                    <p>Password Sementara</p>
+
+                    <div class="bg-white border rounded px-3 py-2 font-mono text-center">
+                        <span x-text="generatedPassword"></span>
+                    </div>
+
+                    <p class="text-xs text-gray-600">
+                        Berikan password ini kepada karyawan untuk login pertama.
+                    </p>
+                </div>
+            </template>
+            
             <div class="flex justify-end gap-2 pt-4 border-t">
-                <button @click="openCreate=false"
-                    class="px-4 py-2 border rounded-lg">Batal</button>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                    Simpan
-                </button>
+            <button 
+                type="button"
+                @click="
+                    passwordGenerated=true;
+                    newEmployee={
+                        id_pegawai:'',
+                        nama:'',
+                        telp:'',
+                        email:'',
+                        departemen:'',
+                        gender:'',
+                        status:'Aktif'
+                    }
+                    "
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                Simpan
+            </button>
             </div>
         </div>
     </div>
@@ -199,6 +298,14 @@
                     <input type="text" x-model="selectedEmployee.nama"
                         class="w-full border rounded-lg px-3 py-2">
                 </div>
+
+                <div>
+                    <label class="text-sm">ID Pegawai</label>
+                    <input type="text"
+                        x-model="selectedEmployee.id_pegawai"
+                        readonly
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100">
+                </div>   
 
                 <div>
                     <label class="text-sm">No. Telepon</label>
@@ -261,6 +368,7 @@
             <h2 class="text-lg font-semibold">Detail Karyawan</h2>
 
             <p><strong>Nama:</strong> <span x-text="selectedEmployee.nama"></span></p>
+            <p><strong>ID Pegawai:</strong> <span x-text="selectedEmployee.id_pegawai"></span></p>
             <p><strong>No. Telp:</strong> <span x-text="selectedEmployee.telp"></span></p>
             <p><strong>Email:</strong> <span x-text="selectedEmployee.email"></span></p>
             <p><strong>Departemen:</strong> <span x-text="selectedEmployee.departemen"></span></p>

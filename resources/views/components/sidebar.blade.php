@@ -116,11 +116,17 @@
                     {{ activeMenu('/IndexPenghuni', $currentPath) }}">
                         <span>Penghuni</span>
                     </a>
-
                 </div>
             </div>
 
-            @elseif($user->role === 'penghuni')
+            {{-- PROFILE --}}
+            <a href="/profileAdmin"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/dashboard', $currentPath) }}">
+                @include('components.icons.user')
+                <span>Profile Admin</span>
+            </a>
+
+        @elseif($user->role === 'penghuni')
             {{-- DASHBOARD --}}
             <a href="/dashboardPenghuni"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/dashboard', $currentPath) }}">
@@ -140,6 +146,13 @@
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/units', $currentPath) }}">
                 @include('components.icons.clipboardList')
                 <span>keluhan Saya</span>
+            </a>
+
+            {{-- PROFILE --}}
+            <a href="/profilePenghuni"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/dashboard', $currentPath) }}">
+                @include('components.icons.user')
+                <span>Profile Penghuni</span>
             </a>
             
         @elseif($user->role === 'tenant_relation')
@@ -230,7 +243,13 @@
                 <span>Laporan</span>
             </a>
 
-            
+            {{-- PROFILE --}}
+            <a href="/profileTR"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/dashboard', $currentPath) }}">
+                @include('components.icons.user')
+                <span>Profile Tenant Relation</span>
+            </a>
+
          @elseif($user->role === 'departemen')
              {{-- DASHBOARD --}}
             <a href="/dashboardDepartemen"
@@ -303,14 +322,21 @@
                 @include('components.icons.scrollText')
                 <span>Laporan</span>
             </a>
+
+            {{-- PROFILE --}}
+            <a href="/profileDepartemen"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/dashboard', $currentPath) }}">
+                @include('components.icons.user')
+                <span>Profile Departemen</span>
+            </a>
         @endif
 
-        {{-- PROFILE --}}
+        <!-- {{-- PROFILE --}}
         <a href="/profile"
         class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('/dashboard', $currentPath) }}">
             @include('components.icons.user')
             <span>Profile</span>
-        </a>
+        </a> -->
     </nav>
 
 </aside>

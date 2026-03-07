@@ -10,7 +10,10 @@
         openEditPenghuni:false,
         openDeactivate:false,
         selectedUnit:null,
-        openCreateUnit: false
+        openCreateUnit: false,
+        passwordGenerated:false,
+        generatedPassword:'Tmp-9XK21',
+        createdUnit:''
     }"
     class="p-6 space-y-6">
 
@@ -50,7 +53,7 @@
         <table class="min-w-full divide-y">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-2 text-center">Unit</th>
+                    <th class="px-4 py-2 text-center">No Unit</th>
                     <th class="px-4 py-2 text-center">Gedung</th>
                     <th class="px-4 py-2 text-center">Lantai</th>
                     <th class="px-4 py-2 text-center">Penghuni</th>
@@ -194,6 +197,29 @@
                             focus:ring focus:ring-blue-200 focus:border-blue-500">
                 </div>
 
+                <template x-if="passwordGenerated">
+                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
+                    <p class="font-semibold text-yellow-800">
+                        Akun Unit Berhasil Dibuat
+                    </p>
+
+                    <p>
+                        <strong>Username Login:</strong>
+                        <span x-text="createdUnit"></span>
+                    </p>
+
+                    <p>Password Sementara</p>
+
+                        <div class="bg-white border rounded px-3 py-2 font-mono text-center">
+                        <span x-text="generatedPassword"></span>
+                    </div>
+
+                    <p class="text-xs text-gray-600">
+                        Berikan password ini kepada penghuni unit untuk login pertama.
+                    </p>   
+                    </div>
+                    </template>
+
                 {{-- FOOTER --}}
                 <div class="flex justify-end gap-3 pt-6 border-t">
                     <button
@@ -204,7 +230,11 @@
                     </button>
 
                     <button
-                        type="submit"
+                        type="button"
+                        @click="
+                        createdUnit='A-101';
+                        passwordGenerated=true
+                        "
                         class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                         Simpan Unit
                     </button>
@@ -343,7 +373,11 @@
                 </button>
 
                 <button 
-                    @click="passwordGenerated = true"
+                @click="
+                    if(selectedPenghuniBaru)
+                    {
+                    passwordGenerated=true
+                    }"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                     Simpan Pergantian
                 </button>
