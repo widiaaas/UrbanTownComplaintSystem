@@ -24,11 +24,11 @@
 
             <button
                 class="px-4 py-3 text-sm font-medium"
-                :class="tab==='password'
+                :class="tab==='katasandi'
                     ? 'border-b-2 border-yellow-500 text-yellow-600'
                     : 'text-gray-500 hover:text-gray-700'"
-                @click="tab='password'">
-                Ubah Password
+                @click="tab='katasandi'">
+                Ubah Kata Sandi
             </button>
         </div>
 
@@ -123,26 +123,26 @@
 
         </div>
 
-        {{-- ================= TAB UBAH PASSWORD ================= --}}
-        <div x-show="tab==='password'" x-cloak class="p-6 space-y-4">
+        {{-- ================= TAB UBAH katasandi ================= --}}
+        <div x-show="tab==='katasandi'" x-cloak class="p-6 space-y-4">
 
             <div>
-                <label class="label">Password Lama</label>
-                <input type="password" class="input input-bordered w-full">
+                <label class="label">katasandi Lama</label>
+                <input type="katasandi" class="input input-bordered w-full">
             </div>
 
             <div>
-                <label class="label">Password Baru</label>
-                <input type="password" class="input input-bordered w-full">
+                <label class="label">katasandi Baru</label>
+                <input type="katasandi" class="input input-bordered w-full">
             </div>
 
             <div>
-                <label class="label">Konfirmasi Password Baru</label>
-                <input type="password" class="input input-bordered w-full">
+                <label class="label">Konfirmasi katasandi Baru</label>
+                <input type="katasandi" class="input input-bordered w-full">
             </div>
 
             <div class="flex justify-end pt-4">
-                <button class="btn btn-primary">Simpan Password</button>
+                <button class="btn btn-primary">Simpan katasandi</button>
             </div>
 
         </div>

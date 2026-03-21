@@ -264,7 +264,12 @@
                 {{-- SIMPAN KE KNOWLEDGE BASE --}}
                 <div class="flex justify-end">
                     <button
-                        @click="openSimpanKB = true"
+                        @click="
+                            kbForm.judul = keluhan.judul;
+                            kbForm.deskripsi = keluhan.deskripsi;
+                            kbForm.langkah = keputusan.catatan;
+                            openSimpanKB = true
+                        "
                         class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                         Simpan Solusi ke Knowledge Base
                     </button>
@@ -686,7 +691,7 @@
         x-transition
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
     >
-        <div class="bg-white w-full max-w-4xl rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-white w-full max-w-5xl rounded-xl shadow-lg overflow-hidden">
 
             {{-- HEADER --}}
             <div class="flex items-center justify-between px-6 py-4 border-b">
@@ -698,11 +703,7 @@
                         Referensi solusi untuk membantu penanganan keluhan
                     </p>
                 </div>
-                <button
-                    @click="openKnowledgeBase = false"
-                    class="text-gray-500 hover:text-gray-700 text-xl">
-                    ✕
-                </button>
+                <button @click="openKnowledgeBase = false">✕</button>
             </div>
 
             {{-- SEARCH --}}
@@ -710,124 +711,14 @@
                 <input
                     type="text"
                     x-model="kbSearch"
-                    placeholder="Cari solusi (contoh: AC, lampu, kran)..."
+                    placeholder="Cari solusi..."
                     class="w-full border rounded-lg px-3 py-2 text-sm"
                 >
             </div>
 
-            {{-- BODY --}}
-            <div class="px-6 py-4 grid grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
-
-                {{-- LIST SOLUSI --}}
-                <div class="col-span-1 space-y-2">
-                    <template x-for="item in filteredKnowledgeBase" :key="item.id">
-                        <button
-                            @click="selectKB(item)"
-                            class="w-full text-left border rounded-lg p-3 hover:bg-gray-50"
-                            :class="{
-                                'border-green-500 bg-green-50': selectedKB && selectedKB.id === item.id
-                            }"
-                        >
-                            <p class="font-medium text-sm" x-text="item.judul"></p>
-                            <p class="text-xs text-gray-500 mt-1" x-text="item.dept"></p>
-                        </button>
-                    </template>
-
-                    <template x-if="filteredKnowledgeBase.length === 0">
-                        <p class="text-sm text-gray-400 italic text-center py-4">
-                            Solusi tidak ditemukan
-                        </p>
-                    </template>
-                </div>
-
-                {{-- DETAIL SOLUSI --}}
-                <div class="col-span-2 border rounded-lg p-4 space-y-3">
-
-                    <template x-if="!selectedKB">
-                        <p class="text-sm text-gray-400 italic text-center py-10">
-                            Pilih solusi untuk melihat detail
-                        </p>
-                    </template>
-
-                    <template x-if="selectedKB">
-                        <div class="space-y-3">
-                            <div>
-                                <p class="font-semibold text-gray-800"
-                                x-text="selectedKB.judul"></p>
-                                <p class="text-xs text-gray-500"
-                                x-text="'Departemen: ' + selectedKB.dept"></p>
-                            </div>
-
-                            <div class="bg-gray-50 border rounded-lg p-3 text-sm text-gray-700"
-                                x-text="selectedKB.deskripsi">
-                            </div>
-
-                            {{-- LAMPIRAN --}}
-                            <div>
-                                <p class="text-sm font-medium mb-1">
-                                    Lampiran
-                                </p>
-                                <div class="flex flex-wrap gap-2">
-                                    <template x-for="file in selectedKB.lampiran">
-                                        <span
-                                            class="px-3 py-1 border rounded text-xs bg-gray-50"
-                                            x-text="file">
-                                        </span>
-                                    </template>
-
-                                    <template x-if="selectedKB.lampiran.length === 0">
-                                        <span class="text-xs text-gray-400">
-                                            Tidak ada lampiran
-                                        </span>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    {{-- RIWAYAT KELUHAN TERKAIT --}}
-                    <div class="border-t pt-3">
-                        <p class="font-medium text-sm mb-2">
-                            Riwayat Keluhan Terkait
-                        </p>
-
-                        <template x-if="selectedKB.relatedKeluhan.length">
-                            <div class="space-y-2">
-                                <template x-for="rk in selectedKB.relatedKeluhan" :key="rk.id">
-                                    <div
-                                        class="flex justify-between items-center border rounded-lg px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
-                                        @click="bukaKeluhanTerkait(rk.id)"
-                                    >
-                                        <div>
-                                            <p class="font-medium" x-text="rk.tiket"></p>
-                                            <p class="text-xs text-gray-500">
-                                                Unit <span x-text="rk.unit"></span> ·
-                                                <span x-text="rk.tanggal"></span>
-                                            </p>
-                                        </div>
-
-                                        <span
-                                            class="text-xs px-2 py-1 rounded"
-                                            :class="{
-                                                'bg-blue-100 text-blue-700': rk.status === 'Open',
-                                                'bg-yellow-100 text-yellow-700': rk.status === 'On Progress',
-                                                'bg-green-100 text-green-700': rk.status === 'Close'
-                                            }"
-                                            x-text="rk.status">
-                                        </span>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-
-                        <template x-if="selectedKB.relatedKeluhan.length === 0">
-                            <p class="text-xs text-gray-400 italic">
-                                Belum ada keluhan lain yang menggunakan solusi ini
-                            </p>
-                        </template>
-                    </div>
-
-                </div>
+            {{-- REUSE UI --}}
+            <div class="p-6 max-h-[70vh] overflow-y-auto">
+                @include('components.knowledgeBase')
             </div>
 
             {{-- FOOTER --}}
@@ -840,7 +731,6 @@
             </div>
 
         </div>
-
     </div>
     {{-- ================= MODAL TAMBAH KNOWLEDGE BASE ================= --}}
     <div
@@ -868,22 +758,17 @@
 
                 {{-- JUDUL --}}
                 <div>
-                    <label class="font-medium block mb-1">
-                        Judul Solusi
-                    </label>
+                    <label class="font-medium block mb-1">Judul Solusi</label>
                     <input
                         type="text"
                         x-model="kbForm.judul"
                         class="w-full border rounded-lg px-3 py-2"
-                        placeholder="Contoh: AC Tidak Dingin"
                     >
                 </div>
 
                 {{-- DEPARTEMEN --}}
                 <div>
-                    <label class="font-medium block mb-1">
-                        Departemen Terkait
-                    </label>
+                    <label class="font-medium block mb-1">Departemen Terkait</label>
                     <select
                         x-model="kbForm.dept"
                         class="w-full border rounded-lg px-3 py-2"
@@ -894,25 +779,72 @@
                         <option>Finance</option>
                     </select>
                 </div>
+                
+                {{-- KATEGORI (SEARCHABLE + ADD NEW) --}}
+                    <div class="relative">
+                        <p class="text-xs text-gray-500 mb-1">Kategori</p>
+
+                        <div class="border rounded px-3 py-2 cursor-pointer bg-white"
+                            @click="openKategori = !openKategori">
+                            <span x-text="kbForm.kategori || 'Pilih kategori...'"></span>
+                        </div>
+
+                        <div x-show="openKategori"
+                            x-transition
+                            @click.outside="openKategori = false"
+                            class="absolute z-50 w-full bg-white border rounded shadow mt-1">
+
+                            <input
+                                x-model="kategoriSearch"
+                                placeholder="Cari atau tambah kategori..."
+                                class="w-full border-b px-3 py-2 text-sm">
+
+                            <div class="max-h-40 overflow-y-auto">
+
+                                <template x-for="item in filteredKategori" :key="item">
+                                    <div
+                                        @click="selectKategori(item)"
+                                        class="px-3 py-2 hover:bg-green-100 cursor-pointer text-sm"
+                                        x-text="item">
+                                    </div>
+                                </template>
+
+                                {{-- ADD NEW --}}
+                                <template x-if="kategoriSearch && !kategoriList.includes(kategoriSearch)">
+                                    <div
+                                        @click="tambahKategoriBaru"
+                                        class="px-3 py-2 text-green-600 cursor-pointer border-t text-sm">
+                                        + Tambah "<span x-text="kategoriSearch"></span>"
+                                    </div>
+                                </template>
+
+                            </div>
+                        </div>
+                    </div>
 
                 {{-- DESKRIPSI --}}
                 <div>
-                    <label class="font-medium block mb-1">
-                        Deskripsi Solusi
-                    </label>
+                    <label class="font-medium block mb-1">Deskripsi</label>
                     <textarea
                         x-model="kbForm.deskripsi"
+                        rows="2"
+                        class="w-full border rounded-lg px-3 py-2"
+                    ></textarea>
+                </div>
+
+                {{-- LANGKAH --}}
+                <div>
+                    <label class="font-medium block mb-1">Langkah Penyelesaian</label>
+                    <textarea
+                        x-model="kbForm.langkah"
                         rows="4"
                         class="w-full border rounded-lg px-3 py-2"
-                        placeholder="Tuliskan langkah atau solusi penanganan keluhan"
                     ></textarea>
                 </div>
 
                 {{-- LAMPIRAN --}}
                 <div>
-                    <label class="font-medium block mb-1">
-                        Lampiran Dokumentasi
-                    </label>
+                    <label class="font-medium block mb-1">Lampiran Dokumentasi</label>
 
                     <input
                         type="file"
@@ -923,11 +855,11 @@
 
                     <div class="flex flex-wrap gap-2 mt-2">
                         <template x-for="(file, index) in kbForm.lampiran" :key="index">
-                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50">
+                            <div class="border rounded px-3 py-1 text-xs bg-gray-50">
                                 <span x-text="file.name"></span>
                                 <button
                                     @click="hapusLampiranKB(index)"
-                                    class="ml-2 text-red-500 hover:text-red-700">
+                                    class="ml-2 text-red-500">
                                     ✕
                                 </button>
                             </div>
@@ -941,17 +873,19 @@
             <div class="px-6 py-4 border-t flex justify-end gap-2">
                 <button
                     @click="openSimpanKB = false"
-                    class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm">
+                    class="px-4 py-2 rounded-lg bg-gray-100">
                     Batal
                 </button>
+
                 <button
                     @click="simpanKeKnowledgeBase"
-                    class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
+                    class="px-4 py-2 rounded-lg bg-green-600 text-white">
                     Simpan
                 </button>
             </div>
 
         </div>
+    </div>
 </div>
 
 </div>
@@ -1203,19 +1137,22 @@ function detailKeluhanApp() {
         },
 
         simpanKeKnowledgeBase() {
-            if (!this.kbForm.judul || !this.kbForm.dept || !this.kbForm.deskripsi) {
+            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.gejala || !this.kbForm.langkah) {
                 alert('Lengkapi semua data Knowledge Base');
                 return;
             }
 
             // Simpan ke list KB (UI)
             this.knowledgeBase.push({
-                id: this.knowledgeBase.length + 1,
-                judul: this.kbForm.judul,
-                dept: this.kbForm.dept,
-                deskripsi: this.kbForm.deskripsi,
-                lampiran: this.kbForm.lampiran.map(f => f.name)
-            });
+            id: this.knowledgeBase.length + 1,
+            judul: this.kbForm.judul,
+            kategori: this.kbForm.kategori,
+            gejala: this.kbForm.gejala,
+            langkah: this.kbForm.langkah,
+            dept: this.kbForm.dept,
+            lampiran: this.kbForm.lampiran.map(f => f.name),
+            relatedKeluhan: []
+        });
 
             alert('Solusi berhasil disimpan ke Knowledge Base');
 

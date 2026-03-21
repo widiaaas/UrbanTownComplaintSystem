@@ -95,6 +95,9 @@ Route::get('/rekapPenangananTR', function (){
 Route::get('/profileTR', function (){
     return view ('tenantRelation.profile');
 });
+Route::get('/knowledgeBase', function (){
+    return view ('tenantRelation.knowledgeBase.index');
+});
 
 // ---------- DEPARTEMEN -------------------   
 // Work Order

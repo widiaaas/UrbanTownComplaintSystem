@@ -5,16 +5,27 @@
 @section('content')
 
 <div 
-    x-data="{
-        openEdit:false,
-        openEditPenghuni:false,
-        openDeactivate:false,
-        selectedUnit:null,
-        openCreateUnit: false,
-        passwordGenerated:false,
-        generatedPassword:'Tmp-9XK21',
-        createdUnit:''
-    }"
+x-data="{
+    openEdit:false,
+    openEditPenghuni:false,
+    openDeactivate:false,
+    openDelete:false,
+    openResetPassword:false,
+    selectedUnit:null,
+    openCreateUnit: false,
+    passwordGenerated:false,
+    generatedPassword:'Tmp-9XK21',
+    createdUnit:'',
+
+    units:[
+        {no:'A-101', gedung:'Tower A', lantai:10, penghuni:'Widiawati', status:'aktif'},
+        {no:'A-102', gedung:'Tower A', lantai:10, penghuni:'Andi Saputra', status:'aktif'},
+        {no:'A-103', gedung:'Tower A', lantai:10, penghuni:'Siti Aminah', status:'nonaktif'},
+        {no:'B-201', gedung:'Tower B', lantai:2, penghuni:'Budi Santoso', status:'aktif'},
+        {no:'B-202', gedung:'Tower B', lantai:2, penghuni:'Rina Kartika', status:'aktif'},
+        {no:'C-301', gedung:'Tower C', lantai:3, penghuni:'Dedi Kurniawan', status:'nonaktif'}
+    ]
+}"
     class="p-6 space-y-6">
 
     {{-- ================= HEADER ================= --}}
@@ -49,81 +60,125 @@
     </div>
 
     {{-- ================= TABLE ================= --}}
-    <div class="bg-white rounded-lg shadow overflow-x-auto">
-        <table class="min-w-full divide-y">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 py-2 text-center">No Unit</th>
-                    <th class="px-4 py-2 text-center">Gedung</th>
-                    <th class="px-4 py-2 text-center">Lantai</th>
-                    <th class="px-4 py-2 text-center">Penghuni</th>
-                    <th class="px-4 py-2 text-center">Status</th>
-                    <th class="px-4 py-2 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-            <tr 
-                x-data="{ status: 'aktif' }"
-                class="text-center hover:bg-gray-50">
+    <div class="bg-white rounded-lg shadow overflow-visible">
 
-                <td class="px-4 py-2">A-101</td>
-                <td class="px-4 py-2">Tower A</td>
-                <td class="px-4 py-2">10</td>
-                <td class="px-4 py-2">Widiawati</td>
+        <div class="overflow-x-auto overflow-visible">
+            <table class="min-w-full divide-y">
+                
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-center">No Unit</th>
+                        <th class="px-4 py-2 text-center">Gedung</th>
+                        <th class="px-4 py-2 text-center">Lantai</th>
+                        <th class="px-4 py-2 text-center">Penghuni</th>
+                        <th class="px-4 py-2 text-center">Status</th>
+                        <th class="px-4 py-2 text-center">Aksi</th>
+                    </tr>
+                </thead>
 
-                <td class="px-4 py-2">
-                    <span 
-                        x-show="status === 'aktif'"
-                        class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
-                        Aktif
-                    </span>
-                    <span 
-                        x-show="status === 'nonaktif'"
-                        class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-                        Nonaktif
-                    </span>
-                </td>
-                <td class="px-4 py-2 flex justify-center gap-1 flex-wrap">
-                    {{-- EDIT UNIT (SELALU ADA) --}}
-                    <button
-                        @click="openEdit=true; selectedUnit='A-101'"
-                        class="px-2 py-1 text-xs bg-yellow-400 text-white rounded">
-                        Edit Unit
-                    </button>
+                <tbody>
 
-                    {{-- GANTI PENGHUNI (HANYA JIKA AKTIF) --}}
-                    <template x-if="status === 'aktif'">
-                        <button
-                            @click="openEditPenghuni=true; selectedUnit='A-101'"
-                            class="px-2 py-1 text-xs bg-blue-500 text-white rounded">
-                            Ganti Penghuni
-                        </button>
+                    <template x-for="unit in units" :key="unit.no">
+                        <tr class="text-center hover:bg-gray-50">
+
+                            <td class="px-4 py-2" x-text="unit.no"></td>
+                            <td class="px-4 py-2" x-text="unit.gedung"></td>
+                            <td class="px-4 py-2" x-text="unit.lantai"></td>
+                            <td class="px-4 py-2" x-text="unit.penghuni"></td>
+
+                            {{-- STATUS --}}
+                            <td class="px-4 py-2">
+                                <span 
+                                    x-show="unit.status === 'aktif'"
+                                    class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
+                                    Aktif
+                                </span>
+
+                                <span 
+                                    x-show="unit.status === 'nonaktif'"
+                                    class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
+                                    Nonaktif
+                                </span>
+                            </td>
+
+                            {{-- AKSI --}}
+                            <td class="px-4 py-2 relative">
+
+                                <div x-data="{open:false}" class="relative inline-block text-left">
+
+                                    <button
+                                        @click.stop="open=!open"
+                                        class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
+                                        Aksi
+                                        <span class="text-xs">▼</span>
+                                    </button>
+
+                                    <div
+                                        x-show="open"
+                                        x-cloak
+                                        x-transition
+                                        @click.outside="open=false"
+                                        class="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-xl z-50 text-left">
+
+                                        <button
+                                            @click="openEdit=true; selectedUnit=unit.no; open=false"
+                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                            ✏️ Edit Unit
+                                        </button>
+
+                                        <template x-if="unit.status === 'aktif'">
+                                            <button
+                                                @click="openEditPenghuni=true; selectedUnit=unit.no; open=false"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                                👥 Ganti Penghuni
+                                            </button>
+                                        </template>
+
+                                        <template x-if="unit.status === 'aktif'">
+                                            <button
+                                                @click="openResetPassword=true; selectedUnit=unit.no; open=false"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                                🔑 Reset Kata Sandi
+                                            </button>
+                                        </template>
+
+                                        <div class="border-t my-1"></div>
+
+                                        <template x-if="unit.status === 'aktif'">
+                                            <button
+                                                @click="openDeactivate=true; selectedUnit=unit.no; open=false"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-orange-600 hover:bg-orange-50">
+                                                ⛔ Nonaktifkan
+                                            </button>
+                                        </template>
+
+                                        <template x-if="unit.status === 'nonaktif'">
+                                            <button
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-600 hover:bg-green-50">
+                                                ✅ Aktifkan
+                                            </button>
+                                        </template>
+
+                                        <button
+                                            @click="openDelete=true; selectedUnit=unit.no; open=false"
+                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                            🗑️ Hapus
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
                     </template>
 
-                    {{-- NONAKTIFKAN (HANYA JIKA AKTIF) --}}
-                    <template x-if="status === 'aktif'">
-                        <button
-                            @click="openDeactivate=true; selectedUnit='A-101'"
-                            class="px-2 py-1 text-xs bg-red-600 text-white rounded">
-                            Nonaktifkan
-                        </button>
-                    </template>
+                </tbody>
+            </table>
+        </div>
 
-                    {{-- AKTIFKAN (HANYA JIKA NONAKTIF) --}}
-                    <template x-if="status === 'nonaktif'">
-                        <button
-                            @click="status='aktif'"
-                            class="px-2 py-1 text-xs bg-green-600 text-white rounded">
-                            Aktifkan
-                        </button>
-                    </template>
-
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </div>
-
     {{-- ================= MODAL TAMBAH UNIT ================= --}}
     <div 
         x-show="openCreateUnit"
@@ -385,7 +440,42 @@
 
         </div>
     </div>
+    
+    {{-- ================= MODAL HAPUS UNIT ================= --}}
+    <div x-show="openDelete" x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
+        <div @click.outside="openDelete=false"
+            class="bg-white w-full max-w-sm rounded-lg p-6">
+
+            <h2 class="text-lg font-semibold text-red-600">
+                Hapus Unit
+            </h2>
+
+            <p class="text-sm text-gray-600 mt-2">
+                Apakah Anda yakin ingin menghapus unit 
+                <strong x-text="selectedUnit"></strong>?
+            </p>
+
+            <p class="text-xs text-gray-500 mt-1">
+                Data unit dan relasinya akan dihapus dari sistem.
+            </p>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button 
+                    @click="openDelete=false"
+                    class="px-4 py-2 border rounded-lg">
+                    Batal
+                </button>
+
+                <button 
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg">
+                    Hapus
+                </button>
+            </div>
+
+        </div>
+    </div>
     {{-- ================= MODAL NONAKTIFKAN UNIT ================= --}}
     <div x-show="openDeactivate" x-cloak
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -405,6 +495,55 @@
                     Nonaktifkan
                 </button>
             </div>
+        </div>
+    </div>
+    {{-- ================= MODAL RESET PASSWORD ================= --}}
+    <div x-show="openResetPassword" x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div @click.outside="openResetPassword=false"
+            class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
+
+            <h2 class="text-lg font-semibold text-gray-800">
+                Reset Password Unit
+            </h2>
+
+            <p class="text-sm text-gray-600">
+                Password login untuk unit 
+                <strong x-text="selectedUnit"></strong> 
+                akan direset.
+            </p>
+
+            <template x-if="passwordGenerated">
+                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
+                    <p class="font-semibold text-yellow-800">
+                        Password Sementara Baru
+                    </p>
+
+                    <div class="bg-white border rounded px-3 py-2 font-mono text-center">
+                        <span x-text="generatedPassword"></span>
+                    </div>
+
+                    <p class="text-xs text-gray-600">
+                        Berikan password ini kepada penghuni unit untuk login kembali.
+                    </p>
+                </div>
+            </template>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button
+                    @click="openResetPassword=false"
+                    class="px-4 py-2 border rounded-lg">
+                    Batal
+                </button>
+
+                <button
+                    @click="passwordGenerated=true"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg">
+                    Reset Password
+                </button>
+            </div>
+
         </div>
     </div>
 

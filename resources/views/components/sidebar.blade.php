@@ -25,7 +25,7 @@
             ],
         ];
     $currentPath = request()->path();
-    $user = $users['departemen']; // ganti admin / daftarPenanganan / departemen
+    $user = $users['tenant_relation']; // ganti admin / daftarPenanganan / departemen
     function activeMenu($path, $currentPath) {
         return $currentPath === trim($path, '/') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100';
     }
