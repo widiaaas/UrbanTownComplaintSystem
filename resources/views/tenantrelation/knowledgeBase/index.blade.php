@@ -3,7 +3,7 @@
 @section('title', 'Knowledge Base')
 
 @section('content')
-<div x-data="kbPage()" class="p-6 max-w-6xl mx-auto">
+<div x-data="kbPage()" class="px-6 pb-6 w-full">
 
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-center mb-4">
@@ -17,224 +17,289 @@
         </div>
 
         <button
-            @click="
-                resetKBForm();
-                openCreateKB = true
-            "
-            class="bg-green-600 text-white px-4 py-2 rounded"
-        >
+            @click="openCreateKBModal()"
+            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
             + Tambah Knowledge Base
         </button>
     </div>
 
-    {{-- ================= SEARCH ================= --}}
-    <div class="mb-4">
-        <input
-            type="text"
-            x-model="kbSearch"
-            placeholder="Cari solusi (contoh: AC, lampu, kran)..."
-            class="w-full border rounded-lg px-3 py-2 text-sm"
-        >
-    </div>
-
-    {{-- ================= LIST & DETAIL ================= --}}
+    {{-- ================= SEARCH & LIST & DETAIL ================= --}}
     @include('components.knowledgeBase')
 
-    {{-- ================= MODAL CREATE KB ================= --}}
+    {{-- ================= MODAL CREATE/EDIT KB ================= --}}
     <div
-        x-show="openCreateKB"
+        x-show="openKBModal"
         x-cloak
         x-transition
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-    >
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
 
             {{-- HEADER --}}
             <div class="flex justify-between items-center px-6 py-4 border-b">
-                <h3 class="font-semibold">Tambah Knowledge Base</h3>
-                <button @click="openCreateKB = false">✕</button>
+                <h3 class="font-semibold text-lg" x-text="editingId ? 'Edit Knowledge Base' : 'Tambah Knowledge Base'"></h3>
+                <button @click="openKBModal = false" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
             </div>
 
             {{-- BODY --}}
-            <div class="px-6 py-4 space-y-4">
+            <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1">
 
                 {{-- JUDUL --}}
-                <input x-model="kbForm.judul"
-                    placeholder="Judul"
-                    class="w-full border rounded px-3 py-2 text-sm">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul*</label>
+                    <input x-model="kbForm.judul"
+                        placeholder="Contoh: AC Tidak Dingin"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
 
-                    {{-- KATEGORI (SEARCHABLE + ADD NEW) --}}
-                    <div class="relative">
-                        <p class="text-xs text-gray-500 mb-1">Kategori</p>
-
-                        <div class="border rounded px-3 py-2 cursor-pointer bg-white"
-                            @click="openKategori = !openKategori">
-                            <span x-text="kbForm.kategori || 'Pilih kategori...'"></span>
-                        </div>
-
-                        <div x-show="openKategori"
-                            x-transition
-                            @click.outside="openKategori = false"
-                            class="absolute z-50 w-full bg-white border rounded shadow mt-1">
-
-                            <input
-                                x-model="kategoriSearch"
-                                placeholder="Cari atau tambah kategori..."
-                                class="w-full border-b px-3 py-2 text-sm">
-
-                            <div class="max-h-40 overflow-y-auto">
-
-                                <template x-for="item in filteredKategori" :key="item">
-                                    <div
-                                        @click="selectKategori(item)"
-                                        class="px-3 py-2 hover:bg-green-100 cursor-pointer text-sm"
-                                        x-text="item">
-                                    </div>
-                                </template>
-
-                                {{-- ADD NEW --}}
-                                <template x-if="kategoriSearch && !kategoriList.includes(kategoriSearch)">
-                                    <div
-                                        @click="tambahKategoriBaru"
-                                        class="px-3 py-2 text-green-600 cursor-pointer border-t text-sm">
-                                        + Tambah "<span x-text="kategoriSearch"></span>"
-                                    </div>
-                                </template>
-
-                            </div>
-                        </div>
+                {{-- KATEGORI --}}
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
+                    <div class="border rounded-lg px-3 py-2 cursor-pointer bg-white hover:border-gray-400 transition"
+                        @click="openKategori = !openKategori">
+                        <span x-text="kbForm.kategori || 'Pilih kategori...'" :class="{'text-gray-400': !kbForm.kategori}"></span>
                     </div>
 
+                    <div x-show="openKategori"
+                        x-transition
+                        @click.outside="openKategori = false"
+                        class="absolute z-50 w-full bg-white border rounded-lg shadow-lg mt-1">
 
-                    {{-- DEPARTEMEN (DROPDOWN FIX) --}}
-                    <div class="relative">
-                        <p class="text-xs text-gray-500 mb-1">Departemen</p>
+                        <input
+                            x-model="kategoriSearch"
+                            placeholder="Cari atau tambah kategori..."
+                            class="w-full border-b px-3 py-2 text-sm focus:outline-none">
 
-                        <div class="border rounded px-3 py-2 cursor-pointer bg-white"
-                            @click="openDept = !openDept">
-                            <span x-text="kbForm.dept || 'Pilih departemen...'"></span>
-                        </div>
-
-                        <div x-show="openDept"
-                            x-transition
-                            @click.outside="openDept = false"
-                            class="absolute z-50 w-full bg-white border rounded shadow mt-1">
-
-                            <template x-for="item in deptList" :key="item">
+                        <div class="max-h-40 overflow-y-auto">
+                            <template x-for="item in filteredKategori" :key="item">
                                 <div
-                                    @click="selectDept(item)"
+                                    @click="selectKategori(item)"
                                     class="px-3 py-2 hover:bg-green-100 cursor-pointer text-sm"
                                     x-text="item">
                                 </div>
                             </template>
 
+                            {{-- ADD NEW --}}
+                            <template x-if="kategoriSearch && !kategoriList.includes(kategoriSearch)">
+                                <div
+                                    @click="tambahKategoriBaru"
+                                    class="px-3 py-2 text-green-600 cursor-pointer border-t text-sm hover:bg-green-50">
+                                    + Tambah "<span x-text="kategoriSearch"></span>"
+                                </div>
+                            </template>
                         </div>
                     </div>
+                </div>
 
-                {{-- DESKRIPSI --}}
-                <textarea x-model="kbForm.deskripsi"
-                    placeholder="Deskripsi"
-                    class="w-full border rounded px-3 py-2 text-sm"></textarea>
-
-                {{-- LANGKAH --}}
-                <textarea x-model="kbForm.langkah"
-                    placeholder="Langkah Penyelesaian"
-                    class="w-full border rounded px-3 py-2 text-sm"></textarea>
-
-                {{-- LAMPIRAN --}}
-                <input type="file" multiple @change="handleUploadKB">
-
-                <div class="flex flex-wrap gap-2">
-                    <template x-for="(file,index) in kbForm.lampiran">
-                        <div class="border px-2 py-1 text-xs rounded bg-gray-50 flex items-center gap-1">
-                            <span x-text="file.name"></span>
-                            <button @click="hapusLampiranKB(index)">✕</button>
-                        </div>
-                    </template>
+                {{-- DEPARTEMEN --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen Terkait *</label>
+                    <select x-model="kbForm.dept"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="">Pilih Departemen</option>
+                        <option>Engineering</option>
+                        <option>Operational</option>
+                        <option>Finance</option>
+                    </select>
+                </div>
+                
+                {{-- LAMPIRAN (untuk KB level) --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lampiran (opsional)</label>
+                    <input type="file" multiple @change="handleUploadKB" class="w-full text-sm">
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <template x-for="(file, index) in kbForm.lampiran">
+                            <div class="border px-2 py-1 text-xs rounded bg-gray-50 flex items-center gap-1">
+                                <span x-text="file.name"></span>
+                                <button @click="hapusLampiranKB(index)" class="text-red-500">✕</button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
             </div>
 
             {{-- FOOTER --}}
-            <div class="px-6 py-4 border-t flex justify-end gap-2">
-                <button @click="openCreateKB=false"
-                    class="bg-gray-100 px-3 py-1 rounded">
+            <div class="px-6 py-4 border-t flex justify-end gap-2 bg-gray-50">
+                <button @click="openKBModal = false"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
                     Batal
                 </button>
-
-                <button @click="simpanKB"
-                    class="bg-green-600 text-white px-4 py-2 rounded">
+                <button @click="saveKB"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                     Simpan
                 </button>
             </div>
-
         </div>
     </div>
 
+    {{-- ================= MODAL CREATE/EDIT PENYEBAB ================= --}}
+    <div
+        x-show="openCauseModal"
+        x-cloak
+        x-transition
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
+
+            {{-- HEADER --}}
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+                <h3 class="font-semibold text-lg" x-text="editingCause ? 'Edit Penyebab' : 'Tambah Penyebab'"></h3>
+                <button @click="openCauseModal = false" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+
+            {{-- BODY --}}
+            <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+
+                {{-- PENYEBAB --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Penyebab *</label>
+                    <textarea x-model="causeForm.penyebab"
+                        placeholder="Contoh: Freon habis atau tekanan tidak stabil"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="2"></textarea>
+                </div>
+
+                {{-- DESKRIPSI --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                    <textarea x-model="causeForm.deskripsi"
+                        placeholder="Deskripsi singkat (opsional)"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="2"></textarea>
+                </div>
+
+                {{-- LANGKAH PENYELESAIAN --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Langkah Penyelesaian *</label>
+                    <textarea x-model="causeForm.langkah"
+                        placeholder="1. Cek tekanan freon&#10;2. Isi ulang freon&#10;3. Pastikan tidak ada kebocoran"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="4"></textarea>
+                </div>
+
+                {{-- LAMPIRAN --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lampiran (opsional)</label>
+                    <input type="file" multiple @change="handleUploadCause" class="w-full text-sm">
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <template x-for="(file, index) in causeForm.lampiran">
+                            <div class="border px-2 py-1 text-xs rounded bg-gray-50 flex items-center gap-1">
+                                <span x-text="file.name"></span>
+                                <button @click="hapusLampiranCause(index)" class="text-red-500">✕</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="px-6 py-4 border-t flex justify-end gap-2 bg-gray-50">
+                <button @click="openCauseModal = false"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
+                    Batal
+                </button>
+                <button @click="saveCause"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                    Simpan
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- ================= SCRIPT ================= --}}
 <script>
 function kbPage() {
     return {
-        kbSearch: '',
-        selectedKB: null,
-        openCreateKB: false,
-
+        // Modal KB
+        openKBModal: false,
+        editingId: null,
         openKategori: false,
-        openDept: false,
-        deptList: ['Engineering','Housekeeping','IT Support','Security'],
+
+        // Modal Penyebab
+        openCauseModal: false,
+        editingCause: null, // object cause yang sedang diedit
+
+        // Search
+        kbSearch: '',
+        searchDiagnosis: '',
         kategoriSearch: '',
-        kategoriList: ['AC','Listrik','Plumbing','Internet','Furniture'],
 
-        // knowledgeBase: [],
-
+        // Form KB
         kbForm: {
             judul: '',
             kategori: '',
+            dept: '',
+            lampiran: []  // lampiran untuk KB level (bisa kosong)
+        },
+
+        // Form Penyebab
+        causeForm: {
+            penyebab: '',
             deskripsi: '',
             langkah: '',
-            dept: '',
-            created_by: '',
-            lampiran: [],
-            relatedKeluhan: []
+            lampiran: []
         },
 
+        // Lists
+        kategoriList: ['AC', 'Listrik', 'Plumbing', 'Internet', 'Furniture'],
         knowledgeBase: [
-        {
-            id: 1,
-            judul: 'AC Tidak Dingin',
-            deskripsi: 'Periksa filter AC, bersihkan evaporator, dan cek freon.',
-            dept: 'Engineering',
-            lampiran: ['ac_before.jpg'],
-            relatedKeluhan: [
-                {
-                    id: 1,
-                    tiket: 'TCK-001',
-                    unit: 'A-101',
-                 
-                },
-                {
-                    id: 4,
-                    tiket: 'TCK-014',
-                    unit: 'B-210',
-                    
-                }
-            ]
-        },
-        {
-            id: 2,
-            judul: 'Lampu Mati',
-            deskripsi: 'Cek MCB, ganti lampu, dan periksa fitting.',
-            dept: 'Engineering',
-            lampiran: [],
-            relatedKeluhan: []
-        }
-    ],
+            {
+                id: 1,
+                judul: "AC Tidak Dingin",
+                kategori: "AC",
+                dept: "Engineering",
+                diagnosis_list: [
+                    {
+                        id: 1,
+                        Penyebab: "Freon habis atau tekanan tidak stabil",
+                        deskripsi: "Tekanan freon rendah menyebabkan AC tidak mendingin optimal.",
+                        langkah: "1. Cek tekanan freon menggunakan manifold gauge\n2. Isi ulang freon jika tekanan rendah\n3. Periksa kebocoran pada sambungan pipa\n4. Pastikan tidak ada kebocoran pada evaporator",
+                        lampiran: ["freon-check.pdf"]
+                    },
+                    {
+                        id: 2,
+                        Penyebab: "Saluran drainase tersumbat",
+                        deskripsi: "Air tidak bisa mengalir keluar sehingga AC bocor atau tidak dingin.",
+                        langkah: "1. Bersihkan selang pembuangan dengan air bertekanan\n2. Pastikan selang tidak tertekuk\n3. Cek posisi kemiringan AC indoor\n4. Bersihkan bak penampung air",
+                        lampiran: []
+                    }
+                ]
+            },
+            {
+                id: 2,
+                judul: "AC Bocor Air",
+                kategori: "AC",
+                dept: "Engineering",
+                diagnosis_list: [
+                    {
+                        id: 3,
+                        Penyebab: "Filter AC kotor",
+                        deskripsi: "Filter kotor menghambat aliran udara dan menimbulkan kebocoran air.",
+                        langkah: "1. Lepas filter AC\n2. Bersihkan dengan air mengalir\n3. Keringkan dan pasang kembali\n4. Lakukan pembersihan rutin setiap bulan",
+                        lampiran: ["filter-cleaning-guide.pdf"]
+                    }
+                ]
+            }
+        ],
 
+        selectedKB: null,
+        selectedDiagnosis: null,
+
+        // Computed
         get filteredKnowledgeBase() {
             return this.knowledgeBase.filter(kb =>
-                kb.judul.toLowerCase().includes(this.kbSearch.toLowerCase())
+                kb.judul.toLowerCase().includes(this.kbSearch.toLowerCase()) ||
+                kb.kategori.toLowerCase().includes(this.kbSearch.toLowerCase())
+            );
+        },
+
+        get filteredDiagnosis() {
+            if (!this.selectedKB) return [];
+            return this.selectedKB.diagnosis_list.filter(d =>
+                d.Penyebab.toLowerCase().includes(this.searchDiagnosis.toLowerCase())
             );
         },
 
@@ -244,8 +309,15 @@ function kbPage() {
             );
         },
 
+        // ========== METHODS KB ==========
         selectKB(item) {
             this.selectedKB = item;
+            this.selectedDiagnosis = null;
+            this.searchDiagnosis = '';
+        },
+
+        selectDiagnosis(diag) {
+            this.selectedDiagnosis = diag;
         },
 
         selectKategori(item) {
@@ -256,19 +328,15 @@ function kbPage() {
 
         tambahKategoriBaru() {
             const newKategori = this.kategoriSearch.trim();
-
-            if (!this.kategoriList.includes(newKategori)) {
-                this.kategoriList.push(newKategori);
-            }
-
+            if (!this.kategoriList.includes(newKategori)) this.kategoriList.push(newKategori);
             this.kbForm.kategori = newKategori;
-
             this.kategoriSearch = '';
             this.openKategori = false;
         },
 
         handleUploadKB(e) {
             this.kbForm.lampiran.push(...Array.from(e.target.files));
+            e.target.value = '';
         },
 
         hapusLampiranKB(index) {
@@ -279,57 +347,164 @@ function kbPage() {
             this.kbForm = {
                 judul: '',
                 kategori: '',
-                deskripsi: '',
-                langkah: '',
                 dept: '',
-                created_by: '',
-                lampiran: [],
-                relatedKeluhan: []
+                lampiran: []
             };
         },
-        selectDept(item) {
-            this.kbForm.dept = item;
-            this.openDept = false;
+
+        openCreateKBModal() {
+            this.resetKBForm();
+            this.editingId = null;
+            this.openKBModal = true;
         },
-        simpanKB() {
-            if (
-                !this.kbForm.judul ||
-                !this.kbForm.kategori ||
-                !this.kbForm.deskripsi ||
-                !this.kbForm.langkah ||
-                !this.kbForm.dept ||
-                !this.kbForm.created_by
-            ) {
-                alert('Lengkapi semua data');
+
+        openEditKBModal(item) {
+            this.resetKBForm();
+            this.editingId = item.id;
+            this.kbForm.judul = item.judul;
+            this.kbForm.kategori = item.kategori;
+            this.kbForm.dept = item.dept;
+            // Lampiran KB (opsional) – tidak diisi dari data karena tidak disimpan di level KB
+            this.openKBModal = true;
+        },
+
+        deleteKB(id) {
+            if (confirm('Hapus Knowledge Base ini? Data tidak dapat dikembalikan.')) {
+                const index = this.knowledgeBase.findIndex(kb => kb.id === id);
+                if (index !== -1) {
+                    this.knowledgeBase.splice(index, 1);
+                    if (this.selectedKB && this.selectedKB.id === id) {
+                        this.selectedKB = null;
+                        this.selectedDiagnosis = null;
+                    }
+                }
+            }
+        },
+
+        saveKB() {
+            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.dept) {
+                alert('Lengkapi semua data (Judul, Kategori, Departemen)');
                 return;
             }
 
-            const now = new Date();
-            const formattedDate = now.toLocaleString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            this.knowledgeBase.push({
-                id: this.knowledgeBase.length + 1,
-                judul: this.kbForm.judul,
-                kategori: this.kbForm.kategori,
-                deskripsi: this.kbForm.deskripsi,
-                langkah: this.kbForm.langkah,
-                dept: this.kbForm.dept,
-                created_by: this.kbForm.created_by,
-                created_at: formattedDate,
-                lampiran: this.kbForm.lampiran.map(f => f.name),
-                relatedKeluhan: []
-            });
-
-            alert('Berhasil ditambahkan');
+            if (this.editingId) {
+                const index = this.knowledgeBase.findIndex(kb => kb.id === this.editingId);
+                if (index !== -1) {
+                    this.knowledgeBase[index] = {
+                        ...this.knowledgeBase[index],
+                        judul: this.kbForm.judul,
+                        kategori: this.kbForm.kategori,
+                        dept: this.kbForm.dept
+                    };
+                    if (this.selectedKB && this.selectedKB.id === this.editingId) {
+                        this.selectedKB = this.knowledgeBase[index];
+                    }
+                }
+                alert('Berhasil diupdate');
+            } else {
+                const newKB = {
+                    id: this.knowledgeBase.length + 1,
+                    judul: this.kbForm.judul,
+                    kategori: this.kbForm.kategori,
+                    dept: this.kbForm.dept,
+                    diagnosis_list: [] // baru, tanpa penyebab
+                };
+                this.knowledgeBase.push(newKB);
+                alert('Berhasil ditambahkan');
+            }
 
             this.resetKBForm();
-            this.openCreateKB = false;
+            this.openKBModal = false;
+            this.editingId = null;
+        },
+
+        // ========== METHODS PENYEBAB ==========
+        resetCauseForm() {
+            this.causeForm = {
+                penyebab: '',
+                deskripsi: '',
+                langkah: '',
+                lampiran: []
+            };
+        },
+
+        handleUploadCause(e) {
+            this.causeForm.lampiran.push(...Array.from(e.target.files));
+            e.target.value = '';
+        },
+
+        hapusLampiranCause(index) {
+            this.causeForm.lampiran.splice(index, 1);
+        },
+
+        openAddCauseModal() {
+            if (!this.selectedKB) {
+                alert('Pilih Knowledge Base terlebih dahulu');
+                return;
+            }
+            this.resetCauseForm();
+            this.editingCause = null;
+            this.openCauseModal = true;
+        },
+
+        openEditCauseModal(cause) {
+            this.resetCauseForm();
+            this.editingCause = cause;
+            this.causeForm.penyebab = cause.Penyebab;
+            this.causeForm.deskripsi = cause.deskripsi || '';
+            this.causeForm.langkah = cause.langkah;
+            // Lampiran: ubah array nama file menjadi array object { name }
+            this.causeForm.lampiran = (cause.lampiran || []).map(name => ({ name }));
+            this.openCauseModal = true;
+        },
+
+        saveCause() {
+            if (!this.causeForm.penyebab || !this.causeForm.langkah) {
+                alert('Lengkapi data (Penyebab dan Langkah Penyelesaian)');
+                return;
+            }
+
+            const newCause = {
+                id: this.editingCause ? this.editingCause.id : Date.now(),
+                Penyebab: this.causeForm.penyebab,
+                deskripsi: this.causeForm.deskripsi,
+                langkah: this.causeForm.langkah,
+                lampiran: this.causeForm.lampiran.map(f => f.name)
+            };
+
+            if (this.editingCause) {
+                // Update existing cause
+                const index = this.selectedKB.diagnosis_list.findIndex(d => d.id === this.editingCause.id);
+                if (index !== -1) {
+                    this.selectedKB.diagnosis_list[index] = newCause;
+                    // Jika penyebab yang diedit sedang dipilih, update selectedDiagnosis
+                    if (this.selectedDiagnosis && this.selectedDiagnosis.id === this.editingCause.id) {
+                        this.selectedDiagnosis = newCause;
+                    }
+                }
+                alert('Penyebab berhasil diupdate');
+            } else {
+                // Add new cause
+                this.selectedKB.diagnosis_list.push(newCause);
+                alert('Penyebab berhasil ditambahkan');
+            }
+
+            this.resetCauseForm();
+            this.openCauseModal = false;
+            this.editingCause = null;
+        },
+
+        deleteCause(causeId) {
+            if (!this.selectedKB) return;
+            if (confirm('Hapus penyebab ini?')) {
+                const index = this.selectedKB.diagnosis_list.findIndex(d => d.id === causeId);
+                if (index !== -1) {
+                    this.selectedKB.diagnosis_list.splice(index, 1);
+                    if (this.selectedDiagnosis && this.selectedDiagnosis.id === causeId) {
+                        this.selectedDiagnosis = null;
+                    }
+                }
+            }
         }
     }
 }

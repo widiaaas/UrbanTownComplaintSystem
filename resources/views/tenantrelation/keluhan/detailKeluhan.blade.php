@@ -691,7 +691,7 @@
         x-transition
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
     >
-        <div class="bg-white w-full max-w-5xl rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-white w-full max-w-7xl rounded-xl shadow-lg overflow-hidden">
 
             {{-- HEADER --}}
             <div class="flex items-center justify-between px-6 py-4 border-b">
@@ -703,22 +703,236 @@
                         Referensi solusi untuk membantu penanganan keluhan
                     </p>
                 </div>
-                <button @click="openKnowledgeBase = false">✕</button>
+                <button @click="openKnowledgeBase = false" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
 
-            {{-- SEARCH --}}
-            <div class="px-6 py-3 border-b">
-                <input
-                    type="text"
-                    x-model="kbSearch"
-                    placeholder="Cari solusi..."
-                    class="w-full border rounded-lg px-3 py-2 text-sm"
-                >
-            </div>
+            {{-- BODY --}}
+            <div class="p-6 w-full max-h-[80vh] overflow-y-auto">
 
-            {{-- REUSE UI --}}
-            <div class="p-6 max-h-[70vh] overflow-y-auto">
-                @include('components.knowledgeBase')
+                {{-- Layout Desktop: 3 kolom --}}
+                <div class="hidden lg:grid lg:grid-cols-12 gap-4">
+
+                {{-- LIST KB --}}
+                <div class="col-span-2 flex flex-col">
+                    <div class="border rounded-xl p-3 bg-white shadow">
+                        <div class="sticky top-0 z-20 bg-white pb-2">
+                            <input
+                                type="text"
+                                x-model="searchKB"
+                                placeholder="Cari judul atau kategori..."
+                                class="w-full border rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="overflow-y-auto space-y-2 mt-2" style="max-height: 70vh">
+                            <template x-for="item in filteredKnowledgeBase" :key="item.id">
+                                <button
+                                    @click="selectKB(item)"
+                                    class="w-full text-left p-3 rounded-lg border transition"
+                                    :class="selectedKB && selectedKB.id === item.id 
+                                        ? 'border-green-500 bg-green-50'
+                                        : 'bg-gray-50 hover:bg-green-50'">
+                                    <p class="font-semibold text-sm" x-text="item.judul"></p>
+                                    <p class="text-xs text-gray-500" x-text="item.kategori"></p>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                    {{-- PENYEBAB --}}
+                    <div class="col-span-3 flex flex-col">
+                        <template x-if="selectedKB">
+                            <div class="border rounded-xl p-3 bg-white shadow">
+                                <div class="sticky top-0 z-20 bg-white pb-2">
+                                    <input
+                                        type="text"
+                                        x-model="searchDiagnosis"
+                                        placeholder="Cari penyebab..."
+                                        class="w-full border rounded-lg px-3 py-2 text-sm">
+                                </div>
+                                <div class="overflow-y-auto space-y-2 mt-2" style="max-height: 60vh">
+                                    <template x-for="diag in filteredDiagnosis" :key="diag.id">
+                                        <button
+                                            @click="selectDiagnosis(diag)"
+                                            class="w-full text-left p-3 rounded-lg border transition"
+                                            :class="selectedDiagnosis && selectedDiagnosis.id === diag.id
+                                                ? 'bg-green-100 border-green-500'
+                                                : 'bg-gray-50 hover:bg-green-50'">
+                                            <p class="text-sm font-medium" x-text="diag.Penyebab"></p>
+                                        </button>
+                                    </template>
+                                    <template x-if="filteredDiagnosis.length === 0">
+                                        <div class="text-xs text-gray-400 italic text-center py-4">
+                                            Penyebab tidak ditemukan
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="!selectedKB">
+                            <div class="border rounded-xl p-4 bg-gray-50 shadow">
+                                <div class="h-64 flex items-center justify-center text-gray-400">
+                                    <p class="text-center">Pilih Knowledge Base terlebih dahulu</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- DETAIL --}}
+                    <div class="col-span-7 flex flex-col">
+                        <template x-if="selectedDiagnosis">
+                            <div class="border rounded-xl p-4 bg-green-50 shadow">
+                                <div class="space-y-4">
+                                    <h2 class="text-lg font-semibold text-gray-800">
+                                        Detail Penanganan
+                                    </h2>
+
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-semibold">Penyebab</p>
+                                        <div class="bg-white border rounded p-3 mt-1" x-text="selectedDiagnosis.Penyebab"></div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-semibold">Departemen Terkait</p>
+                                        <div class="bg-white border rounded p-3 mt-1" x-text="selectedKB.dept || '-'"></div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-semibold">Langkah Penyelesaian</p>
+                                        <div class="bg-white border rounded p-3 mt-1 whitespace-pre-line" x-text="selectedDiagnosis.langkah"></div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-semibold">Lampiran</p>
+                                        <div class="flex flex-wrap gap-2 mt-1">
+                                            <template x-for="file in selectedDiagnosis.lampiran">
+                                                <span class="px-3 py-1 border rounded text-xs bg-white" x-text="file"></span>
+                                            </template>
+                                            <template x-if="selectedDiagnosis.lampiran.length === 0">
+                                                <span class="text-xs text-gray-400">Tidak ada lampiran</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="selectedKB && !selectedDiagnosis">
+                            <div class="border rounded-xl p-4 bg-green-50 shadow">
+                                <div class="h-64 flex items-center justify-center text-gray-400">
+                                    <p class="text-center">Pilih penyebab untuk melihat detail penanganan</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+
+                {{-- Layout Mobile: Vertikal --}}
+                <div class="lg:hidden space-y-4">
+                    {{-- LIST KB --}}
+                    <div class="bg-white rounded-xl shadow">
+                        <div class="p-3 border-b">
+                            <input
+                                type="text"
+                                x-model="searchKB"
+                                placeholder="Cari judul atau kategori..."
+                                class="w-full border rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="p-3 space-y-2 max-h-64 overflow-y-auto">
+                            <template x-for="item in filteredKnowledgeBase" :key="item.id">
+                                <button
+                                    @click="selectKB(item)"
+                                    class="w-full text-left p-3 rounded-lg border transition"
+                                    :class="selectedKB && selectedKB.id === item.id 
+                                        ? 'border-green-500 bg-green-50'
+                                        : 'bg-gray-50 hover:bg-green-50'">
+                                    <p class="font-semibold text-sm" x-text="item.judul"></p>
+                                    <p class="text-xs text-gray-500" x-text="item.kategori"></p>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- PENYEBAB + DETAIL --}}
+                    <div x-show="selectedKB" x-cloak>
+                        <div class="space-y-4">
+
+                            {{-- Penyebab --}}
+                            <div class="bg-white rounded-xl shadow p-3">
+                                <div class="p-3 border-b">
+                                    <input
+                                        type="text"
+                                        x-model="searchDiagnosis"
+                                        placeholder="Cari penyebab..."
+                                        class="w-full border rounded-lg px-3 py-2 text-sm">
+                                </div>
+                                <div class="p-3 space-y-2 max-h-64 overflow-y-auto">
+                                    <template x-for="diag in filteredDiagnosis" :key="diag.id">
+                                        <button
+                                            @click="selectDiagnosis(diag)"
+                                            class="w-full text-left p-3 rounded-lg border transition"
+                                            :class="selectedDiagnosis && selectedDiagnosis.id === diag.id
+                                                ? 'bg-green-100 border-green-500'
+                                                : 'bg-gray-50 hover:bg-green-50'">
+                                            <p class="text-sm font-medium" x-text="diag.Penyebab"></p>
+                                        </button>
+                                    </template>
+                                    <template x-if="filteredDiagnosis.length === 0">
+                                        <div class="text-xs text-gray-400 italic text-center py-4">
+                                            Penyebab tidak ditemukan
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Detail --}}
+                            <div x-show="selectedDiagnosis" x-cloak class="bg-green-50 rounded-xl shadow p-4">
+                                <h2 class="text-lg font-semibold text-gray-800">Detail Penanganan</h2>
+
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold">Penyebab</p>
+                                    <div class="bg-white border rounded p-3 mt-1" x-text="selectedDiagnosis.Penyebab"></div>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold">Departemen Terkait</p>
+                                    <div class="bg-white border rounded p-3 mt-1" x-text="selectedKB.dept || '-'"></div>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold">Deskripsi</p>
+                                    <div class="bg-white border rounded p-3 mt-1" x-text="selectedKB.deskripsi"></div>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold">Langkah Penyelesaian</p>
+                                    <div class="bg-white border rounded p-3 mt-1 whitespace-pre-line" x-text="selectedDiagnosis.langkah"></div>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs text-gray-500 font-semibold">Lampiran</p>
+                                    <div class="flex flex-wrap gap-2 mt-1">
+                                        <template x-for="file in selectedDiagnosis.lampiran">
+                                            <span class="px-3 py-1 border rounded text-xs bg-white" x-text="file"></span>
+                                        </template>
+                                        <template x-if="selectedDiagnosis.lampiran.length === 0">
+                                            <span class="text-xs text-gray-400">Tidak ada lampiran</span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- Pesan ketika belum pilih KB --}}
+                    <div x-show="!selectedKB" x-cloak>
+                        <div class="bg-gray-50 rounded-xl shadow p-8 text-center text-gray-400">
+                            Pilih Knowledge Base terlebih dahulu
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
             {{-- FOOTER --}}
@@ -732,136 +946,120 @@
 
         </div>
     </div>
+
     {{-- ================= MODAL TAMBAH KNOWLEDGE BASE ================= --}}
     <div
         x-show="openSimpanKB"
         x-cloak
         x-transition
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-    >
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
 
             {{-- HEADER --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b">
-                <h3 class="text-lg font-semibold text-gray-800">
-                    Simpan ke Knowledge Base
-                </h3>
-                <button
-                    @click="openSimpanKB = false"
-                    class="text-gray-500 hover:text-gray-700 text-xl">
-                    ✕
-                </button>
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+                <h3 class="font-semibold text-lg">Simpan ke Knowledge Base</h3>
+                <button @click="openSimpanKB = false" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
             </div>
 
-            {{-- BODY --}}
-            <div class="px-6 py-4 space-y-4 text-sm">
+            {{-- BODY (scrollable) --}}
+            <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1">
 
                 {{-- JUDUL --}}
                 <div>
-                    <label class="font-medium block mb-1">Judul Solusi</label>
-                    <input
-                        type="text"
-                        x-model="kbForm.judul"
-                        class="w-full border rounded-lg px-3 py-2"
-                    >
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul Solusi *</label>
+                    <input x-model="kbForm.judul"
+                        placeholder="Contoh: AC Tidak Dingin"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
 
-                {{-- DEPARTEMEN --}}
+                {{-- DEPARTEMEN TERKAIT --}}
                 <div>
-                    <label class="font-medium block mb-1">Departemen Terkait</label>
-                    <select
-                        x-model="kbForm.dept"
-                        class="w-full border rounded-lg px-3 py-2"
-                    >
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen Terkait</label>
+                    <select x-model="kbForm.dept"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="">Pilih Departemen</option>
                         <option>Engineering</option>
                         <option>Operational</option>
                         <option>Finance</option>
                     </select>
                 </div>
-                
+
                 {{-- KATEGORI (SEARCHABLE + ADD NEW) --}}
-                    <div class="relative">
-                        <p class="text-xs text-gray-500 mb-1">Kategori</p>
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
+                    <div class="border rounded-lg px-3 py-2 cursor-pointer bg-white hover:border-gray-400 transition"
+                        @click="openKategori = !openKategori">
+                        <span x-text="kbForm.kategori || 'Pilih kategori...'" :class="{'text-gray-400': !kbForm.kategori}"></span>
+                    </div>
 
-                        <div class="border rounded px-3 py-2 cursor-pointer bg-white"
-                            @click="openKategori = !openKategori">
-                            <span x-text="kbForm.kategori || 'Pilih kategori...'"></span>
-                        </div>
+                    <div x-show="openKategori"
+                        x-transition
+                        @click.outside="openKategori = false"
+                        class="absolute z-50 w-full bg-white border rounded-lg shadow-lg mt-1">
 
-                        <div x-show="openKategori"
-                            x-transition
-                            @click.outside="openKategori = false"
-                            class="absolute z-50 w-full bg-white border rounded shadow mt-1">
+                        <input
+                            x-model="kategoriSearch"
+                            placeholder="Cari atau tambah kategori..."
+                            class="w-full border-b px-3 py-2 text-sm focus:outline-none">
 
-                            <input
-                                x-model="kategoriSearch"
-                                placeholder="Cari atau tambah kategori..."
-                                class="w-full border-b px-3 py-2 text-sm">
+                        <div class="max-h-40 overflow-y-auto">
+                            <template x-for="item in filteredKategori" :key="item">
+                                <div
+                                    @click="selectKategori(item)"
+                                    class="px-3 py-2 hover:bg-green-100 cursor-pointer text-sm"
+                                    x-text="item">
+                                </div>
+                            </template>
 
-                            <div class="max-h-40 overflow-y-auto">
-
-                                <template x-for="item in filteredKategori" :key="item">
-                                    <div
-                                        @click="selectKategori(item)"
-                                        class="px-3 py-2 hover:bg-green-100 cursor-pointer text-sm"
-                                        x-text="item">
-                                    </div>
-                                </template>
-
-                                {{-- ADD NEW --}}
-                                <template x-if="kategoriSearch && !kategoriList.includes(kategoriSearch)">
-                                    <div
-                                        @click="tambahKategoriBaru"
-                                        class="px-3 py-2 text-green-600 cursor-pointer border-t text-sm">
-                                        + Tambah "<span x-text="kategoriSearch"></span>"
-                                    </div>
-                                </template>
-
-                            </div>
+                            {{-- ADD NEW --}}
+                            <template x-if="kategoriSearch && !kategoriList.includes(kategoriSearch)">
+                                <div
+                                    @click="tambahKategoriBaru"
+                                    class="px-3 py-2 text-green-600 cursor-pointer border-t text-sm hover:bg-green-50">
+                                    + Tambah "<span x-text="kategoriSearch"></span>"
+                                </div>
+                            </template>
                         </div>
                     </div>
+                </div>
+
+                {{-- PENYEBAB --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Penyebab *</label>
+                    <textarea x-model="kbForm.penyebab"
+                        placeholder="Contoh: Freon habis atau tekanan tidak stabil"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="2"></textarea>
+                </div>
 
                 {{-- DESKRIPSI --}}
                 <div>
-                    <label class="font-medium block mb-1">Deskripsi</label>
-                    <textarea
-                        x-model="kbForm.deskripsi"
-                        rows="2"
-                        class="w-full border rounded-lg px-3 py-2"
-                    ></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                    <textarea x-model="kbForm.deskripsi"
+                        placeholder="Deskripsi singkat tentang penyebab (opsional)"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="2"></textarea>
                 </div>
 
-                {{-- LANGKAH --}}
+                {{-- LANGKAH PENYELESAIAN --}}
                 <div>
-                    <label class="font-medium block mb-1">Langkah Penyelesaian</label>
-                    <textarea
-                        x-model="kbForm.langkah"
-                        rows="4"
-                        class="w-full border rounded-lg px-3 py-2"
-                    ></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Langkah Penyelesaian *</label>
+                    <textarea x-model="kbForm.langkah"
+                        placeholder="1. Cek tekanan freon&#10;2. Isi ulang freon&#10;3. Periksa kebocoran"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="4"></textarea>
                 </div>
 
                 {{-- LAMPIRAN --}}
                 <div>
-                    <label class="font-medium block mb-1">Lampiran Dokumentasi</label>
-
-                    <input
-                        type="file"
-                        multiple
-                        @change="handleUploadKB($event)"
-                        class="text-sm"
-                    >
-
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lampiran (opsional)</label>
+                    <input type="file" multiple @change="handleUploadKB($event)" class="w-full text-sm">
                     <div class="flex flex-wrap gap-2 mt-2">
                         <template x-for="(file, index) in kbForm.lampiran" :key="index">
-                            <div class="border rounded px-3 py-1 text-xs bg-gray-50">
+                            <div class="border px-2 py-1 text-xs rounded bg-gray-50 flex items-center gap-1">
                                 <span x-text="file.name"></span>
-                                <button
-                                    @click="hapusLampiranKB(index)"
-                                    class="ml-2 text-red-500">
-                                    ✕
-                                </button>
+                                <button @click="hapusLampiranKB(index)" class="text-red-500">✕</button>
                             </div>
                         </template>
                     </div>
@@ -870,23 +1068,19 @@
             </div>
 
             {{-- FOOTER --}}
-            <div class="px-6 py-4 border-t flex justify-end gap-2">
-                <button
-                    @click="openSimpanKB = false"
-                    class="px-4 py-2 rounded-lg bg-gray-100">
+            <div class="px-6 py-4 border-t flex justify-end gap-2 bg-gray-50">
+                <button @click="openSimpanKB = false"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
                     Batal
                 </button>
-
-                <button
-                    @click="simpanKeKnowledgeBase"
-                    class="px-4 py-2 rounded-lg bg-green-600 text-white">
+                <button @click="simpanKeKnowledgeBase"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                     Simpan
                 </button>
             </div>
-
         </div>
     </div>
-</div>
+
 
 </div>
 
@@ -899,11 +1093,18 @@ function detailKeluhanApp() {
         openLaporan: false,
         openKnowledgeBase: false,
         openSimpanKB: false,
-        kbSearch: '',
+        openKategori: false,                 // untuk dropdown kategori
+        searchKB: '',                         // pencarian KB
+        searchDiagnosis: '',                  // pencarian diagnosis
         selectedKB: null,
+        selectedDiagnosis: null,              // diagnosis yang dipilih
         selectedWO: {},
         keputusanAkhir: null,
         workOrders: [],
+
+        // Daftar kategori untuk dropdown
+        kategoriList: ['AC', 'Plumbing', 'Listrik', 'Lainnya'],
+        kategoriSearch: '',
 
         /* ================= DATA SOURCE ================= */
         detailKeluhan: [
@@ -921,12 +1122,7 @@ function detailKeluhanApp() {
                     status: 'Open'
                 },
                 riwayat: [
-                    {
-                        tipe: 'system',
-                        judul: 'Keluhan Masuk',
-                        ket: 'Keluhan diterima oleh sistem',
-                        waktu: '12 Feb 2026 09:00'
-                    }
+                    { tipe: 'system', judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '12 Feb 2026 09:00' }
                 ]
             },
             {
@@ -938,29 +1134,14 @@ function detailKeluhanApp() {
                     telepon: '08129876543',
                     tanggal: '13 Feb 2026',
                     judul: 'Kran bocor',
-                    deskripsi: 'Kran wasatafel kamar mandi bocor.',
+                    deskripsi: 'Kran wastafel kamar mandi bocor.',
                     lampiranKeluhan: ['lampu_mati.jpg'],
                     status: 'On Progress'
                 },
                 riwayat: [
-                    {
-                        tipe: 'system',
-                        judul: 'Keluhan Masuk',
-                        ket: 'Keluhan diterima oleh sistem',
-                        waktu: '13 Feb 2026 08:30'
-                    },
-                    {
-                        tipe: 'tr',
-                        judul: 'TR Mengambil Keluhan',
-                        ket: 'Keluhan di-assign ke tim TR',
-                        waktu: '13 Feb 2026 08:45'
-                    },
-                    {
-                        tipe: 'departemen',
-                        judul: 'Menunggu laporan Work Order departemen',
-                        ket: 'Work order sudah diberikan ke departemen teknik',
-                        waktu: '13 Feb 2026 09:30'
-                    },
+                    { tipe: 'system', judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '13 Feb 2026 08:30' },
+                    { tipe: 'tr', judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '13 Feb 2026 08:45' },
+                    { tipe: 'departemen', judul: 'Menunggu laporan Work Order departemen', ket: 'Work order sudah diberikan ke departemen teknik', waktu: '13 Feb 2026 09:30' }
                 ]
             },
             {
@@ -977,36 +1158,11 @@ function detailKeluhanApp() {
                     status: 'Close'
                 },
                 riwayat: [
-                    {
-                        tipe: 'system',
-                        judul: 'Keluhan Masuk',
-                        ket: 'Keluhan diterima oleh sistem',
-                        waktu: '14 Feb 2026 07:15'
-                    },
-                    {
-                        tipe: 'tr',
-                        judul: 'TR Mengambil Keluhan',
-                        ket: 'Keluhan di-assign ke tim TR',
-                        waktu: '14 Feb 2026 07:30'
-                    },
-                    {
-                        tipe: 'departemen',
-                        judul: 'Menunggu laporan Work Order departemen',
-                        ket: 'Work order sudah diberikan ke departemen teknik',
-                        waktu: '14 Feb 2026 07:30'
-                    },
-                    {
-                        tipe: 'tr',
-                        judul: 'TR memberi keputusan',
-                        ket: 'keputusan sudah dikirim ke penghuni ',
-                        waktu: '15 Feb 2026 07:30'
-                    },
-                    {
-                        tipe: 'tr',
-                        judul: 'Keluhan Ditutup',
-                        ket: 'Keluhan ditutup oleh TR',
-                        waktu: '15 Feb 2026 09:00'
-                    }
+                    { tipe: 'system', judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '14 Feb 2026 07:15' },
+                    { tipe: 'tr', judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '14 Feb 2026 07:30' },
+                    { tipe: 'departemen', judul: 'Menunggu laporan Work Order departemen', ket: 'Work order sudah diberikan ke departemen teknik', waktu: '14 Feb 2026 07:30' },
+                    { tipe: 'tr', judul: 'TR memberi keputusan', ket: 'keputusan sudah dikirim ke penghuni', waktu: '15 Feb 2026 07:30' },
+                    { tipe: 'tr', judul: 'Keluhan Ditutup', ket: 'Keluhan ditutup oleh TR', waktu: '15 Feb 2026 09:00' }
                 ]
             }
         ],
@@ -1015,48 +1171,85 @@ function detailKeluhanApp() {
         keluhan: {},
         riwayat: [],
 
-        // KB
+        // Knowledge Base
         knowledgeBase: [
-        {
-            id: 1,
-            judul: 'AC Tidak Dingin',
-            deskripsi: 'Periksa filter AC, bersihkan evaporator, dan cek freon.',
-            dept: 'Engineering',
-            lampiran: ['ac_before.jpg'],
-            relatedKeluhan: [
-                {
-                    id: 1,
-                    tiket: 'TCK-001',
-                    unit: 'A-101',
-                    status: 'Close',
-                    tanggal: '12 Feb 2026'
-                },
-                {
-                    id: 4,
-                    tiket: 'TCK-014',
-                    unit: 'B-210',
-                    status: 'Close',
-                    tanggal: '20 Jan 2026'
-                }
-            ]
-        },
-        {
-            id: 2,
-            judul: 'Lampu Mati',
-            deskripsi: 'Cek MCB, ganti lampu, dan periksa fitting.',
-            dept: 'Engineering',
-            lampiran: [],
-            relatedKeluhan: []
-        }
-    ],
+            {
+                id: 1,
+                judul: "AC Tidak Dingin",
+                kategori: "AC",
+                deskripsi: "AC tidak mengeluarkan udara dingin seperti biasanya",
+                diagnosis_list: [
+                    {
+                        id: 1,
+                        Penyebab: "Freon habis atau tekanan tidak stabil",
+                        deskripsi: "Tekanan freon rendah menyebabkan AC tidak mendingin optimal.",
+                        langkah: "1. Cek tekanan freon menggunakan manifold gauge\n2. Isi ulang freon jika tekanan rendah\n3. Periksa kebocoran pada sambungan pipa\n4. Pastikan tidak ada kebocoran pada evaporator",
+                        lampiran: ["freon-check.pdf"]
+                    },
+                    {
+                        id: 2,
+                        Penyebab: "Saluran drainase tersumbat",
+                        deskripsi: "Air tidak bisa mengalir keluar sehingga AC bocor atau tidak dingin.",
+                        langkah: "1. Bersihkan selang pembuangan dengan air bertekanan\n2. Pastikan selang tidak tertekuk\n3. Cek posisi kemiringan AC indoor\n4. Bersihkan bak penampung air",
+                        lampiran: []
+                    }
+                ]
+            },
+            {
+                id: 2,
+                judul: "AC Bocor Air",
+                kategori: "AC",
+                deskripsi: "AC mengeluarkan air yang menetes ke dalam ruangan",
+                diagnosis_list: [
+                    {
+                        id: 3,
+                        Penyebab: "Saluran drainase tersumbat",
+                        deskripsi: "Drainase tersumbat menyebabkan air tidak keluar dan menetes.",
+                        langkah: "1. Bersihkan selang pembuangan\n2. Pastikan tidak tertekuk\n3. Cek posisi AC\n4. Bersihkan evaporator",
+                        lampiran: []
+                    },
+                    {
+                        id: 4,
+                        Penyebab: "Filter AC kotor",
+                        deskripsi: "Filter kotor menghambat aliran udara dan menimbulkan kebocoran air.",
+                        langkah: "1. Lepas filter AC\n2. Bersihkan dengan air mengalir\n3. Keringkan dan pasang kembali\n4. Lakukan pembersihan rutin setiap bulan",
+                        lampiran: ["filter-cleaning-guide.pdf"]
+                    }
+                ]
+            }
+        ],
+
+        /* ================= COMPUTED PROPERTIES ================= */
         get workOrdersByTiket() {
-            return this.workOrders.filter(
-                wo => wo.tiket === this.keluhan.tiket
+            return this.workOrders.filter(wo => wo.tiket === this.keluhan.tiket);
+        },
+
+        get filteredKnowledgeBase() {
+            if (!this.searchKB) return this.knowledgeBase;
+            return this.knowledgeBase.filter(kb =>
+                kb.judul.toLowerCase().includes(this.searchKB.toLowerCase()) ||
+                (kb.kategori && kb.kategori.toLowerCase().includes(this.searchKB.toLowerCase()))
+            );
+        },
+
+        get filteredDiagnosis() {
+            if (!this.selectedKB) return [];
+            if (!this.searchDiagnosis) return this.selectedKB.diagnosis_list;
+            return this.selectedKB.diagnosis_list.filter(d =>
+                d.Penyebab.toLowerCase().includes(this.searchDiagnosis.toLowerCase())
+            );
+        },
+
+        get filteredKategori() {
+            if (!this.kategoriSearch) return this.kategoriList;
+            return this.kategoriList.filter(k =>
+                k.toLowerCase().includes(this.kategoriSearch.toLowerCase())
             );
         },
 
         /* ================= KEPUTUSAN TR ================= */
         keputusan: {
+            judul: '',
             status: 'On Progress',
             catatan: '',
             lampiran: []
@@ -1067,15 +1260,20 @@ function detailKeluhanApp() {
             dept: '',
             instruction: ''
         },
+
+        /* ================= FORM KB ================= */
         kbForm: {
             judul: '',
-            dept: '',
+            kategori: '',
+            penyebab: '',
             deskripsi: '',
+            langkah: '',
             lampiran: []
         },
+
         keputusanAkhir: {
             judul: '',
-            keputusan: '',
+            solusi: '',
             lampiran: [],
             tanggal: '',
             dibuatOleh: ''
@@ -1097,25 +1295,91 @@ function detailKeluhanApp() {
         ],
 
         /* ================= METHODS ================= */
+        selectKB(item) {
+            this.selectedKB = item;
+            this.selectedDiagnosis = null;
+        },
+
+        selectDiagnosis(diag) {
+            this.selectedDiagnosis = diag;
+        },
+
+        selectKategori(kategori) {
+            this.kbForm.kategori = kategori;
+            this.openKategori = false;
+            this.kategoriSearch = '';
+        },
+
+        tambahKategoriBaru() {
+            if (this.kategoriSearch && !this.kategoriList.includes(this.kategoriSearch)) {
+                this.kategoriList.push(this.kategoriSearch);
+                this.kbForm.kategori = this.kategoriSearch;
+                this.openKategori = false;
+                this.kategoriSearch = '';
+            }
+        },
+
         handleUploadKB(event) {
             const files = Array.from(event.target.files);
             this.kbForm.lampiran.push(...files);
         },
+
+        hapusLampiranKB(index) {
+            this.kbForm.lampiran.splice(index, 1);
+        },
+
+        simpanKeKnowledgeBase() {
+            // Validasi field wajib
+            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.penyebab || !this.kbForm.langkah) {
+                alert('Lengkapi semua data yang wajib (Judul, Kategori, Penyebab, dan Langkah Penyelesaian)');
+                return;
+            }
+
+            // Simpan ke list KB
+            this.knowledgeBase.push({
+                id: this.knowledgeBase.length + 1,
+                judul: this.kbForm.judul,
+                kategori: this.kbForm.kategori,
+                deskripsi: this.kbForm.deskripsi,
+                diagnosis_list: [
+                    {
+                        id: Date.now(),
+                        Penyebab: this.kbForm.penyebab,
+                        deskripsi: this.kbForm.deskripsi,
+                        langkah: this.kbForm.langkah,
+                        lampiran: this.kbForm.lampiran.map(f => f.name)
+                    }
+                ]
+            });
+
+            alert('Solusi berhasil disimpan ke Knowledge Base');
+
+            // Reset form
+            this.kbForm = {
+                judul: '',
+                kategori: '',
+                penyebab: '',
+                deskripsi: '',
+                langkah: '',
+                lampiran: []
+            };
+
+            this.openSimpanKB = false;
+        },
+
         simpanKeputusan() {
             if (!this.keputusan.catatan.trim()) {
                 alert('Catatan keputusan wajib diisi');
                 return;
             }
 
-            // SIMPAN RIWAYAT INTERNAL
             this.riwayat.push({
                 tipe: 'tr',
-                judul: 'Keputusan TR',
+                judul: this.keputusan.judul || 'Keputusan TR',
                 ket: this.keputusan.catatan,
                 waktu: this.now()
             });
 
-            // JIKA STATUS CLOSE → SIMPAN KEPUTUSAN AKHIR
             if (this.keputusan.status === 'Close') {
                 this.keputusanAkhir = {
                     judul: this.keputusan.judul,
@@ -1128,68 +1392,10 @@ function detailKeluhanApp() {
 
             this.keluhan.status = this.keputusan.status;
 
-            this.keputusan.catatan = '';
-            this.keputusan.lampiran = [];
-        },
-
-        hapusLampiranKB(index) {
-            this.kbForm.lampiran.splice(index, 1);
-        },
-
-        simpanKeKnowledgeBase() {
-            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.gejala || !this.kbForm.langkah) {
-                alert('Lengkapi semua data Knowledge Base');
-                return;
-            }
-
-            // Simpan ke list KB (UI)
-            this.knowledgeBase.push({
-            id: this.knowledgeBase.length + 1,
-            judul: this.kbForm.judul,
-            kategori: this.kbForm.kategori,
-            gejala: this.kbForm.gejala,
-            langkah: this.kbForm.langkah,
-            dept: this.kbForm.dept,
-            lampiran: this.kbForm.lampiran.map(f => f.name),
-            relatedKeluhan: []
-        });
-
-            alert('Solusi berhasil disimpan ke Knowledge Base');
-
             // Reset form
-            this.kbForm = {
-                judul: '',
-                dept: '',
-                deskripsi: '',
-                lampiran: []
-            };
-
-            this.openSimpanKB = false;
-        },
-        get filteredKnowledgeBase() {
-            return this.knowledgeBase.filter(kb =>
-                kb.judul.toLowerCase().includes(this.kbSearch.toLowerCase())
-            );
-        },
-
-        selectKB(item) {
-            this.selectedKB = item;
-        },
-        simpanKeputusan() {
-            if (!this.keputusan.catatan.trim()) {
-                alert('Catatan keputusan wajib diisi');
-                return;
-            }
-
-            this.riwayat.push({
-                tipe: 'tr',
-                judul: 'Keputusan TR',
-                ket: this.keputusan.catatan,
-                waktu: this.now()
-            });
-
             this.keputusan.catatan = '';
             this.keputusan.lampiran = [];
+            this.keputusan.judul = '';
         },
 
         kirimWO() {
@@ -1202,13 +1408,13 @@ function detailKeluhanApp() {
 
             this.workOrders.push({
                 id,
-                tiket: this.keluhan.tiket, // 🔥 LINK KE KELUHAN
+                tiket: this.keluhan.tiket,
                 no: `WO-${String(id).padStart(3, '0')}`,
                 dept: this.woForm.dept,
                 instruksi: this.woForm.instruction,
                 status: 'On Progress',
                 petugas: '-',
-                laporan: '',
+                laporan: [],
                 lampiran: [],
                 tanggal: this.now()
             });
@@ -1242,11 +1448,9 @@ function detailKeluhanApp() {
 
         /* ================= INIT ================= */
         init() {
-            // Ambil parameter ?id= dari URL
             const params = new URLSearchParams(window.location.search);
             const id = parseInt(params.get('id'));
 
-            // Cari data sesuai id
             const data = this.detailKeluhan.find(d => d.keluhan.id === id);
 
             if (data) {
@@ -1256,7 +1460,7 @@ function detailKeluhanApp() {
                 alert('Data keluhan tidak ditemukan');
             }
         }
-    }
+    };
 }
 </script>
 @endsection
