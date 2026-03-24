@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<!-- @extends('layouts.app')
 
 @section('title', 'Kelola Unit')
 
@@ -549,4 +549,529 @@ x-data="{
 
 </div>
 
+@endsection -->
+
+@extends('layouts.app')
+
+@section('title', 'Kelola Unit')
+
+@section('content')
+
+<div x-data="unitManager()" x-init="init()" class="p-6 space-y-6">
+
+    {{-- ================= HEADER ================= --}}
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">Kelola Unit</h1>
+        <button
+            @click="openCreateUnit = true"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            + Tambah Unit
+        </button>
+    </div>
+
+    {{-- ================= FILTER ================= --}}
+    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+            <label class="text-sm font-medium">Cari Unit / Gedung</label>
+            <input type="text" x-model="search" class="w-full mt-1 border rounded-lg px-3 py-2">
+        </div>
+        <div>
+            <label class="text-sm font-medium">Lantai</label>
+            <select x-model="floorFilter" class="w-full mt-1 border rounded-lg px-3 py-2">
+                <option value="">Semua</option>
+                @foreach($units->pluck('lantai')->unique() as $floor)
+                    <option value="{{ $floor }}">{{ $floor }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex gap-2 items-end">
+            <button @click="applyFilter()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Filter</button>
+            <button @click="resetFilter()" class="px-4 py-2 border rounded-lg">Reset</button>
+        </div>
+    </div>
+
+    {{-- ================= TABLE ================= --}}
+<div class="bg-white rounded-lg shadow">
+    <div class="overflow-x-auto">
+        <div class="relative min-w-full" style="min-width: 600px;">
+            <table class="w-full divide-y">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-center">No Unit</th>
+                        <th class="px-4 py-2 text-center">Gedung</th>
+                        <th class="px-4 py-2 text-center">Lantai</th>
+                        <th class="px-4 py-2 text-center">Penghuni</th>
+                        <th class="px-4 py-2 text-center">Status</th>
+                        <th class="px-4 py-2 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($units as $unit)
+                    <tr class="text-center hover:bg-gray-50">
+                        <td class="px-4 py-2">{{ $unit->no_unit }}</td>
+                        <td class="px-4 py-2">{{ $unit->gedung }}</td>
+                        <td class="px-4 py-2">{{ $unit->lantai }}</td>
+                        <td class="px-4 py-2">{{ $unit->penghuniAktif->nama ?? '-' }}</td>
+                        <td class="px-4 py-2">
+                            <span class="px-2 py-1 text-xs rounded {{ $unit->status == 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                {{ $unit->status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 relative">
+                            <div x-data="{ open: false }" class="relative inline-block text-left">
+                                <button @click.stop="open = !open"
+                                        class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
+                                    Aksi <span class="text-xs">▼</span>
+                                </button>
+                                <div x-show="open" @click.outside="open = false"
+                                     x-cloak
+                                     class="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-xl z-50 text-left"
+                                     style="position: absolute; z-index: 9999;">
+                                    <button @click="editUnit({{ $unit->id }}, '{{ $unit->gedung }}', {{ $unit->lantai }}, {{ $unit->nomor_kamar }})"
+                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                        ✏️ Edit Unit
+                                    </button>
+
+                                    @if($unit->status == 'Aktif')
+                                        <button @click="openGantiPenghuni({{ $unit->id }}, '{{ $unit->no_unit }}', '{{ $unit->penghuniAktif->nama ?? '-' }}')"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                            👥 Ganti Penghuni
+                                        </button>
+                                        <button @click="openResetPassword({{ $unit->id }}, '{{ $unit->no_unit }}')"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                            🔑 Reset Kata Sandi
+                                        </button>
+                                    @endif
+
+                                    <div class="border-t my-1"></div>
+
+                                    @if($unit->status == 'Aktif')
+                                        <button @click="toggleStatus({{ $unit->id }}, '{{ $unit->no_unit }}', 'nonaktif')"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-orange-600 hover:bg-orange-50">
+                                            ⛔ Nonaktifkan
+                                        </button>
+                                    @else
+                                        <button @click="toggleStatus({{ $unit->id }}, '{{ $unit->no_unit }}', 'aktif')"
+                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-600 hover:bg-green-50">
+                                            ✅ Aktifkan
+                                        </button>
+                                    @endif
+
+                                    <button @click="confirmDelete({{ $unit->id }}, '{{ $unit->no_unit }}')"
+                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                        🗑️ Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+    {{-- ================= MODAL TAMBAH UNIT ================= --}}
+    <div x-show="openCreateUnit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div @click.outside="openCreateUnit = false" class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 space-y-5">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">Tambah Unit Baru</h2>
+                <button @click="openCreateUnit = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+
+            <form @submit.prevent="saveUnit" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nomor Unit</label>
+                    <input type="text" x-model="newUnit.no_unit" placeholder="Contoh: A-101" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Gedung</label>
+                    <input type="text" x-model="newUnit.gedung" placeholder="Contoh: Tower A" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Lantai</label>
+                    <input type="number" x-model="newUnit.lantai" placeholder="Contoh: 10" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nomor Kamar</label>
+                    <input type="number" x-model="newUnit.nomor_kamar" placeholder="Contoh: 1" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+
+                <template x-if="createdUnit">
+                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
+                        <p class="font-semibold text-yellow-800">Akun Unit Berhasil Dibuat</p>
+                        <p><strong>Username Login:</strong> <span x-text="createdUnit.no_unit"></span></p>
+                        <p>Password Sementara</p>
+                        <div class="bg-white border rounded px-3 py-2 font-mono text-center" x-text="createdUnit.password"></div>
+                        <p class="text-xs text-gray-600">Berikan password ini kepada penghuni unit untuk login pertama.</p>
+                    </div>
+                </template>
+
+                <div class="flex justify-end gap-3 pt-6 border-t">
+                    <button type="button" @click="openCreateUnit = false" class="px-5 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Simpan Unit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ================= MODAL EDIT UNIT ================= --}}
+    <div x-show="openEdit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div @click.outside="openEdit = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
+            <h2 class="font-semibold text-lg">Edit Unit (<span x-text="selectedUnit.no_unit"></span>)</h2>
+            <form @submit.prevent="updateUnit">
+                <div>
+                    <label class="text-sm">Gedung</label>
+                    <input type="text" x-model="editForm.gedung" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="text-sm">Lantai</label>
+                    <input type="number" x-model="editForm.lantai" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="text-sm">Nomor Kamar</label>
+                    <input type="number" x-model="editForm.nomor_kamar" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" @click="openEdit = false" class="px-4 py-2 border rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ================= MODAL GANTI PENGHUNI ================= --}}
+    <div x-show="openEditPenghuni" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div @click.outside="openEditPenghuni = false" class="bg-white w-full max-w-lg rounded-xl shadow-lg max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Pergantian Penghuni Unit <span class="text-blue-600" x-text="selectedUnit.no_unit"></span></h2>
+            </div>
+            <div class="px-6 py-4 space-y-5 overflow-y-auto">
+                <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
+                    <p><strong>Gedung:</strong> <span x-text="selectedUnit.gedung"></span></p>
+                    <p><strong>Lantai:</strong> <span x-text="selectedUnit.lantai"></span></p>
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-sm font-medium text-gray-700">Penghuni Aktif Saat Ini</p>
+                    <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
+                        <p><strong>Nama:</strong> <span x-text="selectedUnit.currentPenghuni"></span></p>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 space-y-4">
+                    <h3 class="text-sm font-semibold text-red-600">Pilih Penghuni Baru</h3>
+                    <select x-model="selectedPenghuniId" @change="fetchPenghuniDetail" class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+                        <option value="">-- Pilih Penghuni --</option>
+                        <template x-for="p in penghuniList" :key="p.id">
+                            <option :value="p.id" x-text="p.nama"></option>
+                        </template>
+                    </select>
+                    <template x-if="selectedPenghuniDetail">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm space-y-1">
+                            <p><strong>Nama:</strong> <span x-text="selectedPenghuniDetail.nama"></span></p>
+                            <p><strong>No. HP:</strong> <span x-text="selectedPenghuniDetail.telepon"></span></p>
+                            <p><strong>Email:</strong> <span x-text="selectedPenghuniDetail.email"></span></p>
+                        </div>
+                    </template>
+                </div>
+
+                <template x-if="passwordGenerated">
+                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
+                        <p class="font-semibold text-yellow-800">Password Sementara Penghuni Baru</p>
+                        <div class="bg-white border rounded px-3 py-2 font-mono text-center" x-text="newPassword"></div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="px-6 py-4 border-t flex justify-end gap-2 bg-white">
+                <button @click="openEditPenghuni = false" class="px-4 py-2 border rounded-lg hover:bg-gray-100">Batal</button>
+                <button @click="submitGantiPenghuni" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Simpan Pergantian</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ================= MODAL HAPUS UNIT ================= --}}
+    <div x-show="openDelete" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div @click.outside="openDelete = false" class="bg-white w-full max-w-sm rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-red-600">Hapus Unit</h2>
+            <p class="text-sm text-gray-600 mt-2">Apakah Anda yakin ingin menghapus unit <strong x-text="selectedUnit.no_unit"></strong>?</p>
+            <p class="text-xs text-gray-500 mt-1">Data unit dan relasinya akan dihapus dari sistem.</p>
+            <div class="flex justify-end gap-2 mt-6">
+                <button @click="openDelete = false" class="px-4 py-2 border rounded-lg">Batal</button>
+                <button @click="deleteUnit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ================= MODAL NONAKTIFKAN/AKTIFKAN ================= --}}
+    <div x-show="openToggle" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div @click.outside="openToggle = false" class="bg-white w-full max-w-sm rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-red-600" x-text="toggleAction == 'nonaktif' ? 'Nonaktifkan Unit' : 'Aktifkan Unit'"></h2>
+            <p class="text-sm text-gray-600 mt-2">Unit <strong x-text="selectedUnit.no_unit"></strong> akan <span x-text="toggleAction == 'nonaktif' ? 'dinonaktifkan' : 'diaktifkan'"></span>.</p>
+            <div class="flex justify-end gap-2 mt-6">
+                <button @click="openToggle = false" class="px-4 py-2 border rounded-lg">Batal</button>
+                <button @click="submitToggle" class="px-4 py-2 bg-red-600 text-white rounded-lg" :class="toggleAction == 'aktif' ? 'bg-green-600' : 'bg-red-600'">Konfirmasi</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ================= MODAL RESET PASSWORD ================= --}}
+    <div x-show="openReset" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div @click.outside="openReset = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-semibold text-gray-800">Reset Password Unit</h2>
+            <p class="text-sm text-gray-600">Password login untuk unit <strong x-text="selectedUnit.no_unit"></strong> akan direset.</p>
+            <template x-if="resetPasswordGenerated">
+                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
+                    <p class="font-semibold text-yellow-800">Password Sementara Baru</p>
+                    <div class="bg-white border rounded px-3 py-2 font-mono text-center" x-text="newPassword"></div>
+                    <p class="text-xs text-gray-600">Berikan password ini kepada penghuni unit untuk login kembali.</p>
+                </div>
+            </template>
+            <div class="flex justify-end gap-2 pt-4">
+                <button @click="openReset = false" class="px-4 py-2 border rounded-lg">Batal</button>
+                <button @click="submitResetPassword" class="px-4 py-2 bg-purple-600 text-white rounded-lg">Reset Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function unitManager() {
+    return {
+        openCreateUnit: false,
+        openEdit: false,
+        openEditPenghuni: false,
+        openDelete: false,
+        openToggle: false,
+        openReset: false,
+        selectedUnit: { id: null, no_unit: '', gedung: '', lantai: '', currentPenghuni: '' },
+        newUnit: { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
+        editForm: { gedung: '', lantai: '', nomor_kamar: '' },
+        createdUnit: null,
+        search: '',
+        floorFilter: '',
+        unitsData: @json($units),
+        filteredUnits: [],
+        penghuniList: [],
+        selectedPenghuniId: '',
+        selectedPenghuniDetail: null,
+        passwordGenerated: false,
+        newPassword: '',
+        toggleAction: '',
+        resetPasswordGenerated: false,
+
+        init() {
+            this.filteredUnits = this.unitsData;
+            this.fetchPenghuniList();
+        },
+
+        applyFilter() {
+            this.filteredUnits = this.unitsData.filter(unit => {
+                let match = true;
+                if (this.search) {
+                    match = unit.no_unit.toLowerCase().includes(this.search.toLowerCase()) ||
+                            unit.gedung.toLowerCase().includes(this.search.toLowerCase());
+                }
+                if (this.floorFilter && unit.lantai != this.floorFilter) {
+                    match = false;
+                }
+                return match;
+            });
+        },
+
+        resetFilter() {
+            this.search = '';
+            this.floorFilter = '';
+            this.applyFilter();
+        },
+
+        fetchPenghuniList() {
+            fetch('/penghuni-available')
+                .then(res => res.json())
+                .then(data => this.penghuniList = data);
+        },
+
+        fetchPenghuniDetail() {
+            if (this.selectedPenghuniId) {
+                this.selectedPenghuniDetail = this.penghuniList.find(p => p.id == this.selectedPenghuniId);
+            } else {
+                this.selectedPenghuniDetail = null;
+            }
+        },
+
+        saveUnit() {
+            fetch('/units', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(this.newUnit)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.createdUnit = data.unit;
+                    this.createdUnit.password = data.password;
+                    this.newUnit = { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' };
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    alert('Gagal menambah unit: ' + data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        },
+
+        editUnit(id, gedung, lantai, nomor_kamar) {
+            this.selectedUnit.id = id;
+            this.editForm.gedung = gedung;
+            this.editForm.lantai = lantai;
+            this.editForm.nomor_kamar = nomor_kamar;
+            this.openEdit = true;
+        },
+
+        updateUnit() {
+            fetch(`/units/${this.selectedUnit.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(this.editForm)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Unit berhasil diperbarui');
+                    location.reload();
+                } else {
+                    alert('Gagal memperbarui unit: ' + data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        },
+
+        confirmDelete(id, no_unit) {
+            this.selectedUnit.id = id;
+            this.selectedUnit.no_unit = no_unit;
+            this.openDelete = true;
+        },
+
+        deleteUnit() {
+            fetch(`/units/${this.selectedUnit.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Unit berhasil dihapus');
+                    location.reload();
+                } else {
+                    alert('Gagal menghapus unit: ' + data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        },
+
+        openGantiPenghuni(id, no_unit, currentPenghuni) {
+            this.selectedUnit.id = id;
+            this.selectedUnit.no_unit = no_unit;
+            this.selectedUnit.currentPenghuni = currentPenghuni;
+            this.selectedPenghuniId = '';
+            this.selectedPenghuniDetail = null;
+            this.passwordGenerated = false;
+            this.newPassword = '';
+            this.openEditPenghuni = true;
+        },
+
+        submitGantiPenghuni() {
+            if (!this.selectedPenghuniId) {
+                alert('Pilih penghuni baru terlebih dahulu');
+                return;
+            }
+            fetch(`/units/${this.selectedUnit.id}/change-occupant`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ penghuni_id: this.selectedPenghuniId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.passwordGenerated = true;
+                    this.newPassword = data.new_password;
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    alert('Gagal mengganti penghuni: ' + data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        },
+
+        openResetPassword(id, no_unit) {
+            this.selectedUnit.id = id;
+            this.selectedUnit.no_unit = no_unit;
+            this.resetPasswordGenerated = false;
+            this.newPassword = '';
+            this.openReset = true;
+        },
+
+        submitResetPassword() {
+            fetch(`/units/${this.selectedUnit.id}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.resetPasswordGenerated = true;
+                    this.newPassword = data.new_password;
+                } else {
+                    alert('Gagal reset password: ' + data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        },
+
+        toggleStatus(id, no_unit, action) {
+            this.selectedUnit.id = id;
+            this.selectedUnit.no_unit = no_unit;
+            this.toggleAction = action;
+            this.openToggle = true;
+        },
+
+        submitToggle() {
+            fetch(`/units/${this.selectedUnit.id}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Gagal mengubah status: ' + data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        }
+    }
+}
+</script>
 @endsection

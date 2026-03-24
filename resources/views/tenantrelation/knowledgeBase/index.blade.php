@@ -9,7 +9,7 @@
     <div class="flex justify-between items-center mb-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">
-                Knowledge Base Solusi Keluhan
+                Knowledge Base 
             </h1>
             <p class="text-sm text-gray-500">
                 Referensi solusi untuk membantu penanganan keluhan

@@ -20,8 +20,16 @@
         <p class="text-gray-600">Sistem Keluhan Urban Town Serpong</p>
     </div>
 
-    <!-- Form UI Only -->
-    <form class="space-y-6">
+    <!-- Form dengan method POST dan action ke route login -->
+    <form method="POST" action="{{ route('login.post') }}" class="space-y-6">
+        @csrf
+
+        @if ($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <!-- Username -->
         <div class="relative">
             <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
@@ -31,7 +39,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 14a7 7 0 016.879 3.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                 </div>
-                <input type="text" placeholder="Masukkan username" class="block w-full pl-10"/>
+                <input type="text" name="username" value="{{ old('username') }}" placeholder="Masukkan username" class="block w-full pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md" required autofocus>
             </div>
         </div>
 
@@ -44,7 +52,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c-1.657 0-3 1.343-3 3v3h6v-3c0-1.657-1.343-3-3-3zM7 11V7a5 5 0 1110 0v4"/>
                     </svg>
                 </div>
-                <input type="password" placeholder="Masukkan password" class="block w-full pl-10"/>
+                <input type="password" name="password" placeholder="Masukkan password" class="block w-full pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md" required>
             </div>
         </div>
 
@@ -53,17 +61,6 @@
             Masuk
         </button>
     </form>
-
-    <!-- Demo Credentials
-    <div class="mt-8 pt-6 border-t border-gray-200 text-xs text-center">
-        <p class="mb-2">Demo Credentials:</p>
-        <div class="grid grid-cols-2 gap-2">
-            <div class="bg-gray-50 p-2 rounded">Admin<br>admin / admin123</div>
-            <div class="bg-gray-50 p-2 rounded">Tenant Relation<br>tr001 / tr123</div>
-            <div class="bg-gray-50 p-2 rounded">Departemen<br>dept001 / dept123</div>
-            <div class="bg-gray-50 p-2 rounded">Penghuni<br>unit101 / unit123</div>
-        </div>
-    </div> -->
 </div>
 
 </body>
