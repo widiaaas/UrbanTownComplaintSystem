@@ -9,65 +9,56 @@ class Keluhan extends Model
 {
     use HasFactory;
 
-    protected $table = 'keluhan';
+    protected $table = 'keluhans';
 
     protected $fillable = [
         'ticket',
         'unit_id',
         'penghuni_id',
-        'title',
-        'description',
-        'category',
-        'priority',
+        'judul',
+        'deskripsi',
         'status',
-        'taken_by',
+        'penanggung_jawab',
         'taken_at',
-        'decision',
-        'decision_date',
-        'feedback_status',
-        'feedback_alasan',
-        'feedback_date',
+        'keputusan',
+        'tanggal_keputusan',
         'lampiran',
     ];
 
     protected $casts = [
-        'priority' => 'string',
         'status' => 'string',
-        'feedback_status' => 'string',
         'taken_at' => 'datetime',
-        'decision_date' => 'datetime',
-        'feedback_date' => 'datetime',
+        'tanggal_keputusan' => 'datetime',
         'lampiran' => 'array',
     ];
 
-    // Relationships
     public function unit()
     {
-        return $this->belongsTo(Unit::class, 'unit_id');
+        return $this->belongsTo(Unit::class);
     }
 
     public function penghuni()
     {
-        return $this->belongsTo(Penghuni::class, 'penghuni_id');
+        return $this->belongsTo(Penghuni::class);
     }
 
-    public function takenBy()
+    public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'taken_by');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab');
     }
 
     public function riwayat()
     {
-        return $this->hasMany(RiwayatKeluhan::class, 'keluhan_id');
+        return $this->hasMany(RiwayatKeluhan::class);
     }
 
     public function workOrders()
     {
-        return $this->hasMany(WorkOrder::class, 'keluhan_id');
+        return $this->hasMany(WorkOrder::class);
     }
 
     public function diagnosis()
     {
-        return $this->hasMany(Diagnosis::class, 'keluhan_id');
+        return $this->hasMany(Diagnosis::class);
     }
 }

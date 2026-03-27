@@ -1,563 +1,10 @@
-<!-- @extends('layouts.app')
-
-@section('title', 'Kelola Unit')
-
-@section('content')
-
-<div 
-x-data="{
-    openEdit:false,
-    openEditPenghuni:false,
-    openDeactivate:false,
-    openDelete:false,
-    openResetPassword:false,
-    selectedUnit:null,
-    openCreateUnit: false,
-    passwordGenerated:false,
-    generatedPassword:'Tmp-9XK21',
-    createdUnit:'',
-
-    units:[
-        {no:'A-101', gedung:'Tower A', lantai:10, penghuni:'Widiawati', status:'aktif'},
-        {no:'A-102', gedung:'Tower A', lantai:10, penghuni:'Andi Saputra', status:'aktif'},
-        {no:'A-103', gedung:'Tower A', lantai:10, penghuni:'Siti Aminah', status:'nonaktif'},
-        {no:'B-201', gedung:'Tower B', lantai:2, penghuni:'Budi Santoso', status:'aktif'},
-        {no:'B-202', gedung:'Tower B', lantai:2, penghuni:'Rina Kartika', status:'aktif'},
-        {no:'C-301', gedung:'Tower C', lantai:3, penghuni:'Dedi Kurniawan', status:'nonaktif'}
-    ]
-}"
-    class="p-6 space-y-6">
-
-    {{-- ================= HEADER ================= --}}
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900">Kelola Unit</h1>
-        <button
-            @click="openCreateUnit = true"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            + Tambah Unit
-        </button>
-    </div>
-
-    {{-- ================= FILTER ================= --}}
-    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4">
-        <div class="flex-1">
-            <label class="text-sm font-medium">Cari Unit / Gedung</label>
-            <input type="text" class="w-full mt-1 border rounded-lg px-3 py-2">
-        </div>
-        <div>
-            <label class="text-sm font-medium">Lantai</label>
-            <select class="w-full mt-1 border rounded-lg px-3 py-2">
-                <option value="">Semua</option>
-                <option>1</option>
-                <option>2</option>
-                <option>10</option>
-            </select>
-        </div>
-        <div class="flex gap-2 items-end">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">Filter</button>
-            <button class="px-4 py-2 border rounded-lg">Reset</button>
-        </div>
-    </div>
-
-    {{-- ================= TABLE ================= --}}
-    <div class="bg-white rounded-lg shadow overflow-visible">
-
-        <div class="overflow-x-auto overflow-visible">
-            <table class="min-w-full divide-y">
-                
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-center">No Unit</th>
-                        <th class="px-4 py-2 text-center">Gedung</th>
-                        <th class="px-4 py-2 text-center">Lantai</th>
-                        <th class="px-4 py-2 text-center">Penghuni</th>
-                        <th class="px-4 py-2 text-center">Status</th>
-                        <th class="px-4 py-2 text-center">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    <template x-for="unit in units" :key="unit.no">
-                        <tr class="text-center hover:bg-gray-50">
-
-                            <td class="px-4 py-2" x-text="unit.no"></td>
-                            <td class="px-4 py-2" x-text="unit.gedung"></td>
-                            <td class="px-4 py-2" x-text="unit.lantai"></td>
-                            <td class="px-4 py-2" x-text="unit.penghuni"></td>
-
-                            {{-- STATUS --}}
-                            <td class="px-4 py-2">
-                                <span 
-                                    x-show="unit.status === 'aktif'"
-                                    class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
-                                    Aktif
-                                </span>
-
-                                <span 
-                                    x-show="unit.status === 'nonaktif'"
-                                    class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-                                    Nonaktif
-                                </span>
-                            </td>
-
-                            {{-- AKSI --}}
-                            <td class="px-4 py-2 relative">
-
-                                <div x-data="{open:false}" class="relative inline-block text-left">
-
-                                    <button
-                                        @click.stop="open=!open"
-                                        class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
-                                        Aksi
-                                        <span class="text-xs">▼</span>
-                                    </button>
-
-                                    <div
-                                        x-show="open"
-                                        x-cloak
-                                        x-transition
-                                        @click.outside="open=false"
-                                        class="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-xl z-50 text-left">
-
-                                        <button
-                                            @click="openEdit=true; selectedUnit=unit.no; open=false"
-                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
-                                            ✏️ Edit Unit
-                                        </button>
-
-                                        <template x-if="unit.status === 'aktif'">
-                                            <button
-                                                @click="openEditPenghuni=true; selectedUnit=unit.no; open=false"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
-                                                👥 Ganti Penghuni
-                                            </button>
-                                        </template>
-
-                                        <template x-if="unit.status === 'aktif'">
-                                            <button
-                                                @click="openResetPassword=true; selectedUnit=unit.no; open=false"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
-                                                🔑 Reset Kata Sandi
-                                            </button>
-                                        </template>
-
-                                        <div class="border-t my-1"></div>
-
-                                        <template x-if="unit.status === 'aktif'">
-                                            <button
-                                                @click="openDeactivate=true; selectedUnit=unit.no; open=false"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-orange-600 hover:bg-orange-50">
-                                                ⛔ Nonaktifkan
-                                            </button>
-                                        </template>
-
-                                        <template x-if="unit.status === 'nonaktif'">
-                                            <button
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-600 hover:bg-green-50">
-                                                ✅ Aktifkan
-                                            </button>
-                                        </template>
-
-                                        <button
-                                            @click="openDelete=true; selectedUnit=unit.no; open=false"
-                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                                            🗑️ Hapus
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-                    </template>
-
-                </tbody>
-            </table>
-        </div>
-
-    </div>
-    {{-- ================= MODAL TAMBAH UNIT ================= --}}
-    <div 
-        x-show="openCreateUnit"
-        x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-
-        <div 
-            @click.outside="openCreateUnit = false"
-            class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 space-y-5">
-
-            {{-- HEADER --}}
-            <div class="flex justify-between items-center">
-                <h2 class="text-lg font-semibold text-gray-800">
-                    Tambah Unit Baru
-                </h2>
-                <button 
-                    @click="openCreateUnit = false"
-                    class="text-gray-400 hover:text-gray-600 text-xl">
-                    &times;
-                </button>
-            </div>
-
-            {{-- FORM --}}
-            <form class="space-y-4">
-
-                {{-- Nomor Unit --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Nomor Unit
-                    </label>
-                    <input 
-                        type="text"
-                        placeholder="Contoh: A-101"
-                        class="w-full mt-1 border rounded-lg px-3 py-2
-                            focus:ring focus:ring-blue-200 focus:border-blue-500">
-                </div>
-
-                {{-- Gedung --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Gedung
-                    </label>
-                    <input 
-                        type="text"
-                        placeholder="Contoh: Tower A"
-                        class="w-full mt-1 border rounded-lg px-3 py-2
-                            focus:ring focus:ring-blue-200 focus:border-blue-500">
-                </div>
-
-                {{-- Lantai --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Lantai
-                    </label>
-                    <input 
-                        type="number"
-                        placeholder="Contoh: 10"
-                        class="w-full mt-1 border rounded-lg px-3 py-2
-                            focus:ring focus:ring-blue-200 focus:border-blue-500">
-                </div>
-
-                {{-- Nomor Kamar --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Nomor Kamar
-                    </label>
-                    <input 
-                        type="number"
-                        placeholder="Contoh: 1"
-                        class="w-full mt-1 border rounded-lg px-3 py-2
-                            focus:ring focus:ring-blue-200 focus:border-blue-500">
-                </div>
-
-                <template x-if="passwordGenerated">
-                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
-                    <p class="font-semibold text-yellow-800">
-                        Akun Unit Berhasil Dibuat
-                    </p>
-
-                    <p>
-                        <strong>Username Login:</strong>
-                        <span x-text="createdUnit"></span>
-                    </p>
-
-                    <p>Password Sementara</p>
-
-                        <div class="bg-white border rounded px-3 py-2 font-mono text-center">
-                        <span x-text="generatedPassword"></span>
-                    </div>
-
-                    <p class="text-xs text-gray-600">
-                        Berikan password ini kepada penghuni unit untuk login pertama.
-                    </p>   
-                    </div>
-                    </template>
-
-                {{-- FOOTER --}}
-                <div class="flex justify-end gap-3 pt-6 border-t">
-                    <button
-                        type="button"
-                        @click="openCreateUnit = false"
-                        class="px-5 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
-                        Batal
-                    </button>
-
-                    <button
-                        type="button"
-                        @click="
-                        createdUnit='A-101';
-                        passwordGenerated=true
-                        "
-                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Simpan Unit
-                    </button>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-
-    {{-- ================= MODAL EDIT UNIT ================= --}}
-    <div x-show="openEdit" x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div @click.outside="openEdit=false"
-            class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
-            <h2 class="font-semibold text-lg">
-                Edit Unit (<span x-text="selectedUnit"></span>)
-            </h2>
-
-            <div>
-                <label class="text-sm">Gedung</label>
-                <input type="text" class="w-full mt-1 border rounded-lg px-3 py-2" value="Tower A">
-            </div>
-
-            <div>
-                <label class="text-sm">Lantai</label>
-                <input type="number" class="w-full mt-1 border rounded-lg px-3 py-2" value="10">
-            </div>
-
-            <div class="flex justify-end gap-2 pt-4">
-                <button @click="openEdit=false" class="px-4 py-2 border rounded-lg">Batal</button>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ================= MODAL EDIT / GANTI PENGHUNI ================= --}}
-    <div 
-        x-show="openEditPenghuni" 
-        x-cloak
-        x-data="{
-            selectedPenghuniBaru: '',
-            passwordGenerated: false,
-            generatedPassword: 'Tmp-9XK21',
-            penghuniList: [
-                { id: 1, nama: 'Andi Saputra', hp: '081234567890', email: 'andi@mail.com' },
-                { id: 2, nama: 'Siti Aminah', hp: '082233445566', email: 'siti@mail.com' },
-                { id: 3, nama: 'Budi Santoso', hp: '083344556677', email: 'budi@mail.com' }
-            ]
-        }"
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-
-        <div 
-            @click.outside="openEditPenghuni=false"
-            class="bg-white w-full max-w-lg rounded-xl shadow-lg 
-                max-h-[90vh] flex flex-col">
-
-            {{-- ================= HEADER ================= --}}
-            <div class="px-6 py-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">
-                    Pergantian Penghuni Unit 
-                    <span class="text-blue-600" x-text="selectedUnit"></span>
-                </h2>
-            </div>
-
-            {{-- ================= BODY (SCROLLABLE) ================= --}}
-            <div class="px-6 py-4 space-y-5 overflow-y-auto">
-
-                {{-- INFO UNIT --}}
-                <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
-                    <p><strong>Gedung:</strong> Tower A</p>
-                    <p><strong>Lantai:</strong> 10</p>
-                </div>
-
-                {{-- PENGHUNI LAMA --}}
-                <div class="space-y-2">
-                    <p class="text-sm font-medium text-gray-700">
-                        Penghuni Aktif Saat Ini
-                    </p>
-                    <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
-                        <p><strong>Nama:</strong> Widiawati</p>
-                        <p><strong>Email:</strong> widiawati@gmail.com</p>
-                    </div>
-                </div>
-
-                {{-- GANTI PENGHUNI --}}
-                <div class="border-t pt-4 space-y-4">
-                    <h3 class="text-sm font-semibold text-red-600">
-                        Pilih Penghuni Baru
-                    </h3>
-
-                    <select 
-                        x-model="selectedPenghuniBaru"
-                        class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-                        <option value="">-- Pilih Penghuni --</option>
-                        <template x-for="p in penghuniList" :key="p.id">
-                            <option :value="p.id" x-text="p.nama"></option>
-                        </template>
-                    </select>
-
-                    <template x-if="selectedPenghuniBaru">
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm space-y-1">
-                            <p><strong>Nama:</strong>
-                                <span x-text="penghuniList.find(p => p.id == selectedPenghuniBaru).nama"></span>
-                            </p>
-                            <p><strong>No. HP:</strong>
-                                <span x-text="penghuniList.find(p => p.id == selectedPenghuniBaru).hp"></span>
-                            </p>
-                            <p><strong>Email:</strong>
-                                <span x-text="penghuniList.find(p => p.id == selectedPenghuniBaru).email"></span>
-                            </p>
-                        </div>
-                    </template>
-                </div>
-
-                {{-- PASSWORD INFO --}}
-                <template x-if="passwordGenerated">
-                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
-                        <p class="font-semibold text-yellow-800">
-                            Password Sementara Penghuni Baru
-                        </p>
-                        <div class="bg-white border rounded px-3 py-2 font-mono text-center">
-                            <span x-text="generatedPassword"></span>
-                        </div>
-                    </div>
-                </template>
-
-            </div>
-
-            {{-- ================= FOOTER ================= --}}
-            <div class="px-6 py-4 border-t flex justify-end gap-2 bg-white">
-                <button 
-                    @click="openEditPenghuni=false"
-                    class="px-4 py-2 border rounded-lg hover:bg-gray-100">
-                    Batal
-                </button>
-
-                <button 
-                @click="
-                    if(selectedPenghuniBaru)
-                    {
-                    passwordGenerated=true
-                    }"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Simpan Pergantian
-                </button>
-            </div>
-
-        </div>
-    </div>
-    
-    {{-- ================= MODAL HAPUS UNIT ================= --}}
-    <div x-show="openDelete" x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-        <div @click.outside="openDelete=false"
-            class="bg-white w-full max-w-sm rounded-lg p-6">
-
-            <h2 class="text-lg font-semibold text-red-600">
-                Hapus Unit
-            </h2>
-
-            <p class="text-sm text-gray-600 mt-2">
-                Apakah Anda yakin ingin menghapus unit 
-                <strong x-text="selectedUnit"></strong>?
-            </p>
-
-            <p class="text-xs text-gray-500 mt-1">
-                Data unit dan relasinya akan dihapus dari sistem.
-            </p>
-
-            <div class="flex justify-end gap-2 mt-6">
-                <button 
-                    @click="openDelete=false"
-                    class="px-4 py-2 border rounded-lg">
-                    Batal
-                </button>
-
-                <button 
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg">
-                    Hapus
-                </button>
-            </div>
-
-        </div>
-    </div>
-    {{-- ================= MODAL NONAKTIFKAN UNIT ================= --}}
-    <div x-show="openDeactivate" x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div @click.outside="openDeactivate=false"
-            class="bg-white w-full max-w-sm rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-red-600">Nonaktifkan Unit</h2>
-            <p class="text-sm text-gray-600 mt-2">
-                Unit <strong x-text="selectedUnit"></strong> akan dinonaktifkan.
-            </p>
-
-            <div class="flex justify-end gap-2 mt-6">
-                <button @click="openDeactivate=false"
-                    class="px-4 py-2 border rounded-lg">
-                    Batal
-                </button>
-                <button class="px-4 py-2 bg-red-600 text-white rounded-lg">
-                    Nonaktifkan
-                </button>
-            </div>
-        </div>
-    </div>
-    {{-- ================= MODAL RESET PASSWORD ================= --}}
-    <div x-show="openResetPassword" x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-        <div @click.outside="openResetPassword=false"
-            class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
-
-            <h2 class="text-lg font-semibold text-gray-800">
-                Reset Password Unit
-            </h2>
-
-            <p class="text-sm text-gray-600">
-                Password login untuk unit 
-                <strong x-text="selectedUnit"></strong> 
-                akan direset.
-            </p>
-
-            <template x-if="passwordGenerated">
-                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
-                    <p class="font-semibold text-yellow-800">
-                        Password Sementara Baru
-                    </p>
-
-                    <div class="bg-white border rounded px-3 py-2 font-mono text-center">
-                        <span x-text="generatedPassword"></span>
-                    </div>
-
-                    <p class="text-xs text-gray-600">
-                        Berikan password ini kepada penghuni unit untuk login kembali.
-                    </p>
-                </div>
-            </template>
-
-            <div class="flex justify-end gap-2 pt-4">
-                <button
-                    @click="openResetPassword=false"
-                    class="px-4 py-2 border rounded-lg">
-                    Batal
-                </button>
-
-                <button
-                    @click="passwordGenerated=true"
-                    class="px-4 py-2 bg-purple-600 text-white rounded-lg">
-                    Reset Password
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-</div>
-
-@endsection -->
-
 @extends('layouts.app')
 
 @section('title', 'Kelola Unit')
 
 @section('content')
 
-<div x-data="unitManager()" x-init="init()" class="p-6 space-y-6">
+<div x-data="unitManager()" x-init='init(@json($units))' class="p-6 space-y-6">
 
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-center">
@@ -591,86 +38,97 @@ x-data="{
     </div>
 
     {{-- ================= TABLE ================= --}}
-<div class="bg-white rounded-lg shadow">
-    <div class="overflow-x-auto">
-        <div class="relative min-w-full" style="min-width: 600px;">
-            <table class="w-full divide-y">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-center">No Unit</th>
-                        <th class="px-4 py-2 text-center">Gedung</th>
-                        <th class="px-4 py-2 text-center">Lantai</th>
-                        <th class="px-4 py-2 text-center">Penghuni</th>
-                        <th class="px-4 py-2 text-center">Status</th>
-                        <th class="px-4 py-2 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($units as $unit)
+    <div class="bg-white rounded-lg shadow overflow-x-auto overflow-y-visible">
+        <table class="min-w-full divide-y">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-center">No Unit</th>
+                    <th class="px-4 py-2 text-center">Gedung</th>
+                    <th class="px-4 py-2 text-center">Lantai</th>
+                    <th class="px-4 py-2 text-center">Penghuni</th>
+                    <th class="px-4 py-2 text-center">Status</th>
+                    <th class="px-4 py-2 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="unit in filteredUnits" :key="unit.id">
                     <tr class="text-center hover:bg-gray-50">
-                        <td class="px-4 py-2">{{ $unit->no_unit }}</td>
-                        <td class="px-4 py-2">{{ $unit->gedung }}</td>
-                        <td class="px-4 py-2">{{ $unit->lantai }}</td>
-                        <td class="px-4 py-2">{{ $unit->penghuniAktif->nama ?? '-' }}</td>
+                        <td class="px-4 py-2" x-text="unit.no_unit"></td>
+                        <td class="px-4 py-2" x-text="unit.gedung"></td>
+                        <td class="px-4 py-2" x-text="unit.lantai"></td>
+                        <td class="px-4 py-2" x-text="unit.currentPenghuni || '-'"></td>
                         <td class="px-4 py-2">
-                            <span class="px-2 py-1 text-xs rounded {{ $unit->status == 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                {{ $unit->status }}
-                            </span>
+                            <span class="px-2 py-1 text-xs rounded"
+                                :class="unit.status == 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                x-text="unit.status"></span>
                         </td>
                         <td class="px-4 py-2 relative">
-                            <div x-data="{ open: false }" class="relative inline-block text-left">
-                                <button @click.stop="open = !open"
-                                        class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
+                            <div x-data="dropdownMenu(unit)" class="relative inline-block text-left">
+
+                                <!-- BUTTON -->
+                                <button @click="open = !open"
+                                    class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
                                     Aksi <span class="text-xs">▼</span>
                                 </button>
-                                <div x-show="open" @click.outside="open = false"
-                                     x-cloak
-                                     class="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-xl z-50 text-left"
-                                     style="position: absolute; z-index: 9999;">
-                                    <button @click="editUnit({{ $unit->id }}, '{{ $unit->gedung }}', {{ $unit->lantai }}, {{ $unit->nomor_kamar }})"
-                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+
+                                <!-- DROPDOWN -->
+                                <div x-show="open"
+                                    @click.outside="open = false"
+                                    x-transition
+                                    x-ref="menu"
+                                    class="fixed w-44 bg-white border rounded-lg shadow-xl z-[9999]"
+                                    x-cloak
+                                    x-init="
+                                        $watch('open', value => {
+                                            if (value) {
+                                                let rect = $el.previousElementSibling.getBoundingClientRect();
+                                                $el.style.top = (rect.bottom + window.scrollY) + 'px';
+                                                $el.style.left = (rect.right - 176) + 'px';
+                                            }
+                                        })
+                                    ">
+
+                                    <button @click="editUnit()" class="w-full text-left px-3 py-2 hover:bg-gray-100">
                                         ✏️ Edit Unit
                                     </button>
 
-                                    @if($unit->status == 'Aktif')
-                                        <button @click="openGantiPenghuni({{ $unit->id }}, '{{ $unit->no_unit }}', '{{ $unit->penghuniAktif->nama ?? '-' }}')"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
-                                            👥 Ganti Penghuni
-                                        </button>
-                                        <button @click="openResetPassword({{ $unit->id }}, '{{ $unit->no_unit }}')"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
-                                            🔑 Reset Kata Sandi
-                                        </button>
-                                    @endif
+                                    <template x-if="status == 'Aktif'">
+                                        <div>
+                                            <button @click="gantiPenghuni()" class="w-full text-left px-3 py-2 hover:bg-gray-100">
+                                                👥 Ganti Penghuni
+                                            </button>
+                                            <button @click="resetPassword()" class="w-full text-left px-3 py-2 hover:bg-gray-100">
+                                                🔑 Reset Kata Sandi
+                                            </button>
+                                        </div>
+                                    </template>
 
                                     <div class="border-t my-1"></div>
 
-                                    @if($unit->status == 'Aktif')
-                                        <button @click="toggleStatus({{ $unit->id }}, '{{ $unit->no_unit }}', 'nonaktif')"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-orange-600 hover:bg-orange-50">
+                                    <template x-if="status == 'Aktif'">
+                                        <button @click="toggleStatus('nonaktif')" class="w-full text-left px-3 py-2 text-orange-600 hover:bg-orange-50">
                                             ⛔ Nonaktifkan
                                         </button>
-                                    @else
-                                        <button @click="toggleStatus({{ $unit->id }}, '{{ $unit->no_unit }}', 'aktif')"
-                                                class="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-600 hover:bg-green-50">
+                                    </template>
+
+                                    <template x-if="status == 'Nonaktif'">
+                                        <button @click="toggleStatus('aktif')" class="w-full text-left px-3 py-2 text-green-600 hover:bg-green-50">
                                             ✅ Aktifkan
                                         </button>
-                                    @endif
+                                    </template>
 
-                                    <button @click="confirmDelete({{ $unit->id }}, '{{ $unit->no_unit }}')"
-                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <button @click="confirmDelete()" class="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50">
                                         🗑️ Hapus
                                     </button>
+
                                 </div>
                             </div>
                         </td>
                     </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                </template>
+            </tbody>
+        </table>
     </div>
-</div>
 
     {{-- ================= MODAL TAMBAH UNIT ================= --}}
     <div x-show="openCreateUnit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -720,24 +178,27 @@ x-data="{
     <div x-show="openEdit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div @click.outside="openEdit = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
             <h2 class="font-semibold text-lg">Edit Unit (<span x-text="selectedUnit.no_unit"></span>)</h2>
-            <form @submit.prevent="updateUnit">
+            
+            <div class="space-y-3">
                 <div>
                     <label class="text-sm">Gedung</label>
-                    <input type="text" x-model="editForm.gedung" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input type="text" x-model="editForm.gedung" class="w-full mt-1 border rounded-lg px-3 py-2">
                 </div>
                 <div>
                     <label class="text-sm">Lantai</label>
-                    <input type="number" x-model="editForm.lantai" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input type="number" x-model="editForm.lantai" class="w-full mt-1 border rounded-lg px-3 py-2">
                 </div>
                 <div>
                     <label class="text-sm">Nomor Kamar</label>
-                    <input type="number" x-model="editForm.nomor_kamar" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input type="number" x-model="editForm.nomor_kamar" class="w-full mt-1 border rounded-lg px-3 py-2">
                 </div>
-                <div class="flex justify-end gap-2 pt-4">
-                    <button type="button" @click="openEdit = false" class="px-4 py-2 border rounded-lg">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>
-                </div>
-            </form>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button type="button" @click="openEdit = false" class="px-4 py-2 border rounded-lg">Batal</button>
+                {{-- GANTI: tidak pakai form submit, langsung @click --}}
+                <button type="button" @click="updateUnit()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>
+            </div>
         </div>
     </div>
 
@@ -756,7 +217,7 @@ x-data="{
                 <div class="space-y-2">
                     <p class="text-sm font-medium text-gray-700">Penghuni Aktif Saat Ini</p>
                     <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
-                        <p><strong>Nama:</strong> <span x-text="selectedUnit.currentPenghuni"></span></p>
+                        <p><strong>Nama:</strong> <span x-text="selectedUnit.currentPenghuni || '-'"></span></p>
                     </div>
                 </div>
 
@@ -812,7 +273,7 @@ x-data="{
             <p class="text-sm text-gray-600 mt-2">Unit <strong x-text="selectedUnit.no_unit"></strong> akan <span x-text="toggleAction == 'nonaktif' ? 'dinonaktifkan' : 'diaktifkan'"></span>.</p>
             <div class="flex justify-end gap-2 mt-6">
                 <button @click="openToggle = false" class="px-4 py-2 border rounded-lg">Batal</button>
-                <button @click="submitToggle" class="px-4 py-2 bg-red-600 text-white rounded-lg" :class="toggleAction == 'aktif' ? 'bg-green-600' : 'bg-red-600'">Konfirmasi</button>
+                <button @click="submitToggle" class="px-4 py-2 text-white rounded-lg" :class="toggleAction == 'aktif' ? 'bg-green-600' : 'bg-red-600'">Konfirmasi</button>
             </div>
         </div>
     </div>
@@ -837,6 +298,22 @@ x-data="{
     </div>
 </div>
 
+{{-- ================= MODAL ALERT ================= --}}
+<div x-show="alertMessage"
+    x-transition.opacity.duration.200ms
+     class="fixed inset-0 bg-black/30 flex items-center justify-center z-[100]"
+     x-cloak>
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+        <p x-text="alertMessage" class="text-gray-800"></p>
+        <div class="mt-4">
+            <button @click="alertMessage = ''"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 function unitManager() {
     return {
@@ -852,7 +329,7 @@ function unitManager() {
         createdUnit: null,
         search: '',
         floorFilter: '',
-        unitsData: @json($units),
+        unitsData: [],
         filteredUnits: [],
         penghuniList: [],
         selectedPenghuniId: '',
@@ -862,9 +339,16 @@ function unitManager() {
         toggleAction: '',
         resetPasswordGenerated: false,
 
-        init() {
-            this.filteredUnits = this.unitsData;
+        init(initialUnits) {
+            this.unitsData = initialUnits;
+            this.filteredUnits = initialUnits;
             this.fetchPenghuniList();
+
+            window.addEventListener('edit-unit', e => this.editUnit(e.detail.id, e.detail.gedung, e.detail.lantai, e.detail.nomor_kamar));
+            window.addEventListener('ganti-penghuni', e => this.openGantiPenghuni(e.detail.id, e.detail.no_unit, e.detail.currentPenghuni));
+            window.addEventListener('reset-password', e => this.openResetPassword(e.detail.id, e.detail.no_unit));
+            window.addEventListener('toggle-status', e => this.toggleStatus(e.detail.id, e.detail.no_unit, e.detail.action));
+            window.addEventListener('confirm-delete', e => this.confirmDelete(e.detail.id, e.detail.no_unit));
         },
 
         applyFilter() {
@@ -890,15 +374,12 @@ function unitManager() {
         fetchPenghuniList() {
             fetch('/penghuni-available')
                 .then(res => res.json())
-                .then(data => this.penghuniList = data);
+                .then(data => this.penghuniList = data)
+                .catch(err => console.error(err));
         },
 
         fetchPenghuniDetail() {
-            if (this.selectedPenghuniId) {
-                this.selectedPenghuniDetail = this.penghuniList.find(p => p.id == this.selectedPenghuniId);
-            } else {
-                this.selectedPenghuniDetail = null;
-            }
+            this.selectedPenghuniDetail = this.penghuniList.find(p => p.id == this.selectedPenghuniId) || null;
         },
 
         saveUnit() {
@@ -916,22 +397,38 @@ function unitManager() {
                     this.createdUnit = data.unit;
                     this.createdUnit.password = data.password;
                     this.newUnit = { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' };
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Unit Berhasil Ditambahkan',
+                        html: `Username: <b>${this.createdUnit.no_unit}</b><br>Password sementara: <b>${this.createdUnit.password}</b>`,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didClose: () => location.reload()
+                    });
                 } else {
-                    alert('Gagal menambah unit: ' + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                 }
             })
             .catch(err => console.error(err));
         },
 
         editUnit(id, gedung, lantai, nomor_kamar) {
-            this.selectedUnit.id = id;
-            this.editForm.gedung = gedung;
-            this.editForm.lantai = lantai;
-            this.editForm.nomor_kamar = nomor_kamar;
-            this.openEdit = true;
+            const unit = this.unitsData.find(u => String(u.id) === String(id));
+            if (unit) {
+                this.selectedUnit.id = id;
+                this.selectedUnit.no_unit = unit.no_unit;
+                this.selectedUnit.gedung = unit.gedung;
+                this.selectedUnit.lantai = unit.lantai;
+                this.selectedUnit.nomor_kamar = unit.nomor_kamar;
+
+                // Pastikan editForm juga diperbarui
+                this.editForm.gedung = unit.gedung;
+                this.editForm.lantai = unit.lantai;
+                this.editForm.nomor_kamar = unit.nomor_kamar;
+
+                this.openEdit = true;
+            }
         },
 
         updateUnit() {
@@ -946,19 +443,49 @@ function unitManager() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('Unit berhasil diperbarui');
-                    location.reload();
+                    // Tutup modal
+                    this.openEdit = false;
+
+                    // Update unitsData
+                    this.unitsData = this.unitsData.map(u => 
+                        u.id === this.selectedUnit.id ? {...u, ...this.editForm} : u
+                    );
+
+                    // Update filteredUnits juga
+                    this.applyFilter();
+
+                    // **Update selectedUnit agar placeholder input edit baru**
+                    this.selectedUnit.gedung = this.editForm.gedung;
+                    this.selectedUnit.lantai = this.editForm.lantai;
+                    this.selectedUnit.nomor_kamar = this.editForm.nomor_kamar;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Unit Berhasil Diperbarui',
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
                 } else {
-                    alert('Gagal memperbarui unit: ' + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                 }
             })
-            .catch(err => console.error(err));
+            .catch(err => Swal.fire('Error', 'Terjadi error saat update', 'error'));
         },
 
         confirmDelete(id, no_unit) {
             this.selectedUnit.id = id;
             this.selectedUnit.no_unit = no_unit;
-            this.openDelete = true;
+            Swal.fire({
+                title: `Hapus Unit ${no_unit}?`,
+                text: "Data unit dan relasinya akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) this.deleteUnit();
+            });
         },
 
         deleteUnit() {
@@ -971,10 +498,10 @@ function unitManager() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('Unit berhasil dihapus');
-                    location.reload();
+                    Swal.fire('Berhasil', 'Unit berhasil dihapus', 'success')
+                        .then(() => location.reload());
                 } else {
-                    alert('Gagal menghapus unit: ' + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                 }
             })
             .catch(err => console.error(err));
@@ -984,6 +511,11 @@ function unitManager() {
             this.selectedUnit.id = id;
             this.selectedUnit.no_unit = no_unit;
             this.selectedUnit.currentPenghuni = currentPenghuni;
+            const unit = this.unitsData.find(u => u.id == id);
+            if (unit) {
+                this.selectedUnit.gedung = unit.gedung;
+                this.selectedUnit.lantai = unit.lantai;
+            }
             this.selectedPenghuniId = '';
             this.selectedPenghuniDetail = null;
             this.passwordGenerated = false;
@@ -993,7 +525,7 @@ function unitManager() {
 
         submitGantiPenghuni() {
             if (!this.selectedPenghuniId) {
-                alert('Pilih penghuni baru terlebih dahulu');
+                Swal.fire('Peringatan', 'Pilih penghuni baru terlebih dahulu', 'warning');
                 return;
             }
             fetch(`/units/${this.selectedUnit.id}/change-occupant`, {
@@ -1009,11 +541,16 @@ function unitManager() {
                 if (data.success) {
                     this.passwordGenerated = true;
                     this.newPassword = data.new_password;
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Penghuni Berhasil Diganti',
+                        html: `Password sementara: <b>${this.newPassword}</b>`,
+                        timer: 3000,
+                        timerProgressBar: true
+                    }).then(() => location.reload());
                 } else {
-                    alert('Gagal mengganti penghuni: ' + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                 }
             })
             .catch(err => console.error(err));
@@ -1039,8 +576,14 @@ function unitManager() {
                 if (data.success) {
                     this.resetPasswordGenerated = true;
                     this.newPassword = data.new_password;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Password Reset',
+                        html: `Password baru: <b>${this.newPassword}</b>`
+                    });
                 } else {
-                    alert('Gagal reset password: ' + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                 }
             })
             .catch(err => console.error(err));
@@ -1050,7 +593,15 @@ function unitManager() {
             this.selectedUnit.id = id;
             this.selectedUnit.no_unit = no_unit;
             this.toggleAction = action;
-            this.openToggle = true;
+            Swal.fire({
+                title: `${action === 'nonaktif' ? 'Nonaktifkan' : 'Aktifkan'} Unit ${no_unit}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) this.submitToggle();
+            });
         },
 
         submitToggle() {
@@ -1063,15 +614,39 @@ function unitManager() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
                 } else {
-                    alert('Gagal mengubah status: ' + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                 }
             })
             .catch(err => console.error(err));
         }
-    }
+    };
+}
+
+// Dropdown tetap sama
+function dropdownMenu(data) {
+    return {
+        open: false,
+        status: data.status,
+        id: data.id,
+        gedung: data.gedung,
+        lantai: data.lantai,
+        nomor_kamar: data.nomor_kamar,
+        no_unit: data.no_unit,
+        currentPenghuni: data.currentPenghuni,
+
+        editUnit() { window.dispatchEvent(new CustomEvent('edit-unit', { detail: { id: this.id, gedung: this.gedung, lantai: this.lantai, nomor_kamar: this.nomor_kamar } })); this.open=false },
+        gantiPenghuni() { window.dispatchEvent(new CustomEvent('ganti-penghuni', { detail: { id: this.id, no_unit: this.no_unit, currentPenghuni: this.currentPenghuni } })); this.open=false },
+        resetPassword() { window.dispatchEvent(new CustomEvent('reset-password', { detail: { id: this.id, no_unit: this.no_unit } })); this.open=false },
+        toggleStatus(action) { window.dispatchEvent(new CustomEvent('toggle-status', { detail: { id: this.id, no_unit: this.no_unit, action } })); this.open=false },
+        confirmDelete() { window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { id: this.id, no_unit: this.no_unit } })); this.open=false }
+    };
+}
+
+if (typeof window.Alpine !== 'undefined') {
+    window.Alpine.data('unitManager', unitManager);
+    window.Alpine.data('dropdownMenu', dropdownMenu);
 }
 </script>
 @endsection

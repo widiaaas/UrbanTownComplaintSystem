@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('karyawan', function (Blueprint $table) {
+        Schema::create('karyawans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('pengguna')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('penggunas')->onDelete('cascade');
             $table->string('nip', 20)->unique();
             $table->string('nama', 100);
             $table->string('telp', 20);
-            $table->string('email', 20)->unique();
+            $table->string('email', 100)->unique();
             $table->string('jabatan', 50);
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
@@ -25,6 +25,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('karyawan');
+        Schema::dropIfExists('karyawans');
     }
 };

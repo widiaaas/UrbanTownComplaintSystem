@@ -29,7 +29,7 @@ class WorkOrderSeeder extends Seeder
             'keluhan_id' => 4,
             'departemen_tujuan' => 'Engineering',
             'instruksi' => 'Ganti kipas angin di unit A-101.',
-            'status' => 'close',
+            'status' => 'closed',
             'penanggung_jawab' => 3,
             'taken_at' => Carbon::now()->subDays(5),
             'laporan' => 'Kipas angin diganti dengan yang baru, berfungsi normal.',

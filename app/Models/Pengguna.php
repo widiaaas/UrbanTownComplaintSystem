@@ -10,11 +10,11 @@ class Pengguna extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $table = 'pengguna';
+    protected $table = 'penggunas';
 
     protected $fillable = [
         'username',
-        'password_hash',
+        'password',
         'role',
         'is_active',
         'must_change_password',
@@ -22,7 +22,7 @@ class Pengguna extends Authenticatable
     ];
 
     protected $hidden = [
-        'password_hash',
+        'password',
     ];
 
     protected $casts = [
@@ -38,7 +38,7 @@ class Pengguna extends Authenticatable
 
     public function getAuthPassword()
     {
-        return $this->password_hash;
+        return $this->password;
     }
 
     // Relationships
@@ -54,22 +54,16 @@ class Pengguna extends Authenticatable
 
     public function keluhanDiambil()
     {
-        return $this->hasMany(Keluhan::class, 'taken_by');
+        return $this->hasMany(Keluhan::class, 'penanggung_jawab');
     }
 
     public function workOrderDiambil()
     {
-        return $this->hasMany(WorkOrder::class, 'taken_by');
-    }
-
-    public function riwayatWorkOrder()
-    {
-        return $this->hasMany(RiwayatWorkOrder::class, 'dibuat_oleh');
+        return $this->hasMany(WorkOrder::class, 'penanggung_jawab');
     }
 
     public function knowledgeBase()
     {
         return $this->hasMany(KnowledgeBase::class, 'created_by');
     }
-    
 }

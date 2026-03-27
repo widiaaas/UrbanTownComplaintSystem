@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('keluhan', function (Blueprint $table) {
+        Schema::create('keluhans', function (Blueprint $table) {
             $table->id();
             $table->string('ticket', 20)->unique();
-            $table->foreignId('unit_id')->constrained('unit')->onDelete('cascade');
-            $table->foreignId('penghuni_id')->constrained('penghuni')->onDelete('cascade');
+            $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
+            $table->foreignId('penghuni_id')->constrained('penghunis')->onDelete('cascade');
             $table->string('judul', 50);
             $table->text('deskripsi');
             $table->enum('status', ['unassigned', 'open', 'on_progress', 'closed'])->default('unassigned');
-            $table->foreignId('penanggung_jawab')->nullable()->constrained('pengguna')->nullOnDelete();
+            $table->foreignId('penanggung_jawab')->nullable()->constrained('penggunas')->nullOnDelete();
             $table->timestamp('taken_at')->nullable();
             $table->text('keputusan')->nullable();
             $table->timestamp('tanggal_keputusan')->nullable();
@@ -27,6 +27,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('keluhan');
+        Schema::dropIfExists('keluhans');
     }
 };

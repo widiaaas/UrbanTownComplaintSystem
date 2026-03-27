@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('pengguna', function (Blueprint $table) {
+        Schema::create('penggunas', function (Blueprint $table) {
             $table->id();
             $table->string('username', 50)->unique();
-            $table->string('password_hash');
+            $table->string('password');
             $table->enum('role', ['admin', 'tenant_relation', 'departemen', 'unit']);
             $table->boolean('is_active')->default(true);
             $table->boolean('must_change_password')->default(true);
@@ -22,6 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('pengguna');
+        Schema::dropIfExists('penggunas');
     }
 };

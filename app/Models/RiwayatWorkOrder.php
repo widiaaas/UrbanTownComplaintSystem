@@ -9,31 +9,29 @@ class RiwayatWorkOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'riwayat_work_order';
+    protected $table = 'riwayat_work_orders';
 
     protected $fillable = [
         'work_order_id',
         'status',
         'keterangan',
         'lampiran',
-        'dibuat_oleh',
+        'penanggung_jawab',
         'waktu',
     ];
 
     protected $casts = [
-        'status' => 'string',
         'lampiran' => 'array',
         'waktu' => 'datetime',
     ];
 
-    // Relationships
     public function workOrder()
     {
-        return $this->belongsTo(WorkOrder::class, 'work_order_id');
+        return $this->belongsTo(WorkOrder::class);
     }
 
-    public function dibuatOleh()
+    public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'dibuat_oleh');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab');
     }
 }

@@ -10,14 +10,13 @@ class Penghuni extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'penghuni';
+    protected $table = 'penghunis';
 
     protected $fillable = [
         'nama',
         'email',
         'telepon',
-        'identity_number',
-        'gender',
+        'jenis_kelamin',
         'status',
         'unit_id',
         'tanggal_masuk',
@@ -25,26 +24,19 @@ class Penghuni extends Model
     ];
 
     protected $casts = [
-        'gender' => 'string',
+        'jenis_kelamin' => 'string',
         'status' => 'string',
         'tanggal_masuk' => 'date',
         'tanggal_keluar' => 'date',
     ];
 
-    // Relationships
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
-    public function keluhan()
+    public function keluhans()
     {
         return $this->hasMany(Keluhan::class, 'penghuni_id');
-    }
-
-    // Relasi ke unit sebagai penghuni aktif (inverse)
-    public function unitSebagaiPenghuniAktif()
-    {
-        return $this->hasOne(Unit::class, 'penghuni_aktif_id');
     }
 }

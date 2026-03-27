@@ -10,7 +10,7 @@ class Unit extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'unit';
+    protected $table = 'units';
 
     protected $fillable = [
         'no_unit',
@@ -19,30 +19,29 @@ class Unit extends Model
         'nomor_kamar',
         'status',
         'user_id',
-        'penghuni_aktif_id',
     ];
 
     protected $casts = [
         'status' => 'string',
     ];
 
-    // Relationships
     public function user()
     {
         return $this->belongsTo(Pengguna::class, 'user_id');
     }
 
-    public function penghuniAktif()
-    {
-        return $this->belongsTo(Penghuni::class, 'penghuni_aktif_id');
-    }
-
-    public function penghuni()
+    public function penghunis()
     {
         return $this->hasMany(Penghuni::class, 'unit_id');
     }
 
-    public function keluhan()
+    public function penghuniAktif()
+    {
+        return $this->hasOne(Penghuni::class, 'unit_id')
+            ->where('status', 'Aktif');
+    }
+
+    public function keluhans()
     {
         return $this->hasMany(Keluhan::class, 'unit_id');
     }

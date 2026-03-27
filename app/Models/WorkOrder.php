@@ -9,7 +9,7 @@ class WorkOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'work_order';
+    protected $table = 'work_orders';
 
     protected $fillable = [
         'nomor_wo',
@@ -17,9 +17,8 @@ class WorkOrder extends Model
         'departemen_tujuan',
         'instruksi',
         'status',
-        'taken_by',
+        'penanggung_jawab',
         'taken_at',
-        'petugas',
         'laporan',
         'lampiran',
         'tanggal_dibuat',
@@ -27,7 +26,6 @@ class WorkOrder extends Model
     ];
 
     protected $casts = [
-        'departemen_tujuan' => 'string',
         'status' => 'string',
         'taken_at' => 'datetime',
         'lampiran' => 'array',
@@ -35,19 +33,18 @@ class WorkOrder extends Model
         'tanggal_selesai' => 'datetime',
     ];
 
-    // Relationships
     public function keluhan()
     {
-        return $this->belongsTo(Keluhan::class, 'keluhan_id');
+        return $this->belongsTo(Keluhan::class);
     }
 
-    public function takenBy()
+    public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'taken_by');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab');
     }
 
     public function riwayat()
     {
-        return $this->hasMany(RiwayatWorkOrder::class, 'work_order_id');
+        return $this->hasMany(RiwayatWorkOrder::class);
     }
 }

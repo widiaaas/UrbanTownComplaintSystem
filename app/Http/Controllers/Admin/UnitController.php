@@ -5,189 +5,197 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use App\Models\Penghuni;
-use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class UnitController extends Controller
 {
-    /**
-     * Display a listing of units.
-     */
     public function index()
     {
-        $units = Unit::with(['penghuniAktif', 'user'])->get();
+        $units = Unit::with(['penghunis' => function ($q) {
+            $q->where('status', 'Aktif');
+        }])
+        ->get()
+        ->map(function ($u) {
+            $penghuniAktif = $u->penghunis->first();
+    
+            return [
+                'id' => $u->id,
+                'no_unit' => $u->no_unit,
+                'gedung' => $u->gedung,
+                'lantai' => $u->lantai,
+                'nomor_kamar' => $u->nomor_kamar,
+                'status' => $u->status,
+                'currentPenghuni' => $penghuniAktif->nama ?? null,
+            ];
+        });
+
         return view('admin.units.index', compact('units'));
     }
 
     /**
-     * Store a newly created unit.
+     * FIX: relasi sekarang bukan units(), tapi unit()
+     */
+    public function getAvailablePenghuni()
+    {
+        $available = Penghuni::whereNull('unit_id')
+            ->get(['id', 'nama', 'telepon', 'email']);
+
+        return response()->json($available);
+    }
+
+    /**
+     * FIX: unit tidak punya kolom password
+     * password ada di tabel pengguna
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'no_unit' => 'required|string|unique:unit,no_unit',
-            'gedung' => 'required|string|max:50',
-            'lantai' => 'required|integer',
+        $validated = $request->validate([
+            'no_unit'     => 'required|string|unique:units,no_unit',
+            'gedung'      => 'required|string',
+            'lantai'      => 'required|integer',
             'nomor_kamar' => 'required|integer',
         ]);
 
-        // Create user for unit
-        $user = Pengguna::create([
-            'username' => $request->no_unit,
-            'password_hash' => Hash::make($password = $this->generatePassword()),
-            'role' => 'unit',
-            'is_active' => true,
-            'must_change_password' => true,
-        ]);
-
-        // Create unit
         $unit = Unit::create([
-            'no_unit' => $request->no_unit,
-            'gedung' => $request->gedung,
-            'lantai' => $request->lantai,
-            'nomor_kamar' => $request->nomor_kamar,
-            'status' => 'Aktif',
-            'user_id' => $user->id,
+            'no_unit'     => $validated['no_unit'],
+            'gedung'      => $validated['gedung'],
+            'lantai'      => $validated['lantai'],
+            'nomor_kamar' => $validated['nomor_kamar'],
+            'status'      => 'Aktif',
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Unit berhasil ditambahkan',
-            'unit' => $unit,
-            'password' => $password,
+            'unit'    => $unit,
         ]);
     }
 
-    /**
-     * Update the specified unit.
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, Unit $unit)
     {
-        $unit = Unit::findOrFail($id);
-        $request->validate([
-            'gedung' => 'required|string|max:50',
-            'lantai' => 'required|integer',
-            'nomor_kamar' => 'required|integer',
-        ]);
+        try {
+            $validated = $request->validate([
+                'gedung'      => 'required|string|max:50',
+                'lantai'      => 'required|integer|min:1',
+                'nomor_kamar' => 'required|integer|min:1',
+            ]);
 
-        $unit->update([
-            'gedung' => $request->gedung,
-            'lantai' => $request->lantai,
-            'nomor_kamar' => $request->nomor_kamar,
-        ]);
+            DB::beginTransaction();
 
-        return response()->json(['success' => true, 'message' => 'Unit berhasil diperbarui']);
-    }
+            $unit->update($validated);
 
-    /**
-     * Remove the specified unit.
-     */
-    public function destroy($id)
-    {
-        $unit = Unit::findOrFail($id);
-        $unit->delete(); // soft delete
-        return response()->json(['success' => true, 'message' => 'Unit berhasil dihapus']);
-    }
+            DB::commit();
 
-    /**
-     * Change occupant of a unit.
-     */
-    public function changeOccupant(Request $request, $id)
-    {
-        $unit = Unit::findOrFail($id);
-        $request->validate([
-            'penghuni_id' => 'required|exists:penghuni,id',
-        ]);
+            return response()->json([
+                'success' => true,
+                'unit' => $unit,
+                'message' => 'Unit berhasil diperbarui'
+            ]);
 
-        $newPenghuni = Penghuni::find($request->penghuni_id);
-        $oldPenghuniId = $unit->penghuni_aktif_id;
-
-        // Update unit
-        $unit->penghuni_aktif_id = $newPenghuni->id;
-        $unit->save();
-
-        // Update old penghuni's status if needed (optional: set to nonaktif)
-        if ($oldPenghuniId) {
-            $oldPenghuni = Penghuni::find($oldPenghuniId);
-            if ($oldPenghuni) {
-                $oldPenghuni->status = 'Nonaktif';
-                $oldPenghuni->tanggal_keluar = now();
-                $oldPenghuni->save();
-            }
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
+    }
 
-        // Update new penghuni's status
-        $newPenghuni->status = 'Aktif';
-        $newPenghuni->tanggal_masuk = now();
-        $newPenghuni->save();
+    /**
+     * FIX: tidak perlu detach
+     */
+    public function destroy(Unit $unit)
+    {
+        // kosongkan penghuni yang terkait
+        Penghuni::where('unit_id', $unit->id)->update([
+            'unit_id' => null,
+            'status' => 'Nonaktif'
+        ]);
 
-        // Reset unit's user password
-        $user = $unit->user;
-        $newPassword = $this->generatePassword();
-        $user->password_hash = Hash::make($newPassword);
-        $user->must_change_password = true;
-        $user->save();
+        $unit->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * 🔥 PERBAIKAN PALING PENTING
+     */
+    public function changeOccupant(Request $request, Unit $unit)
+    {
+        $request->validate([
+            'penghuni_id' => 'required|exists:penghunis,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $penghuniBaru = Penghuni::findOrFail($request->penghuni_id);
+
+            if ($penghuniBaru->unit_id !== null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Penghuni ini sudah menempati unit lain.',
+                ], 422);
+            }
+
+            // Nonaktifkan semua penghuni aktif di unit ini lewat relasi
+            $unit->penghunis()
+                ->where('status', 'Aktif')
+                ->update([
+                    'status' => 'Nonaktif',
+                    'tanggal_keluar' => now(),
+                    'unit_id' => null,
+                ]);
+
+            // Set penghuni baru
+            $penghuniBaru->update([
+                'unit_id' => $unit->id,
+                'status' => 'Aktif',
+                'tanggal_masuk' => now(),
+            ]);
+
+            // Update status unit (tanpa penghuni_aktif_id)
+            $unit->update(['status' => 'Aktif']);
+
+            DB::commit();
+
+            return response()->json(['success' => true]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ❌ DIHAPUS (tidak relevan)
+     * password unit sekarang ada di tabel pengguna
+     */
+
+    public function toggleStatus(Unit $unit)
+    {
+        $newStatus = $unit->status === 'Aktif' ? 'Nonaktif' : 'Aktif';
+
+        $unit->update(['status' => $newStatus]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Penghuni berhasil diganti',
-            'new_password' => $newPassword,
+            'message' => $newStatus === 'Aktif'
+                ? 'Unit berhasil diaktifkan.'
+                : 'Unit berhasil dinonaktifkan.',
         ]);
-    }
-
-    /**
-     * Reset password for a unit.
-     */
-    public function resetPassword($id)
-    {
-        $unit = Unit::findOrFail($id);
-        $user = $unit->user;
-        $newPassword = $this->generatePassword();
-        $user->password_hash = Hash::make($newPassword);
-        $user->must_change_password = true;
-        $user->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Password berhasil direset',
-            'new_password' => $newPassword,
-        ]);
-    }
-
-    /**
-     * Toggle unit status (Aktif/Nonaktif).
-     */
-    public function toggleStatus($id)
-    {
-        $unit = Unit::findOrFail($id);
-        $unit->status = $unit->status === 'Aktif' ? 'Nonaktif' : 'Aktif';
-        $unit->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Status unit berhasil diubah menjadi ' . $unit->status,
-        ]);
-    }
-
-    /**
-     * Get list of available penghuni for dropdown.
-     */
-    public function getPenghuniList()
-    {
-        $penghuni = Penghuni::where('status', 'Aktif')
-                    ->whereNull('unit_id') // optional: only those without active unit
-                    ->orWhere('unit_id', null)
-                    ->get(['id', 'nama', 'telepon', 'email']);
-        return response()->json($penghuni);
-    }
-
-    /**
-     * Generate a random password.
-     */
-    private function generatePassword()
-    {
-        return 'Tmp-' . Str::upper(Str::random(5));
     }
 }

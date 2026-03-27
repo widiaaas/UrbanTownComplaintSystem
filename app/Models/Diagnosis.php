@@ -20,20 +20,13 @@ class Diagnosis extends Model
         'langkah_penyelesaian',
     ];
 
-    protected $casts = [
-        'penyebab' => 'string',
-        'deskripsi' => 'string',
-        'langkah_penyelesaian' => 'string',
-    ];
-
-    // Relationships
     public function knowledgeBase()
     {
-        return $this->belongsTo(KnowledgeBase::class, 'knowledge_base_id');
+        return $this->belongsTo(KnowledgeBase::class);
     }
 
     public function keluhan()
     {
-        return $this->belongsTo(Keluhan::class, 'keluhan_id');
+        return $this->belongsTo(Keluhan::class);
     }
 }

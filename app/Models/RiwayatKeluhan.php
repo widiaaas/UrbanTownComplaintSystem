@@ -9,24 +9,21 @@ class RiwayatKeluhan extends Model
 {
     use HasFactory;
 
-    protected $table = 'riwayat_keluhan';
+    protected $table = 'riwayat_keluhans';
 
     protected $fillable = [
         'keluhan_id',
-        'tipe_aktor',
         'judul',
         'keterangan',
         'waktu',
     ];
 
     protected $casts = [
-        'tipe_aktor' => 'string',
         'waktu' => 'datetime',
     ];
 
-    // Relationships
     public function keluhan()
     {
-        return $this->belongsTo(Keluhan::class, 'keluhan_id');
+        return $this->belongsTo(Keluhan::class);
     }
 }

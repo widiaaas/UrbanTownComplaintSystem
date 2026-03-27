@@ -10,27 +10,21 @@ class Karyawan extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'karyawan';
+    protected $table = 'karyawans';
 
     protected $fillable = [
         'user_id',
-        'id_pegawai',
+        'nip',
         'nama',
         'telp',
         'email',
         'jabatan',
-        'gender',
+        'jenis_kelamin',
         'status',
     ];
 
-    protected $casts = [
-        'gender' => 'string',
-        'status' => 'string',
-    ];
-
-    // Relationships
     public function user()
     {
-        return $this->belongsTo(Pengguna::class, 'user_id');
+        return $this->belongsTo(Pengguna::class);
     }
 }

@@ -10,7 +10,7 @@ class KnowledgeBase extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'knowledge_base';
+    protected $table = 'knowledge_bases';
 
     protected $fillable = [
         'judul',
@@ -19,11 +19,6 @@ class KnowledgeBase extends Model
         'created_by',
     ];
 
-    protected $casts = [
-        'departemen_terkait' => 'string',
-    ];
-
-    // Relationships
     public function createdBy()
     {
         return $this->belongsTo(Pengguna::class, 'created_by');
@@ -31,6 +26,6 @@ class KnowledgeBase extends Model
 
     public function diagnosis()
     {
-        return $this->hasMany(Diagnosis::class, 'knowledge_base_id');
+        return $this->hasMany(Diagnosis::class);
     }
 }

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ActivationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\PenghuniController;
 
 /*
 |--------------------------------------------------------------------------
@@ -144,15 +146,21 @@ Route::middleware(['auth'])->group(function () {
         // Unit management
         Route::get('/IndexUnits', [App\Http\Controllers\Admin\UnitController::class, 'index'])->name('admin.units.index');
         Route::post('/units', [App\Http\Controllers\Admin\UnitController::class, 'store'])->name('admin.units.store');
-        Route::put('/units/{id}', [App\Http\Controllers\Admin\UnitController::class, 'update'])->name('admin.units.update');
-        Route::delete('/units/{id}', [App\Http\Controllers\Admin\UnitController::class, 'destroy'])->name('admin.units.destroy');
-        Route::post('/units/{id}/change-occupant', [App\Http\Controllers\Admin\UnitController::class, 'changeOccupant'])->name('admin.units.changeOccupant');
-        Route::post('/units/{id}/reset-password', [App\Http\Controllers\Admin\UnitController::class, 'resetPassword'])->name('admin.units.resetPassword');
-        Route::post('/units/{id}/toggle-status', [App\Http\Controllers\Admin\UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
-        Route::get('/penghuni-available', [App\Http\Controllers\Admin\UnitController::class, 'getPenghuniList'])->name('admin.penghuni.available');
+        Route::put('/units/{unit}', [App\Http\Controllers\Admin\UnitController::class, 'update'])->name('admin.units.update');
+        Route::delete('/units/{unit}', [App\Http\Controllers\Admin\UnitController::class, 'destroy'])->name('admin.units.destroy');
+        Route::post('/units/{unit}/change-occupant', [App\Http\Controllers\Admin\UnitController::class, 'changeOccupant'])->name('admin.units.changeOccupant');
+        Route::post('/units/{unit}/reset-password', [App\Http\Controllers\Admin\UnitController::class, 'resetPassword'])->name('admin.units.resetPassword');
+        Route::post('/units/{unit}/toggle-status', [App\Http\Controllers\Admin\UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
+        Route::get('/penghuni-available', [App\Http\Controllers\Admin\UnitController::class, 'getAvailablePenghuni'])->name('admin.penghuni.available');
         
+        // Penghuni Management
+        Route::get('/IndexPenghuni', [App\Http\Controllers\PenghuniController::class, 'index'])->name('admin.penghuni.index');
+        Route::get('/penghuni', [PenghuniController::class, 'index'])->name('admin.penghuni.index');
+        Route::post('/penghuni', [PenghuniController::class, 'store'])->name('admin.penghuni.store');
+        Route::put('/penghuni/{penghuni}', [PenghuniController::class, 'update'])->name('admin.penghuni.update');
+        Route::delete('/penghuni/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
+        Route::get('/penghuni/{penghuni}/show', [PenghuniController::class, 'show'])->name('admin.penghuni.show');
         
-        Route::get('/IndexPenghuni', fn() => view('admin.penghuni.index'));
         Route::get('/IndexKaryawan', fn() => view('admin.karyawan.index'));
     });
 
