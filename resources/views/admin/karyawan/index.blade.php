@@ -4,84 +4,7 @@
 
 @section('content')
 
-<div x-data="{ 
-    openEdit:false, 
-    openDetail:false, 
-    openCreate:false,
-    openResetPassword:false,
-
-    passwordGenerated:false,
-    generatedPassword:'Tmp-9XK21',
-
-    employees:[
-        {
-            id_pegawai:'EMP001',
-            nama:'Widiawati Sihaloho',
-            telp:'081234567890',
-            email:'widiawati@email.com',
-            departemen:'Engineering',
-            gender:'Perempuan',
-            status:'Aktif'
-        },
-        {
-            id_pegawai:'EMP002',
-            nama:'Budi Santoso',
-            telp:'082233445566',
-            email:'budi@email.com',
-            departemen:'Tenant Relation',
-            gender:'Laki-laki',
-            status:'Aktif'
-        },
-        {
-            id_pegawai:'EMP003',
-            nama:'Siti Aminah',
-            telp:'083344556677',
-            email:'siti@email.com',
-            departemen:'Admin',
-            gender:'Perempuan',
-            status:'Aktif'
-        },
-        {
-            id_pegawai:'EMP004',
-            nama:'Andi Saputra',
-            telp:'081998877665',
-            email:'andi@email.com',
-            departemen:'Engineering',
-            gender:'Laki-laki',
-            status:'Nonaktif'
-        },
-        {
-            id_pegawai:'EMP005',
-            nama:'Rina Kartika',
-            telp:'081223344556',
-            email:'rina@email.com',
-            departemen:'Tenant Relation',
-            gender:'Perempuan',
-            status:'Aktif'
-        }
-    ],
-
-    newEmployee:{
-        id_pegawai:'',
-        nama:'', 
-        telp:'', 
-        email:'', 
-        departemen:'',
-        gender:'', 
-        status:'Aktif'
-    },
-
-    selectedEmployee:{
-        id_pegawai:'',
-        nama:'', 
-        telp:'', 
-        email:'', 
-        departemen:'',
-        gender:'', 
-        status:'Aktif'
-    }
-}"
-    class="p-6 space-y-6">
+<div x-data="karyawanManager()" x-init='init(@json($karyawans))' class="p-6 space-y-6">
 
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-center">
@@ -132,7 +55,7 @@
 
             <tbody class="bg-white divide-y divide-gray-200">
 
-                <template x-for="emp in employees" :key="emp.id_pegawai">
+                <template x-for="emp in employees" :key="emp.id">
 
                 <tr class="hover:bg-gray-50 text-center">
 
@@ -214,6 +137,7 @@
 
                                 <!-- DELETE -->
                                 <button
+                                    @click="hapus(emp)"
                                     class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
                                     🗑 Hapus
                                 </button>
@@ -330,18 +254,7 @@
             <div class="flex justify-end gap-2 pt-4 border-t">
             <button 
                 type="button"
-                @click="
-                    passwordGenerated=true;
-                    newEmployee={
-                        id_pegawai:'',
-                        nama:'',
-                        telp:'',
-                        email:'',
-                        departemen:'',
-                        gender:'',
-                        status:'Aktif'
-                    }
-                    "
+                @click="store()"
                 class="px-4 py-2 bg-blue-600 text-white rounded-lg">
                 Simpan
             </button>
@@ -417,11 +330,11 @@
             </div>
 
             <div class="flex justify-end gap-2 pt-4 border-t">
-                <button @click="openEdit=false"
-                    class="px-4 py-2 border rounded-lg">Batal</button>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                    Simpan Perubahan
-                </button>
+            <button 
+                @click="update()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                Simpan Perubahan
+            </button>
             </div>
         </div>
     </div>
@@ -495,9 +408,7 @@
                 </button>
 
                 <button
-                    @click="
-                        generatedPassword = 'Tmp-' + Math.random().toString(36).substring(2,7).toUpperCase();
-                    "
+                    @click="resetPassword(selectedEmployee)"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg">
                     Generate Password Baru
                 </button>
@@ -509,4 +420,265 @@
 
 </div>
 
+<script>
+function karyawanManager(){
+    return{
+        employees:[],
+        openCreate:false,
+        openEdit:false,
+        openDetail:false,
+        openResetPassword:false,
+
+        passwordGenerated:false,
+        generatedPassword:'',
+
+        newEmployee:{
+            id_pegawai:'',
+            nama:'', 
+            telp:'', 
+            email:'', 
+            departemen:'',
+            gender:'', 
+            status:'Aktif'
+        },
+
+        selectedEmployee:{},
+
+        init(data){
+            this.employees = data.map(e => ({
+                ...e,
+                id_pegawai: e.nip,
+                departemen: e.jabatan,
+                gender: e.jenis_kelamin
+            }));
+        },
+
+        // ================= STORE =================
+        store(){
+            this.passwordGenerated = false;
+
+            // ================= VALIDASI FRONTEND =================
+            if(!this.newEmployee.id_pegawai){
+                Swal.fire('Error','ID Pegawai wajib diisi','error');
+                return;
+            }
+
+            if(!this.newEmployee.nama){
+                Swal.fire('Error','Nama wajib diisi','error');
+                return;
+            }
+
+            if(!this.newEmployee.telp){
+                Swal.fire('Error','No. Telepon wajib diisi','error');
+                return;
+            }
+
+            if(!this.newEmployee.email){
+                Swal.fire('Error','Email wajib diisi','error');
+                return;
+            }
+
+            if(!this.newEmployee.departemen){
+                Swal.fire('Error','Departemen wajib dipilih','error');
+                return;
+            }
+
+            if(!this.newEmployee.gender){
+                Swal.fire('Error','Jenis kelamin wajib dipilih','error');
+                return;
+            }
+
+            // ================= REQUEST =================
+            fetch('/karyawan',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                },
+                body:JSON.stringify({
+                    nip: this.newEmployee.id_pegawai,
+                    nama: this.newEmployee.nama,
+                    telp: this.newEmployee.telp,
+                    email: this.newEmployee.email,
+                    jabatan: this.newEmployee.departemen,
+                    jenis_kelamin: this.newEmployee.gender
+                })
+            })
+            .then(async res => {
+                if(!res.ok){
+                    const err = await res.json();
+                    throw err;
+                }
+                return res.json();
+            })
+            .then(res => {
+
+                if(res.success){
+
+                    this.passwordGenerated = true;
+                    this.generatedPassword = res.password;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Karyawan Berhasil Ditambahkan',
+                        html: `
+                            ID Login: <b>${this.newEmployee.id_pegawai}</b><br>
+                            Password: <b>${res.password}</b>
+                        `,
+                        confirmButtonText: 'OK'
+                    });
+
+                    // reset form
+                    this.newEmployee = {
+                        id_pegawai:'',
+                        nama:'',
+                        telp:'',
+                        email:'',
+                        departemen:'',
+                        gender:'',
+                        status:'Aktif'
+                    };
+
+                    // reload
+                    setTimeout(()=>{
+                        location.reload();
+                    },1500);
+
+                } else {
+                    Swal.fire('Gagal', res.message || 'Gagal menyimpan','error');
+                }
+            })
+            .catch(err => {
+
+                console.error(err);
+
+                // 🔥 mapping nama field
+                let fieldNames = {
+                    nip: 'ID Pegawai',
+                    nama: 'Nama',
+                    telp: 'No. Telepon',
+                    email: 'Email',
+                    jabatan: 'Departemen',
+                    jenis_kelamin: 'Jenis Kelamin'
+                };
+
+                let message = 'Terjadi kesalahan';
+
+                // 🔥 tampilkan error validasi dari backend
+                if(err.errors){
+                    message = Object.entries(err.errors)
+                        .map(([field, msgs]) => {
+                            let label = fieldNames[field] || field;
+                            return `<b>${label}</b>: ${msgs.join(', ')}`;
+                        })
+                        .join('<br>');
+                }
+
+                Swal.fire({
+                    icon:'error',
+                    title:'Validasi Gagal',
+                    html: message
+                });
+            });
+        },
+
+        // ================= UPDATE =================
+        update(){
+            fetch(`/karyawan/${this.selectedEmployee.id}`,{
+                method:'PUT',
+                credentials:'same-origin',
+                headers:{
+                    'Content-Type':'application/json',
+                    'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                },
+                body:JSON.stringify({
+                    nama: this.selectedEmployee.nama,
+                    telp: this.selectedEmployee.telp,
+                    email: this.selectedEmployee.email,
+                    jabatan: this.selectedEmployee.departemen,
+                    jenis_kelamin: this.selectedEmployee.gender,
+                    status: this.selectedEmployee.status
+                })
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                if(res.success){
+                    Swal.fire('Berhasil','Data diperbarui','success')
+                    .then(()=> location.reload());
+                } else {
+                    Swal.fire('Error','Gagal update','error');
+                }
+            })
+            .catch(()=>{
+                Swal.fire('Error','Terjadi kesalahan server','error');
+            });
+        },
+
+        // ================= DELETE =================
+        hapus(emp){
+            Swal.fire({
+                title: 'Hapus?',
+                text: 'Data tidak bisa dikembalikan!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then(result=>{
+                if(!result.isConfirmed) return;
+
+                fetch(`/karyawan/${emp.id}`,{
+                    method:'DELETE',
+                    credentials:'same-origin',
+                    headers:{
+                        'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    if(res.success){
+                        Swal.fire('Berhasil','Data dihapus','success')
+                        .then(()=> location.reload());
+                    } else {
+                        Swal.fire('Error','Gagal hapus','error');
+                    }
+                });
+            });
+        },
+
+        // ================= RESET PASSWORD =================
+        resetPassword(emp){
+            Swal.fire({
+                title: 'Reset Password?',
+                text: emp.nama,
+                icon: 'warning',
+                showCancelButton: true
+            }).then(result=>{
+                if(!result.isConfirmed) return;
+
+                fetch(`/karyawan/${emp.id}/reset-password`,{
+                    method:'POST',
+                    credentials:'same-origin',
+                    headers:{
+                        'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    if(res.success){
+                        this.generatedPassword = res.new_password;
+
+                        Swal.fire({
+                            icon:'success',
+                            title:'Password Baru',
+                            html:`<b>${res.new_password}</b>`
+                        });
+                    } else {
+                        Swal.fire('Error','Gagal reset password','error');
+                    }
+                });
+            });
+        }
+    }
+}
+</script>
 @endsection

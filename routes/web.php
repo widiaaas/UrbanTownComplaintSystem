@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ActivationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\PenghuniController;
 
 /*
@@ -148,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/units', [App\Http\Controllers\Admin\UnitController::class, 'store'])->name('admin.units.store');
         Route::put('/units/{unit}', [App\Http\Controllers\Admin\UnitController::class, 'update'])->name('admin.units.update');
         Route::delete('/units/{unit}', [App\Http\Controllers\Admin\UnitController::class, 'destroy'])->name('admin.units.destroy');
+        Route::post('/units/{unit}/reset-password', [UnitController::class, 'resetPassword']);
         Route::post('/units/{unit}/change-occupant', [App\Http\Controllers\Admin\UnitController::class, 'changeOccupant'])->name('admin.units.changeOccupant');
         Route::post('/units/{unit}/reset-password', [App\Http\Controllers\Admin\UnitController::class, 'resetPassword'])->name('admin.units.resetPassword');
         Route::post('/units/{unit}/toggle-status', [App\Http\Controllers\Admin\UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
@@ -161,7 +163,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/penghuni/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
         Route::get('/penghuni/{penghuni}/show', [PenghuniController::class, 'show'])->name('admin.penghuni.show');
         
-        Route::get('/IndexKaryawan', fn() => view('admin.karyawan.index'));
+        Route::get('/IndexKaryawan', [KaryawanController::class, 'index']);
+        Route::post('/karyawan', [KaryawanController::class, 'store']);
+        Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update']);
+        Route::delete('/karyawan/{karyawan}', [KaryawanController::class, 'destroy']);
+        Route::post('/karyawan/{karyawan}/reset-password', [KaryawanController::class, 'resetPassword']);
     });
 
     // ---------- TENANT RELATION ----------

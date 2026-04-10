@@ -42,27 +42,47 @@
         <table class="min-w-full divide-y">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-2 text-center">No Unit</th>
-                    <th class="px-4 py-2 text-center">Gedung</th>
-                    <th class="px-4 py-2 text-center">Lantai</th>
-                    <th class="px-4 py-2 text-center">Penghuni</th>
-                    <th class="px-4 py-2 text-center">Status</th>
-                    <th class="px-4 py-2 text-center">Aksi</th>
+                <th class="px-4 py-2 text-center">No</th>
+                <th class="px-4 py-2 text-center">No Unit</th>
+                <th class="px-4 py-2 text-center">Gedung</th>
+                <th class="px-4 py-2 text-center">Lantai</th>
+                <th class="px-4 py-2 text-center">No Kamar</th>
+                <th class="px-4 py-2 text-center">Penghuni</th>
+                <th class="px-4 py-2 text-center">Status</th>
+                <th class="px-4 py-2 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                <template x-for="unit in filteredUnits" :key="unit.id">
-                    <tr class="text-center hover:bg-gray-50">
-                        <td class="px-4 py-2" x-text="unit.no_unit"></td>
-                        <td class="px-4 py-2" x-text="unit.gedung"></td>
-                        <td class="px-4 py-2" x-text="unit.lantai"></td>
-                        <td class="px-4 py-2" x-text="unit.currentPenghuni || '-'"></td>
-                        <td class="px-4 py-2">
-                            <span class="px-2 py-1 text-xs rounded"
-                                :class="unit.status == 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-                                x-text="unit.status"></span>
-                        </td>
-                        <td class="px-4 py-2 relative">
+                <template x-for="(unit, index) in filteredUnits" :key="unit.id">
+                <tr class="text-center hover:bg-gray-50">
+                    <!-- NO -->
+                    <td class="px-4 py-2" x-text="index + 1"></td>
+
+                    <!-- NO UNIT -->
+                    <td class="px-4 py-2" x-text="unit.no_unit"></td>
+
+                    <!-- GEDUNG -->
+                    <td class="px-4 py-2" x-text="unit.gedung"></td>
+
+                    <!-- LANTAI -->
+                    <td class="px-4 py-2" x-text="unit.lantai"></td>
+
+                    <!-- NOMOR KAMAR -->
+                    <td class="px-4 py-2" x-text="unit.nomor_kamar"></td>
+
+                    <!-- PENGHUNI -->
+                    <td class="px-4 py-2" x-text="unit.currentPenghuni || '-'"></td>
+
+                    <!-- STATUS -->
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-1 text-xs rounded"
+                            :class="unit.status == 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                            x-text="unit.status"></span>
+                    </td>
+
+                    <!-- AKSI -->
+                    <td class="px-4 py-2 relative">
+                        
                             <div x-data="dropdownMenu(unit)" class="relative inline-block text-left">
 
                                 <!-- BUTTON -->
@@ -145,15 +165,40 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Gedung</label>
-                    <input type="text" x-model="newUnit.gedung" placeholder="Contoh: Tower A" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input 
+                        type="text" 
+                        x-model="newUnit.gedung"
+                        placeholder="Contoh: Tower A"
+                        pattern="^Tower [A-Z]$"
+                        title="Format harus: Tower A, Tower B, dst"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        required
+                        @input="newUnit.gedung = newUnit.gedung.replace(/[^A-Za-z\s]/g, '').replace(/^tower/i, 'Tower')"
+                    >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Lantai</label>
-                    <input type="number" x-model="newUnit.lantai" placeholder="Contoh: 10" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input 
+                        type="number" 
+                        x-model="newUnit.lantai"
+                        min="1" 
+                        max="30"
+                        placeholder="1 - 30"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        required
+                    >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Nomor Kamar</label>
-                    <input type="number" x-model="newUnit.nomor_kamar" placeholder="Contoh: 1" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input 
+                        type="number" 
+                        x-model="newUnit.nomor_kamar"
+                        min="1" 
+                        max="30"
+                        placeholder="1 - 30"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        required
+                    >
                 </div>
 
                 <template x-if="createdUnit">
@@ -181,16 +226,48 @@
             
             <div class="space-y-3">
                 <div>
+                    <label class="text-sm">No Unit</label>
+                    <input 
+                        type="text" 
+                        x-model="editForm.no_unit"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        placeholder="Contoh: A-101"
+                        required
+                    >
+                </div>
+                <div>
                     <label class="text-sm">Gedung</label>
-                    <input type="text" x-model="editForm.gedung" class="w-full mt-1 border rounded-lg px-3 py-2">
+                    <input 
+                        type="text" 
+                        x-model="editForm.gedung"
+                        pattern="^Tower [A-Z]$"
+                        title="Format harus: Tower A, Tower B, dst"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        @input="editForm.gedung = editForm.gedung.replace(/[^A-Za-z\s]/g, '').replace(/^tower/i, 'Tower')"
+                        required
+                    >
                 </div>
                 <div>
                     <label class="text-sm">Lantai</label>
-                    <input type="number" x-model="editForm.lantai" class="w-full mt-1 border rounded-lg px-3 py-2">
+                    <input 
+                        type="number" 
+                        x-model="editForm.lantai"
+                        min="1" 
+                        max="30"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        required
+                    >
                 </div>
                 <div>
                     <label class="text-sm">Nomor Kamar</label>
-                    <input type="number" x-model="editForm.nomor_kamar" class="w-full mt-1 border rounded-lg px-3 py-2">
+                    <input 
+                        type="number" 
+                        x-model="editForm.nomor_kamar"
+                        min="1" 
+                        max="30"
+                        class="w-full mt-1 border rounded-lg px-3 py-2"
+                        required
+                    >
                 </div>
             </div>
 
@@ -283,6 +360,9 @@
         <div @click.outside="openReset = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
             <h2 class="text-lg font-semibold text-gray-800">Reset Password Unit</h2>
             <p class="text-sm text-gray-600">Password login untuk unit <strong x-text="selectedUnit.no_unit"></strong> akan direset.</p>
+            <p class="text-xs text-gray-500">
+                Pengguna wajib mengganti password saat login berikutnya.
+            </p>
             <template x-if="resetPasswordGenerated">
                 <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
                     <p class="font-semibold text-yellow-800">Password Sementara Baru</p>
@@ -383,6 +463,24 @@ function unitManager() {
         },
 
         saveUnit() {
+            if (!this.newUnit.no_unit) {
+                Swal.fire('Error', 'No Unit wajib diisi', 'error');
+                return;
+            }
+            if (!/^Tower [A-Z]$/.test(this.newUnit.gedung)) {
+                Swal.fire('Error', 'Gedung harus format "Tower A"', 'error');
+                return;
+            }
+
+            if (this.newUnit.lantai < 1 || this.newUnit.lantai > 30) {
+                Swal.fire('Error', 'Lantai harus 1 - 30', 'error');
+                return;
+            }
+
+            if (this.newUnit.nomor_kamar < 1 || this.newUnit.nomor_kamar > 30) {
+                Swal.fire('Error', 'Nomor kamar harus 1 - 30', 'error');
+                return;
+            }
             fetch('/units', {
                 method: 'POST',
                 headers: {
@@ -391,48 +489,113 @@ function unitManager() {
                 },
                 body: JSON.stringify(this.newUnit)
             })
-            .then(res => res.json())
+            .then(async res => {
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw err;
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.success) {
-                    this.createdUnit = data.unit;
-                    this.createdUnit.password = data.password;
+
+                    // 🔥 FIX REACTIVE
+                    this.createdUnit = {
+                        ...data.unit,
+                        password: data.password
+                    };
+
                     this.newUnit = { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' };
 
                     Swal.fire({
                         icon: 'success',
                         title: 'Unit Berhasil Ditambahkan',
-                        html: `Username: <b>${this.createdUnit.no_unit}</b><br>Password sementara: <b>${this.createdUnit.password}</b>`,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didClose: () => location.reload()
+                        html: `
+                            Username: <b>${this.createdUnit.no_unit}</b><br>
+                            Password sementara: <b>${this.createdUnit.password}</b>
+                        `,
+                        confirmButtonText: 'OK'
                     });
+
+                    this.unitsData.push(data.unit);
+                    this.filteredUnits = this.unitsData;
+
+                    // 🔥 OPTIONAL: delay close biar user lihat
+                    setTimeout(() => {
+                        this.openCreateUnit = false;
+                    }, 500);
+
                 } else {
                     Swal.fire('Gagal', data.message, 'error');
                 }
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+
+                let message = err.message;
+
+                if (err.errors) {
+                    message = Object.values(err.errors).flat().join('<br>');
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: message
+                });
+            });
         },
 
         editUnit(id, gedung, lantai, nomor_kamar) {
             const unit = this.unitsData.find(u => String(u.id) === String(id));
+
             if (unit) {
-                this.selectedUnit.id = id;
-                this.selectedUnit.no_unit = unit.no_unit;
-                this.selectedUnit.gedung = unit.gedung;
-                this.selectedUnit.lantai = unit.lantai;
-                this.selectedUnit.nomor_kamar = unit.nomor_kamar;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Perubahan No Unit akan mengubah username login',
+                    showCancelButton: true,
+                    confirmButtonText: 'Lanjutkan',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
 
-                // Pastikan editForm juga diperbarui
-                this.editForm.gedung = unit.gedung;
-                this.editForm.lantai = unit.lantai;
-                this.editForm.nomor_kamar = unit.nomor_kamar;
+                    // ❗ HANYA jalan kalau klik lanjutkan
+                    if (result.isConfirmed) {
 
-                this.openEdit = true;
+                        this.selectedUnit.id = id;
+                        this.selectedUnit.no_unit = unit.no_unit;
+
+                        this.editForm.no_unit = unit.no_unit;
+                        this.editForm.gedung = unit.gedung;
+                        this.editForm.lantai = unit.lantai;
+                        this.editForm.nomor_kamar = unit.nomor_kamar;
+
+                        this.openEdit = true;
+                    }
+                });
             }
         },
 
         updateUnit() {
-            fetch(`/units/${this.selectedUnit.id}`, {
+            if (!this.editForm.no_unit) {
+                Swal.fire('Error', 'No Unit wajib diisi', 'error');
+                return;
+            }
+            if (!/^Tower [A-Z]$/.test(this.editForm.gedung)) {
+                Swal.fire('Error', 'Gedung harus format "Tower A"', 'error');
+                return;
+            }
+
+            if (this.editForm.lantai < 1 || this.editForm.lantai > 30) {
+                Swal.fire('Error', 'Lantai harus 1 - 30', 'error');
+                return;
+            }
+
+            if (this.editForm.nomor_kamar < 1 || this.editForm.nomor_kamar > 30) {
+                Swal.fire('Error', 'Nomor kamar harus 1 - 30', 'error');
+                return;
+            }
+                        fetch(`/units/${this.selectedUnit.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -455,6 +618,7 @@ function unitManager() {
                     this.applyFilter();
 
                     // **Update selectedUnit agar placeholder input edit baru**
+                    
                     this.selectedUnit.gedung = this.editForm.gedung;
                     this.selectedUnit.lantai = this.editForm.lantai;
                     this.selectedUnit.nomor_kamar = this.editForm.nomor_kamar;
@@ -469,7 +633,19 @@ function unitManager() {
                     Swal.fire('Gagal', data.message, 'error');
                 }
             })
-            .catch(err => Swal.fire('Error', 'Terjadi error saat update', 'error'));
+            .catch(async err => {
+                let message = 'Terjadi kesalahan';
+
+                if (err.errors) {
+                    message = Object.values(err.errors).flat().join('<br>');
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: message
+                });
+            });
         },
 
         confirmDelete(id, no_unit) {
@@ -565,29 +741,41 @@ function unitManager() {
         },
 
         submitResetPassword() {
-            fetch(`/units/${this.selectedUnit.id}/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.resetPasswordGenerated = true;
-                    this.newPassword = data.new_password;
+            Swal.fire({
+                title: `Reset password ${this.selectedUnit.no_unit}?`,
+                text: "Password lama akan diganti",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Reset',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Password Reset',
-                        html: `Password baru: <b>${this.newPassword}</b>`
-                    });
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
-                }
-            })
-            .catch(err => console.error(err));
-        },
+                if (!result.isConfirmed) return;
+
+                fetch(`/units/${this.selectedUnit.id}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.resetPasswordGenerated = true;
+                        this.newPassword = data.new_password;
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Password Berhasil Direset',
+                            html: `Password baru: <b>${this.newPassword}</b>`
+                        });
+                    } else {
+                        Swal.fire('Gagal', data.message, 'error');
+                    }
+                })
+                .catch(err => console.error(err));
+            });
+            },
 
         toggleStatus(id, no_unit, action) {
             this.selectedUnit.id = id;

@@ -54,37 +54,92 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'no_unit'     => 'required|string|unique:units,no_unit',
-            'gedung'      => 'required|string',
-            'lantai'      => 'required|integer',
-            'nomor_kamar' => 'required|integer',
+            'no_unit' => 'required|string|unique:units,no_unit',
+        
+            'gedung' => [
+                'required',
+                'string',
+                'regex:/^Tower\s[A-Z]$/'
+            ],
+        
+            'lantai' => 'required|integer|min:1|max:30',
+            'nomor_kamar' => 'required|integer|min:1|max:30',
+        ], [
+            
+            'gedung.regex' => 'Format gedung harus "Tower A", "Tower B", dst.',
+            'lantai.min' => 'Lantai minimal 1.',
+            'lantai.max' => 'Lantai maksimal 30.',
+            'nomor_kamar.min' => 'Nomor kamar minimal 1.',
+            'nomor_kamar.max' => 'Nomor kamar maksimal 30.',
         ]);
 
-        $unit = Unit::create([
-            'no_unit'     => $validated['no_unit'],
-            'gedung'      => $validated['gedung'],
-            'lantai'      => $validated['lantai'],
-            'nomor_kamar' => $validated['nomor_kamar'],
-            'status'      => 'Aktif',
-        ]);
+        DB::beginTransaction();
 
-        return response()->json([
-            'success' => true,
-            'unit'    => $unit,
-        ]);
+        try {
+            $password = Str::random(8);
+
+            // buat akun (penggunas)
+            $user = \App\Models\Pengguna::create([
+                'username' => $validated['no_unit'],
+                'password' => Hash::make($password),
+                'role' => 'unit',
+                'is_active' => true,
+                'must_change_password' => true
+            ]);
+
+            // buat unit (pakai user_id)
+            $unit = Unit::create([
+                'no_unit'     => $validated['no_unit'],
+                'gedung'      => $validated['gedung'],
+                'lantai'      => $validated['lantai'],
+                'nomor_kamar' => $validated['nomor_kamar'],
+                'status'      => 'Aktif',
+                'user_id'     => $user->id
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success'  => true,
+                'unit'     => $unit,
+                'password' => $password
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, Unit $unit)
     {
         try {
             $validated = $request->validate([
-                'gedung'      => 'required|string|max:50',
-                'lantai'      => 'required|integer|min:1',
-                'nomor_kamar' => 'required|integer|min:1',
+                'no_unit' => 'required|string|unique:units,no_unit,' . $unit->id,
+
+                'gedung' => [
+                    'required',
+                    'string',
+                    'regex:/^Tower\s[A-Z]$/'
+                ],
+                'lantai' => 'required|integer|min:1|max:30',
+                'nomor_kamar' => 'required|integer|min:1|max:30',
+            ], [
+                'gedung.regex' => 'Format gedung harus "Tower A", "Tower B", dst.',
             ]);
 
             DB::beginTransaction();
 
+            // 🔥 update username di pengguna
+            $unit->user->update([
+                'username' => $validated['no_unit']
+            ]);
+
+            // 🔥 update unit
             $unit->update($validated);
 
             DB::commit();
@@ -99,14 +154,13 @@ class UnitController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => $e->getMessage()
             ], 500);
         }
     }
@@ -125,6 +179,37 @@ class UnitController extends Controller
         $unit->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    public function resetPassword(Unit $unit)
+    {
+        DB::beginTransaction();
+
+        try {
+            // generate password baru
+            $newPassword = Str::random(8);
+
+            // update ke tabel pengguna
+            $unit->user->update([
+                'password' => Hash::make($newPassword),
+                'must_change_password' => true
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'new_password' => $newPassword
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
