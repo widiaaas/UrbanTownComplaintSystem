@@ -15,7 +15,8 @@ return new class extends Migration
             $table->string('nama', 100);
             $table->string('telp', 20);
             $table->string('email', 100)->unique();
-            $table->string('jabatan', 50);
+            $table->enum('role', ['admin','tenant_relation','departemen']);
+            $table->enum('departemen', ['Operational', 'Engineering', 'Finance', 'Legal','Developer'])->nullable();
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
             $table->timestamps();

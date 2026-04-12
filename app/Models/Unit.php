@@ -13,7 +13,7 @@ class Unit extends Model
     protected $table = 'units';
 
     protected $fillable = [
-        'no_unit',
+        'no_unit', 
         'gedung',
         'lantai',
         'nomor_kamar',

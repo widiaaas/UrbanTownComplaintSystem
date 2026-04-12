@@ -15,12 +15,13 @@ return new class extends Migration
             $table->foreignId('penghuni_id')->constrained('penghunis')->onDelete('cascade');
             $table->string('judul', 50);
             $table->text('deskripsi');
-            $table->enum('status', ['unassigned', 'open', 'on_progress', 'closed'])->default('unassigned');
-            $table->foreignId('penanggung_jawab')->nullable()->constrained('penggunas')->nullOnDelete();
+            $table->enum('status', ['unassigned', 'open', 'on_progress', 'close'])->default('unassigned');
+            $table->foreignId('penanggung_jawab_id')->nullable()->constrained('penggunas')->nullOnDelete();
             $table->timestamp('taken_at')->nullable();
             $table->text('keputusan')->nullable();
             $table->timestamp('tanggal_keputusan')->nullable();
             $table->json('lampiran')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

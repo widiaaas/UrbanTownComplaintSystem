@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Keluhan extends Model
 {
     use HasFactory;
-
+ 
     protected $table = 'keluhans';
 
     protected $fillable = [
@@ -18,7 +18,7 @@ class Keluhan extends Model
         'judul',
         'deskripsi',
         'status',
-        'penanggung_jawab',
+        'penanggung_jawab_id',
         'taken_at',
         'keputusan',
         'tanggal_keputusan',
@@ -44,12 +44,12 @@ class Keluhan extends Model
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'penanggung_jawab');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
     }
 
     public function riwayat()
     {
-        return $this->hasMany(RiwayatKeluhan::class);
+        return $this->hasMany(RiwayatPenangananKeluhan::class, 'keluhan_id');
     }
 
     public function workOrders()

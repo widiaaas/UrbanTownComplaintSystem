@@ -21,7 +21,9 @@ class KaryawanController extends Controller
     {
         $karyawans = Karyawan::with('user')->get();
 
-        return view('admin.karyawan.index', compact('karyawans'));
+        $departemens = ['Operational','Engineering','Finance','Legal','Developer'];
+
+        return view('admin.karyawan.index', compact('karyawans','departemens'));
     }
 
     /**
@@ -30,27 +32,98 @@ class KaryawanController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nip' => 'required|string|max:20|unique:karyawans,nip',
+            'nip' => 'required|string|max:20|unique:karyawans,nip|unique:penggunas,username',
+            'telp' => ['required','regex:/^08[0-9]{8,11}$/'],
             'nama' => ['required','string','max:100','regex:/^[A-Za-z\s]+$/'],
-            'telp' => ['required','regex:/^(08)[0-9]{8,11}$/'],
-            'email' => 'required|email|max:100|unique:karyawans,email',
-            'jabatan' => 'required|string|max:50',
+            'email' => 'required|email|max:100|unique:karyawans,email|unique:penggunas,username',
+
+            // 🔥 ROLE
+            'role' => 'required|in:tenant_relation,departemen',
+
+            // 🔥 DEPARTEMEN (tidak selalu wajib)
+            'departemen' => 'nullable|in:Operational,Engineering,Finance,Legal,Developer',
+
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
         ], [
             'nama.regex' => 'Nama hanya boleh huruf dan spasi.',
             'telp.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
             'email.email' => 'Format email tidak valid.',
         ]);
-        
-        // 🔴 HANDLE ERROR JSON (INI YANG PENTING)
-        if($validator->fails()){
+
+        // ================= VALIDATION ERROR =================
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
-        
-        $validated = $validator->validated();
+
+        DB::beginTransaction();
+
+        try {
+            $validated = $validator->validated();
+
+            // 🔥 VALIDASI TAMBAHAN (LOGIC BISNIS)
+            if ($validated['role'] === 'departemen' && empty($validated['departemen'])) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [
+                        'departemen' => ['Departemen wajib dipilih']
+                    ]
+                ], 422);
+            }
+
+            // 🔑 Generate username & password
+            $username = $validated['nip'];
+            $passwordPlain = 'Tmp-' . strtoupper(Str::random(5));
+
+            // ================= CREATE USER =================
+            $user = Pengguna::create([
+                'username' => $username,
+                'password' => Hash::make($passwordPlain),
+                'role' => 'karyawan',
+                'is_active' => true,
+                'must_change_password' => true,
+            ]);
+
+            // ================= CREATE KARYAWAN =================
+            $karyawan = Karyawan::create([
+                'user_id' => $user->id,
+                'nip' => $validated['nip'],
+                'nama' => $validated['nama'],
+                'telp' => $validated['telp'],
+                'email' => $validated['email'],
+                'role' => $validated['role'],
+
+                // 🔥 LOGIC UTAMA
+                'departemen' => $validated['role'] === 'departemen'
+                    ? $validated['departemen']
+                    : null,
+
+                'jenis_kelamin' => $validated['jenis_kelamin'],
+                'status' => 'Aktif'
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Karyawan berhasil ditambahkan',
+                'data' => $karyawan,
+                'akun' => [
+                    'username' => $username,
+                    'password' => $passwordPlain
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -65,7 +138,7 @@ class KaryawanController extends Controller
                 'nama' => 'required|string|max:100',
                 'telp' => 'required|string|max:20',
                 'email' => 'required|email|unique:karyawans,email,' . $karyawan->id,
-                'jabatan' => 'required|string|max:50',
+                'departemen' => 'required|string|max:50',
                 'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
                 'status' => 'required|in:Aktif,Nonaktif'
             ]);

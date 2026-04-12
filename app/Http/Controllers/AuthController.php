@@ -5,108 +5,101 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Pengguna;
 
 class AuthController extends Controller
 {
-    /**
-     * Show login form.
-     */
+    // TAMPILKAN FORM LOGIN
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    /**
-     * Handle login request.
-     */
+    // PROSES LOGIN
     public function login(Request $request)
     {
+        // VALIDASI
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $credentials = [
-            'username' => $request->username,
-            'password' => $request->password,
-        ];
+        // CARI USER
+        $user = Pengguna::where('username', $request->username)->first();
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-
-            if (!$user->is_active) {
-                Auth::logout();
-                return back()->withErrors(['username' => 'Akun Anda dinonaktifkan.']);
-            }
-
-            $user->last_login = now();
-            $user->save();
-
-            // If password must be changed, redirect to change form
-            if ($user->must_change_password) {
-                return redirect()->route('password.change');
-            }
-
-            return $this->redirectBasedOnRole($user);
+        // CEK USER
+        if (!$user) {
+            return back()
+                ->withErrors(['username' => 'Username tidak ditemukan'])
+                ->withInput();
         }
 
-        return back()->withErrors(['username' => 'Username atau password salah.']);
+        // CEK STATUS AKTIF
+        if (!$user->is_active) {
+            return back()
+                ->withErrors(['username' => 'Akun tidak aktif']);
+        }
+
+        // CEK PASSWORD
+        if (!Hash::check($request->password, $user->password)) {
+            return back()
+                ->withErrors(['password' => 'Password salah'])
+                ->withInput();
+        }
+
+        // LOGIN
+    Auth::login($user, $request->remember ?? false);
+
+    // UPDATE LAST LOGIN
+    $user->update([
+        'last_login' => now()
+    ]);
+
+    // CEK HARUS GANTI PASSWORD
+    if ($user->must_change_password) {
+        return redirect()->route('change.password');
     }
 
-    /**
-     * Logout the user.
-     */
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    // ================= ROLE LOGIC =================
 
-        return redirect('/login');
+    // JIKA UNIT
+    if ($user->role === 'unit') {
+        return redirect('/dashboard/unit');
     }
 
-    /**
-     * Show password change form.
-     */
-    public function showChangeForm()
-    {
-        return view('auth.change-password');
+    // JIKA KARYAWAN
+    if ($user->role === 'karyawan') {
+
+        // ambil data karyawan
+        $karyawan = $user->karyawan;
+
+        if (!$karyawan) {
+            Auth::logout();
+            return back()->withErrors(['username' => 'Data karyawan tidak ditemukan']);
+        }
+
+        // ADMIN
+        if ($karyawan->role === 'admin') {
+            return redirect('/dashboardAdmin');
+        }
+
+        // TENANT RELATION
+        if ($karyawan->role === 'tenant_relation') {
+            return redirect('/dashboardTenantRelation');
+        }
+
+        // DEPARTEMEN
+        if ($karyawan->role === 'departemen') {
+            return redirect('/dashboardDepartemen');
+        }
+
+        // UNIT
+        if ($user->role === 'unit') {
+            return redirect('/dashboardPenghuni');
+        }
     }
 
-    /**
-     * Handle password change.
-     */
-    public function change(Request $request)
-    {
-        $request->validate([
-            'new_password' => 'required|string|min:6|confirmed',
-        ]);
-
-        $user = Auth::user();
-        $user->password_hash = Hash::make($request->new_password);
-        $user->must_change_password = false;
-        $user->save();
-
-        // Logout after password change to force re-login with new password
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login')->with('success', 'Password berhasil diubah. Silakan login kembali.');
-    }
-
-    /**
-     * Redirect to appropriate dashboard based on user role.
-     * Menggunakan URL langsung (tidak bergantung route name) agar kompatibel dengan route yang ada.
-     */
-    protected function redirectBasedOnRole($user)
-    {
-        return match ($user->role) {
-            'admin' => redirect('/dashboardAdmin'),
-            'tenant_relation' => redirect('/dashboardTenantRelation'),
-            'departemen' => redirect('/dashboardDepartemen'),
-            'unit' => redirect('/dashboardPenghuni'),
-            default => redirect('/'),
-        };
+    // fallback
+    return redirect('/');
     }
 }

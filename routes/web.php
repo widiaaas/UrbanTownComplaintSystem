@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ActivationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\KaryawanController;
-use App\Http\Controllers\PenghuniController;
+use App\Http\Controllers\Admin\PenghuniController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -126,7 +128,6 @@ use App\Http\Controllers\PenghuniController;
 |--------------------------------------------------------------------------
 */
 
-
 // ==================== PUBLIC ROUTES ====================
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -135,42 +136,47 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ==================== AUTHENTICATED ROUTES ====================
 Route::middleware(['auth'])->group(function () {
 
-    // --- Ubah password (wajib saat first login) ---
+    // --- Change Password ---
     Route::get('/change-password', [AuthController::class, 'showChangeForm'])->name('password.change');
     Route::post('/change-password', [AuthController::class, 'change']);
 
-    // ---------- ADMIN ----------
+    // ==================== ADMIN ====================
     Route::middleware(['role:admin'])->group(function () {
+
         Route::get('/dashboardAdmin', fn() => view('admin.dashboard'));
-        Route::get('/profileAdmin', fn() => view('admin.profile'));
         
-        // Unit management
-        Route::get('/IndexUnits', [App\Http\Controllers\Admin\UnitController::class, 'index'])->name('admin.units.index');
-        Route::post('/units', [App\Http\Controllers\Admin\UnitController::class, 'store'])->name('admin.units.store');
-        Route::put('/units/{unit}', [App\Http\Controllers\Admin\UnitController::class, 'update'])->name('admin.units.update');
-        Route::delete('/units/{unit}', [App\Http\Controllers\Admin\UnitController::class, 'destroy'])->name('admin.units.destroy');
-        Route::post('/units/{unit}/reset-password', [UnitController::class, 'resetPassword']);
-        Route::post('/units/{unit}/change-occupant', [App\Http\Controllers\Admin\UnitController::class, 'changeOccupant'])->name('admin.units.changeOccupant');
-        Route::post('/units/{unit}/reset-password', [App\Http\Controllers\Admin\UnitController::class, 'resetPassword'])->name('admin.units.resetPassword');
-        Route::post('/units/{unit}/toggle-status', [App\Http\Controllers\Admin\UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
-        Route::get('/penghuni-available', [App\Http\Controllers\Admin\UnitController::class, 'getAvailablePenghuni'])->name('admin.penghuni.available');
-        
-        // Penghuni Management
-        Route::get('/IndexPenghuni', [App\Http\Controllers\PenghuniController::class, 'index'])->name('admin.penghuni.index');
-        Route::get('/penghuni', [PenghuniController::class, 'index'])->name('admin.penghuni.index');
-        Route::post('/penghuni', [PenghuniController::class, 'store'])->name('admin.penghuni.store');
-        Route::put('/penghuni/{penghuni}', [PenghuniController::class, 'update'])->name('admin.penghuni.update');
-        Route::delete('/penghuni/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
+        // PROFLE 
+        Route::get('/profileAdmin', [AdminController::class, 'profile'])->name('admin.profile');
+        Route::put('/profileAdmin/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::put('/profileAdmin/update-password', [AdminController::class, 'updatePassword'])->name('admin.profile.updatePassword');
+
+        // ================= UNIT =================
+        Route::get('/IndexUnits', [UnitController::class, 'index'])->name('admin.units.index');
+        Route::post('/units', [UnitController::class, 'store'])->name('admin.units.store');
+        Route::put('/units/{unit}', [UnitController::class, 'update'])->name('admin.units.update');
+        Route::delete('/units/{unit}', [UnitController::class, 'destroy'])->name('admin.units.destroy');
+
+        Route::post('/units/{unit}/reset-password', [UnitController::class, 'resetPassword'])->name('admin.units.resetPassword');
+        Route::post('/units/{unit}/change-occupant', [UnitController::class, 'changeOccupant'])->name('admin.units.changeOccupant');
+        Route::post('/units/{unit}/toggle-status', [UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
+        Route::get('/penghuni-available', [UnitController::class, 'getAvailablePenghuni'])->name('admin.penghuni.available');
+
+        // ================= PENGHUNI =================
+        Route::get('/IndexPenghuni', [PenghuniController::class, 'index'])->name('admin.penghuni.index');
+        Route::post('/penghuni/store', [PenghuniController::class, 'store'])->name('admin.penghuni.store');
+        Route::put('/penghuni/update/{penghuni}', [PenghuniController::class, 'update'])->name('admin.penghuni.update');
+        Route::delete('/penghuni/delete/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
         Route::get('/penghuni/{penghuni}/show', [PenghuniController::class, 'show'])->name('admin.penghuni.show');
-        
-        Route::get('/IndexKaryawan', [KaryawanController::class, 'index']);
-        Route::post('/karyawan', [KaryawanController::class, 'store']);
-        Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update']);
-        Route::delete('/karyawan/{karyawan}', [KaryawanController::class, 'destroy']);
-        Route::post('/karyawan/{karyawan}/reset-password', [KaryawanController::class, 'resetPassword']);
+
+        // ================= KARYAWAN =================
+        Route::get('/IndexKaryawan', [KaryawanController::class, 'index'])->name('admin.karyawan.index');
+        Route::post('/karyawan', [KaryawanController::class, 'store'])->name('admin.karyawan.store');
+        Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update'])->name('admin.karyawan.update');
+        Route::delete('/karyawan/{karyawan}', [KaryawanController::class, 'destroy'])->name('admin.karyawan.destroy');
+        Route::post('/karyawan/{karyawan}/reset-password', [KaryawanController::class, 'resetPassword'])->name('admin.karyawan.resetPassword');
     });
 
-    // ---------- TENANT RELATION ----------
+    // ================= TENANT RELATION =================
     Route::middleware(['role:tenant_relation'])->group(function () {
         Route::get('/dashboardTenantRelation', fn() => view('tenantrelation.dashboard'));
         Route::get('/profileTR', fn() => view('tenantrelation.profile'));
@@ -181,7 +187,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/knowledgeBase', fn() => view('tenantRelation.knowledgeBase.index'));
     });
 
-    // ---------- DEPARTEMEN ----------
+    // ================= DEPARTEMEN =================
     Route::middleware(['role:departemen'])->group(function () {
         Route::get('/dashboardDepartemen', fn() => view('departemen.dashboard'));
         Route::get('/profileDepartemen', fn() => view('departemen.profile'));
@@ -190,7 +196,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/detailWorkOrder', fn() => view('departemen.workOrder.detailWorkOrder'));
     });
 
-    // ---------- PENGHUNI (UNIT) ----------
+    // ================= PENGHUNI =================
     Route::middleware(['role:unit'])->group(function () {
         Route::get('/dashboardPenghuni', fn() => view('penghuni.dashboard'));
         Route::get('/profilePenghuni', fn() => view('penghuni.profile'));

@@ -14,9 +14,9 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             PenghuniSeeder::class,
             KeluhanSeeder::class,
-            RiwayatKeluhanSeeder::class,
+            RiwayatPenangananKeluhanSeeder::class,
             WorkOrderSeeder::class,
-            RiwayatWorkOrderSeeder::class,
+            RiwayatPenangananWorkOrderSeeder::class,
             KnowledgeBaseSeeder::class,
         ]);
     }

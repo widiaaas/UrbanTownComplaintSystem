@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class Pengguna extends Authenticatable
+use App\Models\Karyawan;
+use App\Models\Unit;
+use App\Models\Keluhan;
+use App\Models\WorkOrder;
+use App\Models\KnowledgeBase;
+
+class Pengguna extends Authenticatable 
 {
     use HasFactory, Notifiable;
 
@@ -54,12 +60,12 @@ class Pengguna extends Authenticatable
 
     public function keluhanDiambil()
     {
-        return $this->hasMany(Keluhan::class, 'penanggung_jawab');
+        return $this->hasMany(Keluhan::class, 'penanggung_jawab_id');
     }
 
     public function workOrderDiambil()
     {
-        return $this->hasMany(WorkOrder::class, 'penanggung_jawab');
+        return $this->hasMany(WorkOrder::class, 'penanggung_jawab_id');
     }
 
     public function knowledgeBase()

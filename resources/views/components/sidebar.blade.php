@@ -3,6 +3,12 @@
     $user = Auth::user();
     $currentPath = request()->path();
     
+    // 🔥 TAMBAHAN (FIX ROLE)
+    $karyawanRole = null;
+    if ($user && $user->role === 'karyawan' && $user->karyawan) {
+        $karyawanRole = $user->karyawan->role;
+    }
+
     // Helper untuk active menu
     function activeMenu($path, $currentPath) {
         return $currentPath === trim($path, '/') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100';
@@ -31,7 +37,7 @@
         {{-- MENU --}}
         <nav class="flex-1 space-y-1 overflow-y-auto">
 
-        @if($user->role === 'admin')
+        @if($karyawanRole === 'admin')
             {{-- DASHBOARD --}}
             <a href="/dashboardAdmin"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('dashboardAdmin', $currentPath) }}">
@@ -120,7 +126,7 @@
                 <span>Profile Penghuni</span>
             </a>
             
-        @elseif($user->role === 'tenant_relation')
+            @elseif($karyawanRole === 'tenant_relation')
             {{-- DASHBOARD --}}
             <a href="/dashboardTenantRelation"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('dashboardTenantRelation', $currentPath) }}">
@@ -186,7 +192,7 @@
                 <span>Profile Tenant Relation</span>
             </a>
 
-        @elseif($user->role === 'departemen')
+            @elseif($karyawanRole === 'departemen')
             {{-- DASHBOARD --}}
             <a href="/dashboardDepartemen"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('dashboardDepartemen', $currentPath) }}">

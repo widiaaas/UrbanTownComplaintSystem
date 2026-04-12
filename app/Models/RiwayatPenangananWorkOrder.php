@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RiwayatWorkOrder extends Model
+class RiwayatPenangananWorkOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'riwayat_work_orders';
+    protected $table = 'riwayat_penanganan_work_orders';
 
     protected $fillable = [
-        'work_order_id',
+        'work_order_id', 
         'status',
         'keterangan',
         'lampiran',
-        'penanggung_jawab',
+        'penanggung_jawab_id',
         'waktu',
     ];
 
@@ -32,6 +32,6 @@ class RiwayatWorkOrder extends Model
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'penanggung_jawab');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
     }
 }

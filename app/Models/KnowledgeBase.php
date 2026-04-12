@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class KnowledgeBase extends Model
 {
     use HasFactory, SoftDeletes;
-
+ 
     protected $table = 'knowledge_bases';
 
     protected $fillable = [

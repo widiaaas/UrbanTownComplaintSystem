@@ -10,7 +10,26 @@
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-900">Kelola Karyawan</h1>
         <button 
-            @click="openCreate = true"
+            @click="
+                openCreate = true;
+
+                // reset state
+                passwordGenerated = false;
+                generatedPassword = '';
+
+                newEmployee = {
+                    id_pegawai:'',
+                    nama:'',
+                    telp:'',
+                    email:'',
+                    departemen:'',
+                    role:'',
+                    gender:'',
+                    status:'Aktif'
+                };
+
+                $nextTick(() => $refs.nama.focus());
+            "
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             + Tambah Karyawan
         </button>
@@ -27,9 +46,10 @@
         <div>
             <label class="text-sm font-medium text-gray-700">Departemen</label>
             <select class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-                <option value="">Semua</option>
-                <option>Engineering</option>
-                <option>Tenant Relation</option>
+                <option value="">Pilih Departemen</option>
+                            @foreach($departemens as $dept)
+                                <option value="{{ $dept }}">{{ $dept }}</option>
+                            @endforeach
             </select>
         </div>
 
@@ -45,6 +65,7 @@
 
             <thead class="bg-gray-100">
                 <tr class="text-center">
+                    <th class="px-4 py-2 border">No</th>
                     <th class="px-4 py-2 border">ID Pegawai</th>
                     <th class="px-4 py-2 border">Nama</th>
                     <th class="px-4 py-2 border">Departemen</th>
@@ -55,9 +76,10 @@
 
             <tbody class="bg-white divide-y divide-gray-200">
 
-                <template x-for="emp in employees" :key="emp.id">
+                <template x-for="(emp, index) in employees" :key="emp.id">
 
                 <tr class="hover:bg-gray-50 text-center">
+                    <td class="px-4 py-2" x-text="index + 1"></td>
 
                     <td class="px-4 py-2" x-text="emp.id_pegawai"></td>
 
@@ -85,21 +107,38 @@
                     <!-- AKSI DROPDOWN -->
                     <td class="px-4 py-2 relative">
 
-                        <div x-data="{open:false}" class="relative inline-block text-left">
+                        <div x-data="dropdownMenu(emp)" class="relative inline-block text-left">
 
-                            <button
-                                @click.stop="open=!open"
-                                class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
-                                Aksi
-                                <span class="text-xs">▼</span>
-                            </button>
+                        <button 
+                            @click="toggle($event)"
+                            class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
+                            Aksi <span class="text-xs">▼</span>
+                        </button>
 
-                            <div
-                                x-show="open"
-                                x-cloak
-                                x-transition
-                                @click.outside="open=false"
-                                class="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-xl z-50">
+                        <div
+                        x-show="open"
+                        x-cloak
+                        x-transition
+                        @click.outside="open = false"
+                        x-ref="menu"
+                        class="fixed w-44 bg-white border rounded-lg shadow-xl z-[9999]"
+                        x-init="
+                            $watch('open', value => {
+                                if (value) {
+                                    let rect = this.button.getBoundingClientRect();
+                                    let dropdownHeight = 180;
+
+                                    if ((rect.bottom + dropdownHeight) > window.innerHeight) {
+                                        $el.style.top = (rect.top - dropdownHeight) + 'px';
+                                    } else {
+                                        $el.style.top = rect.bottom + 'px';
+                                    }
+
+                                    $el.style.left = (rect.right - 176) + 'px';
+                                }
+                            })
+                        "
+                    >
 
                                 <!-- DETAIL -->
                                 <button
@@ -158,10 +197,15 @@
         </div>
 
     {{-- ================= MODAL TAMBAH KARYAWAN ================= --}}
-    <div x-show="openCreate" x-cloak
+    <div 
+        x-show="openCreate" 
+        x-cloak
+        x-trap="openCreate"
+        x-transition.scale.duration.200ms
+        @click.self.stop
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
 
-        <div @click.outside="openCreate=false"
+        <div @click.outside.stop="openCreate=false"
             class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4">
 
             <h2 class="text-lg font-semibold">Tambah Karyawan</h2>
@@ -171,6 +215,7 @@
                     <label class="text-sm font-medium">Nama</label>
                     <input type="text" 
                         x-model="newEmployee.nama"
+                        x-ref="nama"
                         class="w-full border rounded-lg px-3 py-2">
                 </div>
                 <div>
@@ -194,15 +239,29 @@
                 </div>
 
                 <div>
+                    <label class="text-sm font-medium">Role</label>
+                    <select 
+                        x-model="newEmployee.role"
+                        @change="newEmployee.departemen = ''"
+                        class="w-full border rounded-lg px-3 py-2">
+
+                        <option value="">Pilih Role</option>
+                        <option value="tenant_relation">Tenant Relation</option>
+                        <option value="departemen">Departemen</option>
+
+                    </select>
+                </div>
+
+                <div x-show="newEmployee.role === 'departemen'" x-transition.opacity.duration.200ms>
                     <label class="text-sm font-medium">Departemen</label>
                     <select 
                         x-model="newEmployee.departemen"
                         class="w-full border rounded-lg px-3 py-2">
 
                         <option value="">Pilih Departemen</option>
-                        <option>Admin</option>
-                        <option>Engineering</option>
-                        <option>Tenant Relation</option>
+                        @foreach($departemens as $dept)
+                            <option value="{{ $dept }}">{{ $dept }}</option>
+                        @endforeach
 
                     </select>
                 </div>
@@ -235,7 +294,7 @@
                     </p>
 
                     <p>
-                        <strong>ID Pegawai Login:</strong>
+                        <strong>Username:</strong>
                         <span x-text="newEmployee.id_pegawai"></span>
                     </p>
 
@@ -304,9 +363,10 @@
                     <label class="text-sm">Departemen</label>
                     <select x-model="selectedEmployee.departemen"
                         class="w-full border rounded-lg px-3 py-2">
-                        <option>Admin</option>
-                        <option>Departemen</option>
-                        <option>Tenant Relation</option>
+                        <option value="">Pilih Departemen</option>
+                        @foreach($departemens as $dept)
+                            <option value="{{ $dept }}">{{ $dept }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -438,6 +498,7 @@ function karyawanManager(){
             telp:'', 
             email:'', 
             departemen:'',
+            role:'',
             gender:'', 
             status:'Aktif'
         },
@@ -448,10 +509,28 @@ function karyawanManager(){
             this.employees = data.map(e => ({
                 ...e,
                 id_pegawai: e.nip,
-                departemen: e.jabatan,
+                departemen: e.departemen, // ✅ FIX
                 gender: e.jenis_kelamin
             }));
         },
+        showError(msg){
+            this.openCreate = true;
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: msg
+            }).then(() => {
+
+                // 🔥 DELAY WAJIB
+                setTimeout(() => {
+                    this.openCreate = true;
+                    this.$nextTick(() => this.$refs.nama.focus());
+                }, 50);
+
+            });
+        },
+        
 
         // ================= STORE =================
         store(){
@@ -459,32 +538,37 @@ function karyawanManager(){
 
             // ================= VALIDASI FRONTEND =================
             if(!this.newEmployee.id_pegawai){
-                Swal.fire('Error','ID Pegawai wajib diisi','error');
+                this.showError('ID Pegawai wajib diisi');
                 return;
             }
 
             if(!this.newEmployee.nama){
-                Swal.fire('Error','Nama wajib diisi','error');
+                this.showError('Nama wajib diisi');
                 return;
             }
 
             if(!this.newEmployee.telp){
-                Swal.fire('Error','No. Telepon wajib diisi','error');
+                this.showError('No. Telepon wajib diisi');
                 return;
             }
 
             if(!this.newEmployee.email){
-                Swal.fire('Error','Email wajib diisi','error');
+                this.showError('Email wajib diisi');
                 return;
             }
 
-            if(!this.newEmployee.departemen){
-                Swal.fire('Error','Departemen wajib dipilih','error');
+            if(!this.newEmployee.role){
+                this.showError('Role wajib dipilih');
+                return;
+            }
+
+            if(this.newEmployee.role === 'departemen' && !this.newEmployee.departemen){
+                this.showError('Departemen wajib dipilih');
                 return;
             }
 
             if(!this.newEmployee.gender){
-                Swal.fire('Error','Jenis kelamin wajib dipilih','error');
+                this.showError('Jenis kelamin wajib dipilih');
                 return;
             }
 
@@ -500,7 +584,8 @@ function karyawanManager(){
                     nama: this.newEmployee.nama,
                     telp: this.newEmployee.telp,
                     email: this.newEmployee.email,
-                    jabatan: this.newEmployee.departemen,
+                    departemen: this.newEmployee.departemen,
+                    role: this.newEmployee.role,
                     jenis_kelamin: this.newEmployee.gender
                 })
             })
@@ -516,70 +601,68 @@ function karyawanManager(){
                 if(res.success){
 
                     this.passwordGenerated = true;
-                    this.generatedPassword = res.password;
+                    this.generatedPassword = res.akun.password;
 
                     Swal.fire({
                         icon: 'success',
                         title: 'Karyawan Berhasil Ditambahkan',
                         html: `
-                            ID Login: <b>${this.newEmployee.id_pegawai}</b><br>
-                            Password: <b>${res.password}</b>
+                            Username: <b>${res.akun.username}</b><br>
+                            Password: <b>${res.akun.password}</b>
                         `,
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'OK',
+                        allowOutsideClick: false, 
+                        allowEscapeKey: false     
+                    }).then(() => {
+
+                        location.reload(); 
+
                     });
 
-                    // reset form
                     this.newEmployee = {
                         id_pegawai:'',
                         nama:'',
                         telp:'',
                         email:'',
+                        role:'',
                         departemen:'',
                         gender:'',
                         status:'Aktif'
                     };
 
-                    // reload
-                    setTimeout(()=>{
-                        location.reload();
-                    },1500);
-
                 } else {
                     Swal.fire('Gagal', res.message || 'Gagal menyimpan','error');
                 }
-            })
-            .catch(err => {
+                })
+                .catch(err => {
 
-                console.error(err);
+                    console.error(err);
 
-                // 🔥 mapping nama field
-                let fieldNames = {
-                    nip: 'ID Pegawai',
-                    nama: 'Nama',
-                    telp: 'No. Telepon',
-                    email: 'Email',
-                    jabatan: 'Departemen',
-                    jenis_kelamin: 'Jenis Kelamin'
-                };
+                    let fieldNames = {
+                        nip: 'ID Pegawai',
+                        nama: 'Nama',
+                        telp: 'No. Telepon',
+                        email: 'Email',
+                        departemen: 'Departemen',
+                        jenis_kelamin: 'Jenis Kelamin'
+                    };
 
-                let message = 'Terjadi kesalahan';
+                    let message = 'Terjadi kesalahan';
 
-                // 🔥 tampilkan error validasi dari backend
-                if(err.errors){
-                    message = Object.entries(err.errors)
-                        .map(([field, msgs]) => {
-                            let label = fieldNames[field] || field;
-                            return `<b>${label}</b>: ${msgs.join(', ')}`;
-                        })
-                        .join('<br>');
-                }
+                    if(err.errors){
+                        message = Object.entries(err.errors)
+                            .map(([field, msgs]) => {
+                                let label = fieldNames[field] || field;
+                                return `${label}: ${msgs.join(', ')}`;
+                            })
+                            .join('\n');
+                    }
 
-                Swal.fire({
-                    icon:'error',
-                    title:'Validasi Gagal',
-                    html: message
-                });
-            });
+                    // 🔥 GUNAKAN showError (JANGAN Swal langsung)
+                    this.showError(message);
+
+                    });
+                                    
         },
 
         // ================= UPDATE =================
@@ -595,7 +678,7 @@ function karyawanManager(){
                     nama: this.selectedEmployee.nama,
                     telp: this.selectedEmployee.telp,
                     email: this.selectedEmployee.email,
-                    jabatan: this.selectedEmployee.departemen,
+                    departemen: this.selectedEmployee.departemen,
                     jenis_kelamin: this.selectedEmployee.gender,
                     status: this.selectedEmployee.status
                 })
@@ -677,6 +760,18 @@ function karyawanManager(){
                     }
                 });
             });
+        }
+    }
+}
+
+function dropdownMenu(emp){
+    return {
+        open:false,
+        button:null,
+
+        toggle(event){
+            this.open = !this.open;
+            this.button = event.currentTarget;
         }
     }
 }

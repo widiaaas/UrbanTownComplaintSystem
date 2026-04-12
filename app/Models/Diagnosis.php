@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+ 
 class Diagnosis extends Model
 {
     use HasFactory, SoftDeletes;
@@ -22,7 +22,7 @@ class Diagnosis extends Model
 
     public function knowledgeBase()
     {
-        return $this->belongsTo(KnowledgeBase::class);
+        return $this->belongsTo(KnowledgeBase::class, 'knowledge_base_id');
     }
 
     public function keluhan()

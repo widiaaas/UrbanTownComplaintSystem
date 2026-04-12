@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RiwayatKeluhan extends Model
+class RiwayatPenangananKeluhan extends Model
 {
-    use HasFactory;
+    use HasFactory;  
 
-    protected $table = 'riwayat_keluhans';
+    protected $table = 'riwayat_penanganan_keluhans';
 
     protected $fillable = [
         'keluhan_id',
         'judul',
         'keterangan',
         'waktu',
+        'user_id',
     ];
 
     protected $casts = [
@@ -25,5 +26,9 @@ class RiwayatKeluhan extends Model
     public function keluhan()
     {
         return $this->belongsTo(Keluhan::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(Pengguna::class, 'user_id');
     }
 }

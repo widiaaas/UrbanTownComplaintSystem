@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('username', 50)->unique();
             $table->string('password');
-            $table->enum('role', ['admin', 'tenant_relation', 'departemen', 'unit']);
+            $table->enum('role', ['karyawan', 'unit']);
             $table->boolean('is_active')->default(true);
             $table->boolean('must_change_password')->default(true);
             $table->timestamp('last_login')->nullable();

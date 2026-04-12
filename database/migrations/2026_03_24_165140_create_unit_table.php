@@ -16,7 +16,6 @@ return new class extends Migration
             $table->integer('nomor_kamar');
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
             $table->foreignId('user_id')->constrained('penggunas')->onDelete('cascade');
-            // Kolom penghuni_aktif_id tanpa foreign key (hanya integer)
             
             $table->timestamps();
             $table->softDeletes();

@@ -9,7 +9,7 @@ class WorkOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'work_orders';
+    protected $table = 'work_orders'; 
 
     protected $fillable = [
         'nomor_wo',
@@ -17,7 +17,7 @@ class WorkOrder extends Model
         'departemen_tujuan',
         'instruksi',
         'status',
-        'penanggung_jawab',
+        'penanggung_jawab_id',
         'taken_at',
         'laporan',
         'lampiran',
@@ -40,11 +40,11 @@ class WorkOrder extends Model
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'penanggung_jawab');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
     }
 
     public function riwayat()
     {
-        return $this->hasMany(RiwayatWorkOrder::class);
+        return $this->hasMany(RiwayatPenangananWorkOrder::class, 'work_order_id');
     }
 }

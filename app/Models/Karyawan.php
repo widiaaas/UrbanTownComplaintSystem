@@ -18,7 +18,8 @@ class Karyawan extends Model
         'nama',
         'telp',
         'email',
-        'jabatan',
+        'role',
+        'departemen',
         'jenis_kelamin',
         'status',
     ];
@@ -27,4 +28,5 @@ class Karyawan extends Model
     {
         return $this->belongsTo(Pengguna::class);
     }
+
 }
