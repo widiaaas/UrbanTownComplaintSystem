@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\PenghuniController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 
 
 /*
@@ -140,16 +142,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/change-password', [AuthController::class, 'showChangeForm'])->name('password.change');
     Route::post('/change-password', [AuthController::class, 'change']);
 
+    // ================= PROFILE UNIVERSAL =================
+    Route::get('/profile', [ProfileController::class, 'index']); // view
+    Route::get('/profile/me', [ProfileController::class, 'me']); // JSON API
+    Route::put('/profile/update', [ProfileController::class, 'update']);
+    Route::put('/profile/update-password', [ProfileController::class, 'updatePassword']);
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // ==================== ADMIN ====================
     Route::middleware(['role:admin'])->group(function () {
-
-        Route::get('/dashboardAdmin', fn() => view('admin.dashboard'));
         
-        // PROFLE 
-        Route::get('/profileAdmin', [AdminController::class, 'profile'])->name('admin.profile');
-        Route::put('/profileAdmin/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
-        Route::put('/profileAdmin/update-password', [AdminController::class, 'updatePassword'])->name('admin.profile.updatePassword');
-
         // ================= UNIT =================
         Route::get('/IndexUnits', [UnitController::class, 'index'])->name('admin.units.index');
         Route::post('/units', [UnitController::class, 'store'])->name('admin.units.store');
@@ -179,7 +181,6 @@ Route::middleware(['auth'])->group(function () {
     // ================= TENANT RELATION =================
     Route::middleware(['role:tenant_relation'])->group(function () {
         Route::get('/dashboardTenantRelation', fn() => view('tenantrelation.dashboard'));
-        Route::get('/profileTR', fn() => view('tenantrelation.profile'));
         Route::get('/keluhanMasuk', fn() => view('tenantRelation.keluhan.keluhanMasuk'));
         Route::get('/daftarPenanganan', fn() => view('tenantRelation.keluhan.daftarPenanganan'));
         Route::get('/detailKeluhan', fn() => view('tenantRelation.keluhan.detailKeluhan'));
@@ -190,7 +191,6 @@ Route::middleware(['auth'])->group(function () {
     // ================= DEPARTEMEN =================
     Route::middleware(['role:departemen'])->group(function () {
         Route::get('/dashboardDepartemen', fn() => view('departemen.dashboard'));
-        Route::get('/profileDepartemen', fn() => view('departemen.profile'));
         Route::get('/workOrderMasuk', fn() => view('departemen.workOrder.workOrderMasuk'));
         Route::get('/daftarWorkOrder', fn() => view('departemen.workOrder.daftarPenangananWO'));
         Route::get('/detailWorkOrder', fn() => view('departemen.workOrder.detailWorkOrder'));
@@ -199,7 +199,6 @@ Route::middleware(['auth'])->group(function () {
     // ================= PENGHUNI =================
     Route::middleware(['role:unit'])->group(function () {
         Route::get('/dashboardPenghuni', fn() => view('penghuni.dashboard'));
-        Route::get('/profilePenghuni', fn() => view('penghuni.profile'));
         Route::get('/ajukanKeluhan', fn() => view('penghuni.ajukanKeluhan'));
         Route::get('/riwayatKeluhan', fn() => view('penghuni.riwayatKeluhan'));
     });

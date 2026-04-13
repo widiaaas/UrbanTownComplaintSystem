@@ -9,13 +9,13 @@ use App\Models\Pengguna;
 
 class AuthController extends Controller
 {
-    // TAMPILKAN FORM LOGIN
+    // ================= LOGIN FORM =================
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    // PROSES LOGIN
+    // ================= LOGIN =================
     public function login(Request $request)
     {
         // VALIDASI
@@ -27,14 +27,13 @@ class AuthController extends Controller
         // CARI USER
         $user = Pengguna::where('username', $request->username)->first();
 
-        // CEK USER
         if (!$user) {
             return back()
                 ->withErrors(['username' => 'Username tidak ditemukan'])
                 ->withInput();
         }
 
-        // CEK STATUS AKTIF
+        // CEK AKTIF
         if (!$user->is_active) {
             return back()
                 ->withErrors(['username' => 'Akun tidak aktif']);
@@ -48,58 +47,55 @@ class AuthController extends Controller
         }
 
         // LOGIN
-    Auth::login($user, $request->remember ?? false);
+        Auth::login($user, $request->remember ?? false);
 
-    // UPDATE LAST LOGIN
-    $user->update([
-        'last_login' => now()
-    ]);
+        // SECURITY (WAJIB)
+        $request->session()->regenerate();
 
-    // CEK HARUS GANTI PASSWORD
-    if ($user->must_change_password) {
-        return redirect()->route('change.password');
-    }
+        // UPDATE LAST LOGIN
+        $user->update([
+            'last_login' => now()
+        ]);
 
-    // ================= ROLE LOGIC =================
-
-    // JIKA UNIT
-    if ($user->role === 'unit') {
-        return redirect('/dashboard/unit');
-    }
-
-    // JIKA KARYAWAN
-    if ($user->role === 'karyawan') {
-
-        // ambil data karyawan
-        $karyawan = $user->karyawan;
-
-        if (!$karyawan) {
-            Auth::logout();
-            return back()->withErrors(['username' => 'Data karyawan tidak ditemukan']);
+        // HARUS GANTI PASSWORD
+        if ($user->must_change_password) {
+            return redirect()->route('password.change');
         }
 
-        // ADMIN
-        if ($karyawan->role === 'admin') {
-            return redirect('/dashboardAdmin');
-        }
+        // ================= ROLE BASED REDIRECT =================
 
-        // TENANT RELATION
-        if ($karyawan->role === 'tenant_relation') {
-            return redirect('/dashboardTenantRelation');
-        }
-
-        // DEPARTEMEN
-        if ($karyawan->role === 'departemen') {
-            return redirect('/dashboardDepartemen');
-        }
-
-        // UNIT
+        // UNIT (TENANT)
         if ($user->role === 'unit') {
-            return redirect('/dashboardPenghuni');
+            return redirect('/ajukanKeluhan');
         }
+
+        // KARYAWAN
+        if ($user->role === 'karyawan') {
+
+            $karyawan = $user->karyawan;
+
+            if (!$karyawan) {
+                Auth::logout();
+                return back()->withErrors([
+                    'username' => 'Data karyawan tidak ditemukan'
+                ]);
+            }
+
+            return redirect('/dashboard');
+        }
+
+        // fallback
+        return redirect('/');
     }
 
-    // fallback
-    return redirect('/');
+    // ================= LOGOUT =================
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
     }
 }

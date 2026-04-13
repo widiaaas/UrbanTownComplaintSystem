@@ -22,6 +22,26 @@
             {{-- RIGHT: USER INFO --}}
             <div class="flex items-center space-x-4">
 
+                @php
+                    $user = auth()->user();
+                    $karyawan = $user?->karyawan;
+
+                    $nama = $karyawan?->nama ?? 'User';
+                    
+                    // mapping role
+                    if($karyawan){
+                        if($karyawan->role === 'admin'){
+                            $roleLabel = 'Admin';
+                        } elseif($karyawan->role === 'tenant_relation'){
+                            $roleLabel = 'Tenant Relation';
+                        } else {
+                            $roleLabel = $karyawan->departemen ?? '-';
+                        }
+                    } else {
+                        $roleLabel = 'Unit';
+                    }
+                @endphp
+
                 {{-- USER NAME --}}
                 <div class="hidden sm:flex items-center space-x-3 border-l pl-4">
                     <svg xmlns="http://www.w3.org/2000/svg"
@@ -35,28 +55,37 @@
                     </svg>
 
                     <div class="text-right leading-tight">
-                        <p class="text-sm font-medium text-gray-900">Admin Demo</p>
-                        <p class="text-xs text-gray-500">Administrator</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            {{ $nama }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ $roleLabel }}
+                        </p>
                     </div>
                 </div>
 
                 {{-- LOGOUT --}}
-                <a href="#"
-                   class="flex items-center space-x-2 px-3 py-2
-                          rounded-md text-sm font-medium
-                          text-gray-700 hover:bg-gray-100 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-4 w-4"
-                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17 16l4-4m0 0l-4-4m4 4H7
-                                 m6 4v1a2 2 0 01-2 2H5
-                                 a2 2 0 01-2-2V7
-                                 a2 2 0 012-2h6
-                                 a2 2 0 012 2v1"/>
-                    </svg>
-                    <span class="hidden sm:inline">Keluar</span>
-                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                        class="flex items-center space-x-2 px-3 py-2
+                               rounded-md text-sm font-medium
+                               text-gray-700 hover:bg-gray-100 transition">
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="h-4 w-4"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7
+                                     m6 4v1a2 2 0 01-2 2H5
+                                     a2 2 0 01-2-2V7
+                                     a2 2 0 012-2h6
+                                     a2 2 0 012 2v1"/>
+                        </svg>
+
+                        <span class="hidden sm:inline">Keluar</span>
+                    </button>
+                </form>
 
             </div>
         </div>

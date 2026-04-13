@@ -13,15 +13,20 @@ use Illuminate\Support\Facades\DB;
 
 class UnitController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $units = Unit::with(['penghunis' => function ($q) {
+        $query = Unit::with(['penghunis' => function ($q) {
             $q->where('status', 'Aktif');
-        }])
-        ->get()
-        ->map(function ($u) {
+        }]);
+
+        // 🔥 FILTER STATUS DARI URL
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $units = $query->get()->map(function ($u) {
             $penghuniAktif = $u->penghunis->first();
-    
+
             return [
                 'id' => $u->id,
                 'no_unit' => $u->no_unit,

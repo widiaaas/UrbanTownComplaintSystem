@@ -26,7 +26,7 @@ class Karyawan extends Model
 
     public function user()
     {
-        return $this->belongsTo(Pengguna::class);
+        return $this->belongsTo(Pengguna::class, 'user_id');
     }
 
 }

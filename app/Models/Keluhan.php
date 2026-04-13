@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Keluhan extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
  
     protected $table = 'keluhans';
 
@@ -54,11 +55,11 @@ class Keluhan extends Model
 
     public function workOrders()
     {
-        return $this->hasMany(WorkOrder::class);
+        return $this->hasMany(WorkOrder::class, 'keluhan_id');
     }
 
     public function diagnosis()
     {
-        return $this->hasMany(Diagnosis::class);
+        return $this->hasMany(Diagnosis::class, 'keluhan_id');
     }
 }
