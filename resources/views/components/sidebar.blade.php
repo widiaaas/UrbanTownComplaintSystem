@@ -117,13 +117,13 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="/keluhanMasuk"
+            <a href="/keluhan-masuk"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('keluhanMasuk', $currentPath) }}">
                 @include('components.icons.clipboardList')
                 <span>Keluhan Masuk</span>
             </a>
 
-            <a href="/daftarPenanganan"
+            <a href="/daftar-penanganan"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('daftarPenanganan', $currentPath) }}">
                 @include('components.icons.clipboardList')
                 <span>Penanganan Saya</span>

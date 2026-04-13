@@ -19,22 +19,26 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10">
                     <tr>
-                        <th class="px-5 py-3 text-left">No Tiket</th>
-                        <th class="px-5 py-3 text-left">Tanggal</th>
-                        <th class="px-5 py-3 text-left">Penghuni</th>
-                        <th class="px-5 py-3 text-left">Status</th>
+                        <th class="px-5 py-3 text-center">No</th>
+                        <th class="px-5 py-3 text-center">No Tiket</th>
+                        <th class="px-5 py-3 text-center">Unit</th>
+                        <th class="px-5 py-3 text-center">Tanggal</th>
+                        <th class="px-5 py-3 text-center">Penghuni</th>
+                        <th class="px-5 py-3 text-center">Status</th>
                         <th class="px-5 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="k in keluhan" :key="k.id">
+                    <template x-for="(k, index) in keluhan" :key="k.id">
                         <tr class="border-t hover:bg-gray-50">
-                            <td class="px-5 py-3 font-medium" x-text="k.tiket"></td>
-                            <td class="px-5 py-3" x-text="k.tanggal"></td>
-                            <td class="px-5 py-3" x-text="k.nama"></td>
+                            <td class="px-5 py-3 text-center" x-text="index + 1"></td>
+                            <td class="px-5 py-3 text-center font-medium" x-text="k.ticket"></td>
+                            <td class="px-5 py-3 text-center" x-text="k.unit"></td>
+                            <td class="px-5 py-3 text-center" x-text="k.tanggal"></td>
+                            <td class="px-5 py-3 text-center" x-text="k.penghuni"></td>
                             
-                            <td class="px-5 py-3">
-                                <span class="px-3 py-1 rounded-full text-xs"
+                            <td class="px-5 py-3 text-center">
+                                <span class="px-3 py-1 rounded-full text-xs "
                                     :class="statusClass(k.status)"
                                     x-text="k.status">
                                 </span>
@@ -43,19 +47,11 @@
                                 <div class="flex items-center justify-center gap-2">
                                     {{-- Tombol Detail --}}
                                     <a
-                                        :href="'/detailKeluhan?id=' + k.id"
+                                        :href="'/keluhan/' + k.id"
                                         class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700">
                                         Detail
                                     </a>
                                     
-                                    <!-- {{-- Tombol Ubah Status (hanya untuk status Open dan On Progress) --}}
-                                    <template x-if="k.status !== 'Close'">
-                                        <button
-                                            @click="openStatusModal(k)"
-                                            class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700">
-                                            Ubah Status
-                                        </button>
-                                    </template> -->
                                 </div>
                             </td>
                         </tr>
@@ -64,138 +60,23 @@
             </table>
         </div>
     </div>
-
-    <!-- {{-- MODAL UBAH STATUS --}}
-    <div
-        x-show="statusModalOpen"
-        x-cloak
-        x-transition
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-    >
-        <div class="bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden">
-            
-            {{-- HEADER --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b">
-                <h3 class="text-lg font-semibold text-gray-800">
-                    Ubah Status Keluhan
-                </h3>
-                <button
-                    @click="statusModalOpen = false"
-                    class="text-gray-500 hover:text-gray-700 text-xl leading-none"
-                >
-                    &times;
-                </button>
-            </div>
-
-            {{-- BODY --}}
-            <div class="px-6 py-4 space-y-4">
-                <p class="text-sm">
-                    <span class="font-medium">Tiket:</span> 
-                    <span x-text="selectedKeluhan.tiket"></span>
-                </p>
-                <p class="text-sm">
-                    <span class="font-medium">Penghuni:</span> 
-                    <span x-text="selectedKeluhan.nama"></span>
-                </p>
-                <p class="text-sm">
-                    <span class="font-medium">Status Saat Ini:</span> 
-                    <span class="px-2 py-0.5 rounded-full text-xs"
-                          :class="statusClass(selectedKeluhan.status)"
-                          x-text="selectedKeluhan.status">
-                    </span>
-                </p>
-
-                {{-- Pilihan Status Baru --}}
-                <div>
-                    <label class="text-sm font-medium mb-1 block">
-                        Status Baru
-                    </label>
-                    <select 
-                        x-model="newStatus"
-                        class="w-full border rounded-lg px-3 py-2 text-sm"
-                    >
-                        <option value="Open">Open</option>
-                        <option value="On Progress">On Progress</option>
-                        <option value="Close">Close (Selesai)</option>
-                    </select>
-                </div>
-            </div>
-
-            {{-- FOOTER --}}
-            <div class="px-6 py-4 border-t flex justify-end gap-2">
-                <button
-                    @click="statusModalOpen = false"
-                    class="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
-                >
-                    Batal
-                </button>
-                <button
-                    @click="simpanPerubahanStatus"
-                    class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                    Simpan Perubahan
-                </button>
-            </div>
-        </div>
-    </div> -->
 </div>
+
 
 <script>
 function penangananApp() {
     return {
-        // Data keluhan
-        keluhan: [
-            {
-                id: 1,
-                tiket: 'TCK-001',
-                tanggal: '12 Feb 2026',
-                unit: 'A-101',
-                nama: 'Budi Santoso',
-                telepon: '08123456789',
-                status: 'Open',
-                deskripsi: 'AC ruang tamu tidak dingin sejak pagi.',
-                riwayat: [
-                    { judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '12 Feb 2026 09:00' }
-                ]
-            },
-            {
-                id: 2,
-                tiket: 'TCK-002',
-                tanggal: '13 Feb 2026',
-                unit: 'B-205',
-                nama: 'Siti Aminah',
-                telepon: '08129876543',
-                status: 'On Progress',
-                deskripsi: 'Lampu di ruang tamu mati.',
-                riwayat: [
-                    { judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '13 Feb 2026 08:30' },
-                    { judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '13 Feb 2026 08:45' }
-                ]
-            },
-            {
-                id: 3,
-                tiket: 'TCK-003',
-                tanggal: '14 Feb 2026',
-                unit: 'C-310',
-                nama: 'Ahmad Rizki',
-                telepon: '08121234567',
-                status: 'Close',
-                deskripsi: 'Kran wastafel kamar mandi bocor.',
-                riwayat: [
-                    { judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '14 Feb 2026 07:15' },
-                    { judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '14 Feb 2026 07:30' },
-                    { judul: 'Keluhan Ditutup', ket: 'Keluhan ditutup oleh TR', waktu: '14 Feb 2026 09:00' }
-                ]
-            }
-        ],
+        // ================= DATA =================
+        keluhan: @json($keluhan),
+        loading: false,
 
-        // State modal
+        // ================= STATE =================
         statusModalOpen: false,
         selectedKeluhan: {},
         newStatus: '',
         statusCatatan: '',
 
-        // Method untuk membuka modal ubah status
+        // ================= OPEN MODAL =================
         openStatusModal(keluhan) {
             this.selectedKeluhan = { ...keluhan };
             this.newStatus = keluhan.status;
@@ -203,65 +84,110 @@ function penangananApp() {
             this.statusModalOpen = true;
         },
 
-        // Method untuk menyimpan perubahan status
-        simpanPerubahanStatus() {
+        // ================= VALIDASI + CONFIRM =================
+        simpanPerubahanStatus(){
+
             if (!this.newStatus) {
-                alert('Pilih status baru terlebih dahulu');
+                Swal.fire('Oops!', 'Pilih status dulu', 'warning');
                 return;
             }
 
             if (this.newStatus === this.selectedKeluhan.status) {
-                alert('Status baru harus berbeda dari status saat ini');
+                Swal.fire('Oops!', 'Status harus berbeda dari sebelumnya', 'warning');
                 return;
             }
 
             if (!this.statusCatatan.trim()) {
-                alert('Catatan perubahan wajib diisi');
+                Swal.fire('Oops!', 'Catatan wajib diisi', 'warning');
                 return;
             }
 
-            // Cari index keluhan yang akan diubah
-            const index = this.keluhan.findIndex(k => k.id === this.selectedKeluhan.id);
-            
-            if (index !== -1) {
-                // Simpan status lama
-                const oldStatus = this.keluhan[index].status;
-                
-                // Update status
-                this.keluhan[index].status = this.newStatus;
-                
-                // Tambahkan ke riwayat
-                const riwayatBaru = {
-                    judul: 'Status Berubah',
-                    ket: `Status berubah dari ${oldStatus} ke ${this.newStatus}: ${this.statusCatatan}`,
-                    waktu: this.now()
-                };
-                
-                if (!this.keluhan[index].riwayat) {
-                    this.keluhan[index].riwayat = [];
+            Swal.fire({
+                title: 'Update Status?',
+                text: 'Perubahan akan disimpan ke sistem',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, update!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.prosesUpdateStatus();
                 }
-                
-                this.keluhan[index].riwayat.push(riwayatBaru);
-                
-                // Tampilkan notifikasi sukses
-                alert(`Status keluhan ${this.selectedKeluhan.tiket} berhasil diubah menjadi ${this.newStatus}`);
+            });
+        },
+
+        // ================= HIT API =================
+        prosesUpdateStatus(){
+
+            this.loading = true;
+
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Sedang menyimpan perubahan',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch(`/keluhan/${this.selectedKeluhan.id}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    status: this.newStatus,
+                    catatan: this.statusCatatan
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // 🔥 UPDATE UI
+                const index = this.keluhan.findIndex(k => k.id === this.selectedKeluhan.id);
+                if(index !== -1){
+                    this.keluhan[index].status = this.newStatus;
+                }
+
+                this.statusModalOpen = false;
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Terjadi kesalahan saat update status'
+                });
+            })
+            .finally(() => {
+                this.loading = false;
+            });
+        },
+
+        // ================= STATUS BADGE =================
+        statusClass(status){
+            const s = (status || '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, ' '); // 🔥 normalize spasi
+
+            return {
+                'bg-blue-100 text-blue-700': s === 'open',
+                'bg-yellow-100 text-yellow-700': s === 'on progress',
+                'bg-green-100 text-green-700': s === 'close',
+                'bg-gray-100 text-gray-700': !['open','on progress','close'].includes(s)
             }
-
-            // Tutup modal
-            this.statusModalOpen = false;
         },
 
-        // Method untuk mendapatkan class status
-        statusClass(status) {
-            const classes = {
-                'Open': 'bg-blue-100 text-blue-700',
-                'On Progress': 'bg-yellow-100 text-yellow-700',
-                'Close': 'bg-green-100 text-green-700'
-            };
-            return classes[status] || 'bg-gray-100 text-gray-700';
-        },
-
-        // Method untuk mendapatkan waktu sekarang
+        // ================= FORMAT WAKTU =================
         now() {
             const d = new Date();
             const hari = d.getDate();
@@ -269,7 +195,7 @@ function penangananApp() {
             const tahun = d.getFullYear();
             const jam = d.getHours().toString().padStart(2, '0');
             const menit = d.getMinutes().toString().padStart(2, '0');
-            
+
             return `${hari} ${bulan} ${tahun} ${jam}:${menit}`;
         }
     }

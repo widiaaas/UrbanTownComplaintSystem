@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\PenghuniController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KeluhanController;
 
 
 /*
@@ -179,13 +180,32 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ================= TENANT RELATION =================
+    // ================= TENANT RELATION =================
     Route::middleware(['role:tenant_relation'])->group(function () {
-        Route::get('/dashboardTenantRelation', fn() => view('tenantrelation.dashboard'));
-        Route::get('/keluhanMasuk', fn() => view('tenantRelation.keluhan.keluhanMasuk'));
-        Route::get('/daftarPenanganan', fn() => view('tenantRelation.keluhan.daftarPenanganan'));
-        Route::get('/detailKeluhan', fn() => view('tenantRelation.keluhan.detailKeluhan'));
-        Route::get('/rekapPenangananTR', fn() => view('tenantRelation.laporan.rekapPenanganan'));
-        Route::get('/knowledgeBase', fn() => view('tenantRelation.knowledgeBase.index'));
+
+        Route::get('/dashboardTenantRelation', [DashboardController::class, 'tenantRelation']);
+
+        // 🔥 KELUHAN
+        Route::get('/keluhan-masuk', [KeluhanController::class, 'keluhanMasuk'])->name('tr.keluhan.masuk');
+        Route::post('/keluhan/{id}/ambil', [KeluhanController::class, 'ambilKeluhan'])->name('tr.keluhan.ambil');
+
+        // 🔥 DAFTAR PENANGANAN
+        Route::get('/daftar-penanganan', [KeluhanController::class, 'daftarPenanganan'])->name('tr.penanganan');
+
+        // 🔥 DETAIL
+        Route::get('/keluhan/{id}', [KeluhanController::class, 'show'])->name('tr.keluhan.detail');
+
+        // 🔥 UPDATE STATUS (WAJIB)
+        Route::post('/keluhan/{id}/status', [KeluhanController::class, 'updateStatus']);
+
+        // 🔥 KEPUTUSAN AKHIR
+        Route::post('/keluhan/{id}/keputusan-akhir', [KeluhanController::class, 'keputusanAkhir']);
+        // 🔥 LAPORAN
+        Route::get('/rekap-penanganan', [KeluhanController::class, 'rekap'])->name('tr.rekap');
+
+        // 🔥 KNOWLEDGE BASE
+        Route::get('/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('tr.knowledge');
+        Route::get('/knowledgeBase', fn() => view('tenantrelation.knowledgeBase.index'));
     });
 
     // ================= DEPARTEMEN =================
@@ -196,10 +216,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/detailWorkOrder', fn() => view('departemen.workOrder.detailWorkOrder'));
     });
 
-    // ================= PENGHUNI =================
     Route::middleware(['role:unit'])->group(function () {
-        Route::get('/dashboardPenghuni', fn() => view('penghuni.dashboard'));
-        Route::get('/ajukanKeluhan', fn() => view('penghuni.ajukanKeluhan'));
-        Route::get('/riwayatKeluhan', fn() => view('penghuni.riwayatKeluhan'));
+
+        Route::get('/ajukanKeluhan', [KeluhanController::class, 'index']);
+        Route::post('/keluhan', [KeluhanController::class, 'store']);
+        Route::get('/riwayatKeluhan', [KeluhanController::class, 'riwayat']);
     });
 });

@@ -8,7 +8,10 @@
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-start">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Detail Penanganan Keluhan</h1>
+            <h1 class="text-2xl font-bold text-gray-800"
+                x-text="keluhan.judul">
+            </h1>
+
             <p class="text-sm text-gray-500">
                 No Tiket: <span x-text="keluhan.tiket"></span>
             </p>
@@ -26,14 +29,10 @@
         <p><b>No Telepon</b><br><span x-text="keluhan.telepon"></span></p>
         <p><b>Tanggal</b><br><span x-text="keluhan.tanggal"></span></p>
         <p><b>Status Keluhan</b><br>
-            <span class="inline-block text-xs px-2 py-1 rounded"
-                  :class="{
-                      'bg-blue-100 text-blue-700': keluhan.status === 'Open',
-                      'bg-yellow-100 text-yellow-700': keluhan.status === 'On Progress',
-                      'bg-green-100 text-green-700': keluhan.status === 'Close'
-                  }"
-                  x-text="keluhan.status">
-            </span>
+        <span class="inline-block text-xs px-2 py-1 rounded"
+            :class="statusClass(keluhan.status)"
+            x-text="formatStatus(keluhan.status)">
+        </span>
         </p>
     </div>
 
@@ -75,30 +74,51 @@
                 </p>
                 <div class="flex gap-2 flex-wrap">
                     <template x-for="file in keluhan.lampiranKeluhan" :key="file">
-                        <span
-                            class="px-3 py-1 bg-gray-200 rounded text-xs text-gray-700"
-                            x-text="file">
-                        </span>
+                        <a 
+                            :href="'/storage/' + file"
+                            target="_blank"
+                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
+                            Lihat File
+                        </a>
                     </template>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- STATUS KELUHAN --}}
-    <div class="bg-white p-4 rounded-xl border space-y-2">
+    {{-- ================= STATUS KELUHAN ================= --}}
+    <div class="bg-white p-4 rounded-xl border space-y-3">
+
         <h3 class="font-semibold text-sm">Status Keluhan</h3>
 
-        <select x-model="keluhan.status"
-            class="w-full border rounded-lg px-3 py-2">
-            <option>Open</option>
-            <option>On Progress</option>
-            <option>Close</option>
+        <select 
+            x-model="keputusan.status"
+            @change="updateStatusLangsung"
+            :disabled="normalizeStatus(keluhan.status) === 'close'"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+
+            <option value="open">Open</option>
+            <option value="on_progress">On Progress</option>
+
         </select>
 
+        {{-- INFO --}}
         <p class="text-xs text-gray-500">
             Status ini akan langsung terlihat oleh penghuni
         </p>
+
+        {{-- WARNING --}}
+        <p class="text-xs text-gray-400 italic">
+            Status <b>Close</b> hanya bisa dilakukan melalui keputusan akhir
+        </p>
+
+        {{-- INFO JIKA SUDAH CLOSE --}}
+        <template x-if="normalizeStatus(keluhan.status) === 'close'">
+            <div class="text-xs text-green-600 font-medium">
+                Keluhan sudah ditutup dan tidak dapat diubah
+            </div>
+        </template>
+
     </div>
 
     {{-- ================= WORK ORDER ================= --}}
@@ -110,7 +130,7 @@
 
             {{-- Tombol Buat WO --}}
             <button
-                x-show="keluhan.status !== 'Close' && workOrdersByTiket.length === 0"
+                x-show="normalizeStatus(keluhan.status) !== 'close' && workOrdersByTiket.length === 0"
                 @click="openWO = true"
                 class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                 + Buat Work Order
@@ -130,12 +150,7 @@
 
                         <span
                             class="text-xs px-2 py-1 rounded"
-                            :class="{
-                                'bg-blue-100 text-blue-800': wo.status === 'Open',
-                                'bg-yellow-100 text-yellow-800': wo.status === 'On Progress',
-                                'bg-orange-100 text-orange-800': wo.status === 'Waiting',
-                                'bg-green-100 text-green-800': wo.status === 'Close'
-                            }"
+                            :class="statusClass(wo.status)"
                             x-text="wo.status">
                         </span>
                     </div>
@@ -146,6 +161,10 @@
 
                     <p class="text-sm">
                         <b>Tanggal:</b> <span x-text="wo.tanggal"></span>
+                    </p>
+
+                    <p class="text-sm">
+                        <b>Lokasi:</b> <span x-text="wo.lokasi"></span>
                     </p>
 
                     <p class="text-sm text-gray-600">
@@ -161,7 +180,7 @@
             </template>
         </template>
 
-        {{-- JIKA BELUM ADA WO --}}
+        {{-- JIKA BELUM ADA --}}
         <template x-if="!workOrdersByTiket.length">
             <p class="text-sm text-gray-500 italic">
                 Belum ada Work Order untuk tiket ini.
@@ -254,7 +273,7 @@
         </div>
 
         {{-- INFO JIKA SUDAH CLOSE --}}
-        <template x-if="keluhan.status === 'Close'">
+        <template x-if="normalizeStatus(keluhan.status) === 'close'">
             <div class="space-y-3">
                 <div class="text-sm text-gray-500 italic bg-gray-50 border rounded-lg p-3">
                     Keluhan sudah ditutup. Riwayat keputusan tetap dapat dilihat,
@@ -278,7 +297,7 @@
         </template>
 
         {{-- FORM UPDATE PENANGANAN (HANYA JIKA BELUM CLOSE) --}}
-        <template x-if="keluhan.status !== 'Close'">
+        <template x-if="normalizeStatus(keluhan.status) !== 'close'">
             <div class="pl-4 space-y-4">
 
                 {{-- JUDUL Penanganan --}}
@@ -334,20 +353,6 @@
                     </div>
                 </div>
 
-                <!-- {{-- UBAH STATUS --}}
-                <div>
-                    <label class="text-sm font-medium mb-1 block">
-                        Ubah Status Keluhan
-                    </label>
-                    <select
-                        x-model="keputusan.status"
-                        class="w-full border rounded-lg px-3 py-2 text-sm">
-                        <option value="Open">Open</option>
-                        <option value="On Progress">On Progress</option>
-                        <option value="Close">Close</option>
-                    </select>
-                </div> -->
-
                 {{-- ACTION --}}
                 <div class="flex gap-3 pt-2">
                     <button
@@ -378,7 +383,30 @@
                 class="w-full border rounded-lg px-3 py-2 text-sm"
                 rows="3"></textarea>
 
-            <input type="file" multiple>
+                <input type="file" multiple x-ref="fileKeputusan" @change="previewFiles = Array.from($event.target.files)">
+
+                {{-- PREVIEW FILE --}}
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <template x-for="(file, index) in previewFiles" :key="index">
+                        <div class="border px-3 py-2 rounded bg-gray-50 text-xs flex items-center gap-2">
+                            
+                            <span x-text="file.name"></span>
+
+                            <button
+                                @click="openPreviewFile(file)"
+                                class="text-blue-600 hover:underline text-xs">
+                                Preview
+                            </button>
+
+                            <button
+                                @click="previewFiles.splice(index,1)"
+                                class="text-red-500 text-xs">
+                                ✕
+                            </button>
+
+                        </div>
+                    </template>
+                </div>
 
             <div class="flex justify-between">
                 <button
@@ -388,10 +416,52 @@
                 </button>
 
                 <button
+                    @click="simpanKeputusanAkhir"
                     class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
                     Simpan Keputusan
                 </button>
             </div>
+        </div>
+    </div>
+
+    {{-- ================= MODAL PREVIEW FILE ================= --}}
+    <div x-show="openPreview" x-cloak
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+        <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
+
+            {{-- CLOSE --}}
+            <button
+                @click="openPreview = false"
+                class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">
+                ✕
+            </button>
+
+            {{-- TITLE --}}
+            <p class="text-sm font-semibold mb-3" x-text="previewFile?.name"></p>
+
+            {{-- IMAGE PREVIEW --}}
+            <template x-if="previewFile && previewFile.type.startsWith('image/')">
+                <img
+                    :src="URL.createObjectURL(previewFile)"
+                    class="max-h-[70vh] mx-auto rounded">
+            </template>
+
+            {{-- PDF PREVIEW --}}
+            <template x-if="previewFile && previewFile.type === 'application/pdf'">
+                <iframe
+                    :src="URL.createObjectURL(previewFile)"
+                    class="w-full h-[70vh] rounded">
+                </iframe>
+            </template>
+
+            {{-- FILE LAIN --}}
+            <template x-if="previewFile && !previewFile.type.startsWith('image/') && previewFile.type !== 'application/pdf'">
+                <div class="text-center text-gray-500 py-10">
+                    Preview tidak tersedia untuk file ini
+                </div>
+            </template>
+
         </div>
     </div>
 
@@ -451,15 +521,8 @@
                 <p><b>Petugas</b><br><span x-text="selectedWO.petugas"></span></p>
                 <p>
                     <b>Status</b><br>
-                    <span
-                        class="inline-block text-xs px-2 py-1 rounded"
-                        :class="{
-                            'bg-blue-100 text-blue-800': selectedWO.status === 'Open',
-                            'bg-yellow-100 text-yellow-800': selectedWO.status === 'On Progress',
-                            'bg-orange-100 text-orange-800': selectedWO.status === 'Waiting',
-                            'bg-green-100 text-green-800': selectedWO.status === 'Close'
-                        }"
-                        x-text="selectedWO.status">
+                    <span :class="statusClass(keluhan.status)"
+                        x-text="keluhan.status">
                     </span>
                 </p>
             </div>
@@ -467,11 +530,7 @@
             {{-- LOKASI --}}
             <div class="border rounded-lg p-4 text-sm space-y-1">
                 <p class="font-medium">Lokasi</p>
-                <p>
-                    Tower: <b>A</b> |
-                    Lantai: <b>10</b> |
-                    Unit: <b x-text="keluhan.unit"></b>
-                </p>
+                <p x-text="selectedWO.lokasi"></p>
             </div>
 
             {{-- INSTRUKSI AWAL --}}
@@ -493,7 +552,7 @@
                             <div
                                 class="relative pl-5 py-3 rounded-md"
                                 :class="{
-                                    'border-l-4 border-blue-500 bg-blue-50/30': lapor.status === 'On Progress',
+                                    'border-l-4 border-blue-500 bg-blue-50/30': lapor.status === 'On_Progress',
                                     'border-l-4 border-orange-500 bg-orange-50/30': lapor.status === 'Waiting',
                                     'border-l-4 border-green-500 bg-green-50/30': lapor.status === 'Close'
                                 }"
@@ -534,11 +593,9 @@
     </div>
                         
     {{-- ================= MODAL BUAT WORK ORDER ================= --}}
-    <div
-        x-show="openWO"
-        x-cloak
-        x-transition
+    <div x-show="openWO" x-cloak x-transition
         class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
         <div class="bg-white w-full max-w-3xl rounded-xl p-6 space-y-5 overflow-y-auto max-h-[90vh]">
 
             <h3 class="text-lg font-semibold text-gray-800">
@@ -548,138 +605,99 @@
             {{-- HEADER WO --}}
             <div class="grid grid-cols-2 gap-4 text-sm">
 
+                {{-- NO WO AUTO --}}
                 <div>
                     <label class="font-medium">No WO</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
-                        value="WO-2026-001"
+                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500"
+                        :value="'WO-' + new Date().getFullYear() + '-' + String(workOrders.length + 1).padStart(3,'0')"
                         disabled
                     >
                 </div>
 
-                <!-- <div>
-                    <label class="font-medium">Tanggal WO</label>
-                    <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
-                        value="14 Feb 2026 10:30"
-                        disabled
-                    >
-                </div> -->
-
+                {{-- TICKET --}}
                 <div>
                     <label class="font-medium">Ticket</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                        class="w-full border rounded px-3 py-1 bg-gray-100"
                         x-model="keluhan.tiket"
                         disabled
                     >
                 </div>
 
+                {{-- REQUESTOR --}}
                 <div>
                     <label class="font-medium">Requestor</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                        class="w-full border rounded px-3 py-1 bg-gray-100"
                         x-model="keluhan.nama"
                         disabled
                     >
                 </div>
 
+                {{-- TELEPON --}}
                 <div>
                     <label class="font-medium">Nomor Telepon</label>
                     <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                        class="w-full border rounded px-3 py-1 bg-gray-100"
                         x-model="keluhan.telepon"
                         disabled
                     >
                 </div>
 
-                <div>
+                {{-- DEPARTMENT --}}
+                <div class="col-span-2">
                     <label class="font-medium">Department</label>
                     <select
                         class="w-full border rounded px-3 py-1"
                         x-model="woForm.dept"
                     >
                         <option value="">Pilih</option>
-                        <option>Operational</option>
-                        <option>Engineering</option>
-                        <option>Finance</option>
+
+                        <template x-for="d in departemenList" :key="d">
+                            <option :value="d" x-text="d"></option>
+                        </template>
                     </select>
                 </div>
 
             </div>
 
-            {{-- LOKASI --}}
-            <div class="space-y-3">
-
-            {{-- JUDUL --}}
-            <h4 class="text-sm font-semibold tracking-wide">
-                Lokasi
-            </h4>
-            <div class="grid grid-cols-3 gap-4 text-sm pl-4">
-                <div>
-                    <label class="font-medium">Tower</label>
-                    <input
-                        class="w-full border rounded px-3 py-1"
-                        value=" "
-                        
-                    >
-                </div>
-
-                <div>
-                    <label class="font-medium">Lantai</label>
-                    <input
-                        class="w-full border rounded px-3 py-1"
-                        value=" "
-                        
-                    >
-                </div>
-
-                <div>
-                    <label class="font-medium">No</label>
-                    <input
-                        class="w-full border rounded px-3 py-1 "
-                        x-model="keluhan.no"
-                        
-                    >
-                </div>
-
-            </div>
-
-            {{-- NOTES --}}
+            {{-- ================= LOKASI ================= --}}
             <div>
-                <label class="font-medium text-sm">Instruksi</label>
-                <textarea
-                    x-model="woForm.instruction"
+                <label class="font-medium text-sm">Lokasi</label>
+                <input
+                    type="text"
+                    x-model="woForm.lokasi"
                     class="w-full border rounded px-3 py-2 text-sm"
-                    placeholder="Instruksi pekerjaan untuk departemen"
-                ></textarea>
+                    placeholder="Contoh: Tower A Lt 10 Unit A-1001 / Lobby / Parkiran"
+                >
             </div>
 
-            <!-- {{-- DETAIL INSTRUCTION --}}
-            <div>
-                <label class="font-medium text-sm">Detail Instruksi</label>
-                <textarea
-                    x-model="woForm.instruction"
-                    class="w-full border rounded px-3 py-2 text-sm"
-                    placeholder="Instruksi pekerjaan untuk departemen..."
-                ></textarea>
-            </div> -->
+                {{-- INSTRUKSI --}}
+                <div>
+                    <label class="font-medium text-sm">Instruksi</label>
+                    <textarea
+                        x-model="woForm.instruction"
+                        class="w-full border rounded px-3 py-2 text-sm"
+                        placeholder="Instruksi pekerjaan untuk departemen"
+                    ></textarea>
+                </div>
 
-            {{-- ACTION --}}
-            <div class="flex justify-end gap-2 pt-3">
-                <button
-                    @click="openWO=false"
-                    class="border px-4 py-2 rounded text-gray-700 hover:bg-gray-50"
-                >
-                    Batal
-                </button>
-                <button
-                    @click="kirimWO"
-                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                >
-                    Kirim Work Order
-                </button>
-            </div>
+                {{-- ACTION --}}
+                <div class="flex justify-end gap-2 pt-3">
+                    <button
+                        @click="openWO=false"
+                        class="border px-4 py-2 rounded text-gray-700 hover:bg-gray-50">
+                        Batal
+                    </button>
+
+                    <button
+                        @click="kirimWO"
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        Kirim Work Order
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1085,322 +1103,295 @@
 </div>
 
 <script>
+window.detailKeluhan = @json($data);
+window.departemen = @json($departemen);
+
 function detailKeluhanApp() {
     return {
+
         /* ================= STATE ================= */
         openWO: false,
         openRiwayat: false,
         openLaporan: false,
         openKnowledgeBase: false,
         openSimpanKB: false,
-        openKategori: false,                 // untuk dropdown kategori
-        searchKB: '',                         // pencarian KB
-        searchDiagnosis: '',                  // pencarian diagnosis
-        selectedKB: null,
-        selectedDiagnosis: null,              // diagnosis yang dipilih
-        selectedWO: {},
-        keputusanAkhir: null,
-        workOrders: [],
+        previewFile: null,
+        openPreview: false,
 
-        // Daftar kategori untuk dropdown
-        kategoriList: ['AC', 'Plumbing', 'Listrik', 'Lainnya'],
-        kategoriSearch: '',
-
-        /* ================= DATA SOURCE ================= */
-        detailKeluhan: [
-            {
-                keluhan: {
-                    id: 1,
-                    tiket: 'TCK-001',
-                    unit: 'A-101',
-                    nama: 'Budi Santoso',
-                    telepon: '08123456789',
-                    tanggal: '12 Feb 2026',
-                    judul: 'AC Tidak Dingin',
-                    deskripsi: 'AC ruang tamu tidak dingin sejak pagi.',
-                    lampiranKeluhan: ['foto_ac_1.jpg', 'foto_ac_2.jpg'],
-                    status: 'Open'
-                },
-                riwayat: [
-                    { tipe: 'system', judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '12 Feb 2026 09:00' }
-                ]
-            },
-            {
-                keluhan: {
-                    id: 2,
-                    tiket: 'TCK-002',
-                    unit: 'B-205',
-                    nama: 'Siti Aminah',
-                    telepon: '08129876543',
-                    tanggal: '13 Feb 2026',
-                    judul: 'Kran bocor',
-                    deskripsi: 'Kran wastafel kamar mandi bocor.',
-                    lampiranKeluhan: ['lampu_mati.jpg'],
-                    status: 'On Progress'
-                },
-                riwayat: [
-                    { tipe: 'system', judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '13 Feb 2026 08:30' },
-                    { tipe: 'tr', judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '13 Feb 2026 08:45' },
-                    { tipe: 'departemen', judul: 'Menunggu laporan Work Order departemen', ket: 'Work order sudah diberikan ke departemen teknik', waktu: '13 Feb 2026 09:30' }
-                ]
-            },
-            {
-                keluhan: {
-                    id: 3,
-                    tiket: 'TCK-003',
-                    unit: 'C-310',
-                    nama: 'Ahmad Rizki',
-                    telepon: '08121234567',
-                    tanggal: '14 Feb 2026',
-                    judul: 'Lampu mati',
-                    deskripsi: 'Lampu ruang tamu mati.',
-                    lampiranKeluhan: ['lampu_mati.jpg'],
-                    status: 'Close'
-                },
-                riwayat: [
-                    { tipe: 'system', judul: 'Keluhan Masuk', ket: 'Keluhan diterima oleh sistem', waktu: '14 Feb 2026 07:15' },
-                    { tipe: 'tr', judul: 'TR Mengambil Keluhan', ket: 'Keluhan di-assign ke tim TR', waktu: '14 Feb 2026 07:30' },
-                    { tipe: 'departemen', judul: 'Menunggu laporan Work Order departemen', ket: 'Work order sudah diberikan ke departemen teknik', waktu: '14 Feb 2026 07:30' },
-                    { tipe: 'tr', judul: 'TR memberi keputusan', ket: 'keputusan sudah dikirim ke penghuni', waktu: '15 Feb 2026 07:30' },
-                    { tipe: 'tr', judul: 'Keluhan Ditutup', ket: 'Keluhan ditutup oleh TR', waktu: '15 Feb 2026 09:00' }
-                ]
-            }
-        ],
-
-        /* ================= DATA AKTIF ================= */
         keluhan: {},
         riwayat: [],
+        selectedWO: {},
+        departemenList: [],
+        previewFiles: [],
 
-        // Knowledge Base
-        knowledgeBase: [
-            {
-                id: 1,
-                judul: "AC Tidak Dingin",
-                kategori: "AC",
-                deskripsi: "AC tidak mengeluarkan udara dingin seperti biasanya",
-                diagnosis_list: [
-                    {
-                        id: 1,
-                        Penyebab: "Freon habis atau tekanan tidak stabil",
-                        deskripsi: "Tekanan freon rendah menyebabkan AC tidak mendingin optimal.",
-                        langkah: "1. Cek tekanan freon menggunakan manifold gauge\n2. Isi ulang freon jika tekanan rendah\n3. Periksa kebocoran pada sambungan pipa\n4. Pastikan tidak ada kebocoran pada evaporator",
-                        lampiran: ["freon-check.pdf"]
-                    },
-                    {
-                        id: 2,
-                        Penyebab: "Saluran drainase tersumbat",
-                        deskripsi: "Air tidak bisa mengalir keluar sehingga AC bocor atau tidak dingin.",
-                        langkah: "1. Bersihkan selang pembuangan dengan air bertekanan\n2. Pastikan selang tidak tertekuk\n3. Cek posisi kemiringan AC indoor\n4. Bersihkan bak penampung air",
-                        lampiran: []
-                    }
-                ]
-            },
-            {
-                id: 2,
-                judul: "AC Bocor Air",
-                kategori: "AC",
-                deskripsi: "AC mengeluarkan air yang menetes ke dalam ruangan",
-                diagnosis_list: [
-                    {
-                        id: 3,
-                        Penyebab: "Saluran drainase tersumbat",
-                        deskripsi: "Drainase tersumbat menyebabkan air tidak keluar dan menetes.",
-                        langkah: "1. Bersihkan selang pembuangan\n2. Pastikan tidak tertekuk\n3. Cek posisi AC\n4. Bersihkan evaporator",
-                        lampiran: []
-                    },
-                    {
-                        id: 4,
-                        Penyebab: "Filter AC kotor",
-                        deskripsi: "Filter kotor menghambat aliran udara dan menimbulkan kebocoran air.",
-                        langkah: "1. Lepas filter AC\n2. Bersihkan dengan air mengalir\n3. Keringkan dan pasang kembali\n4. Lakukan pembersihan rutin setiap bulan",
-                        lampiran: ["filter-cleaning-guide.pdf"]
-                    }
-                ]
-            }
-        ],
-
-        /* ================= COMPUTED PROPERTIES ================= */
-        get workOrdersByTiket() {
-            return this.workOrders.filter(wo => wo.tiket === this.keluhan.tiket);
-        },
-
-        get filteredKnowledgeBase() {
-            if (!this.searchKB) return this.knowledgeBase;
-            return this.knowledgeBase.filter(kb =>
-                kb.judul.toLowerCase().includes(this.searchKB.toLowerCase()) ||
-                (kb.kategori && kb.kategori.toLowerCase().includes(this.searchKB.toLowerCase()))
-            );
-        },
-
-        get filteredDiagnosis() {
-            if (!this.selectedKB) return [];
-            if (!this.searchDiagnosis) return this.selectedKB.diagnosis_list;
-            return this.selectedKB.diagnosis_list.filter(d =>
-                d.Penyebab.toLowerCase().includes(this.searchDiagnosis.toLowerCase())
-            );
-        },
-
-        get filteredKategori() {
-            if (!this.kategoriSearch) return this.kategoriList;
-            return this.kategoriList.filter(k =>
-                k.toLowerCase().includes(this.kategoriSearch.toLowerCase())
-            );
-        },
-
-        /* ================= KEPUTUSAN TR ================= */
-        keputusan: {
-            judul: '',
-            status: 'On Progress',
-            catatan: '',
-            lampiran: []
-        },
-
-        /* ================= FORM WO ================= */
+        /* ================= WO ================= */
+        workOrders: [],
         woForm: {
             dept: '',
-            instruction: ''
+            instruction: '',
+            lokasi: ''
         },
 
-        /* ================= FORM KB ================= */
-        kbForm: {
+        /* ================= KEPUTUSAN ================= */
+        keputusan: {
             judul: '',
-            kategori: '',
-            penyebab: '',
-            deskripsi: '',
-            langkah: '',
+            status: 'on_progress',
+            catatan: '',
             lampiran: []
         },
 
         keputusanAkhir: {
             judul: '',
-            solusi: '',
-            lampiran: [],
-            tanggal: '',
-            dibuatOleh: ''
+            solusi: ''
         },
 
-        workOrders: [
-            {
-                id: 1,
-                tiket: 'TCK-002',
-                no: 'WO-001',
-                dept: 'Engineering',
-                instruksi: 'Cek kran wastafel bocor',
-                status: 'On Progress',
-                petugas: 'Andi',
-                laporan: [],
-                lampiran: [],
-                tanggal: '13 Feb 2026 09:30'
-            }
-        ],
+        
 
-        /* ================= METHODS ================= */
-        selectKB(item) {
-            this.selectedKB = item;
-            this.selectedDiagnosis = null;
-        },
+        /* ================= INIT ================= */
+        init() {
+            const data = window.detailKeluhan;
 
-        selectDiagnosis(diag) {
-            this.selectedDiagnosis = diag;
-        },
-
-        selectKategori(kategori) {
-            this.kbForm.kategori = kategori;
-            this.openKategori = false;
-            this.kategoriSearch = '';
-        },
-
-        tambahKategoriBaru() {
-            if (this.kategoriSearch && !this.kategoriList.includes(this.kategoriSearch)) {
-                this.kategoriList.push(this.kategoriSearch);
-                this.kbForm.kategori = this.kategoriSearch;
-                this.openKategori = false;
-                this.kategoriSearch = '';
-            }
-        },
-
-        handleUploadKB(event) {
-            const files = Array.from(event.target.files);
-            this.kbForm.lampiran.push(...files);
-        },
-
-        hapusLampiranKB(index) {
-            this.kbForm.lampiran.splice(index, 1);
-        },
-
-        simpanKeKnowledgeBase() {
-            // Validasi field wajib
-            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.penyebab || !this.kbForm.langkah) {
-                alert('Lengkapi semua data yang wajib (Judul, Kategori, Penyebab, dan Langkah Penyelesaian)');
-                return;
-            }
-
-            // Simpan ke list KB
-            this.knowledgeBase.push({
-                id: this.knowledgeBase.length + 1,
-                judul: this.kbForm.judul,
-                kategori: this.kbForm.kategori,
-                deskripsi: this.kbForm.deskripsi,
-                diagnosis_list: [
-                    {
-                        id: Date.now(),
-                        Penyebab: this.kbForm.penyebab,
-                        deskripsi: this.kbForm.deskripsi,
-                        langkah: this.kbForm.langkah,
-                        lampiran: this.kbForm.lampiran.map(f => f.name)
-                    }
-                ]
-            });
-
-            alert('Solusi berhasil disimpan ke Knowledge Base');
-
-            // Reset form
-            this.kbForm = {
-                judul: '',
-                kategori: '',
-                penyebab: '',
-                deskripsi: '',
-                langkah: '',
-                lampiran: []
+            this.keluhan = {
+                id: data.id,
+                tiket: data.ticket,
+                unit: data.unit,
+                tower: data.tower ?? '-',
+                lantai: data.lantai ?? '-',
+                nama: data.penghuni,
+                telepon: data.telepon,
+                tanggal: data.tanggal,
+                judul: data.pengajuan.judul,
+                deskripsi: data.pengajuan.deskripsi,
+                lampiranKeluhan: data.pengajuan.lampiran || [],
+                status: this.normalizeStatus(data.status)
             };
+            this.departemenList = window.departemen || [];
+            
+            this.keputusan.status = this.normalizeStatus(data.status);
 
-            this.openSimpanKB = false;
+            this.riwayat = data.keputusan.map(item => ({
+                tipe: 'tr',
+                judul: 'Update Penanganan',
+                ket: item.isi,
+                waktu: item.tanggal
+            }));
         },
 
-        simpanKeputusan() {
+        /* ================= STATUS ================= */
+        normalizeStatus(status){
+            return (status || '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_');
+        },
+
+        formatStatus(status){
+            const s = this.normalizeStatus(status);
+
+            if(s === 'open') return 'Open';
+            if(s === 'on_progress') return 'On Progress';
+            if(s === 'close') return 'Close';
+
+            return status;
+        },
+
+        statusClass(status){
+            const s = this.normalizeStatus(status);
+
+            return {
+                'bg-blue-100 text-blue-700': s === 'open',
+                'bg-yellow-100 text-yellow-700': s === 'on_progress',
+                'bg-green-100 text-green-700': s === 'close',
+                'bg-gray-100 text-gray-700': !['open','on_progress','close'].includes(s)
+            }
+        },
+
+        /* ================= COMPUTED ================= */
+        get workOrdersByTiket(){
+            return this.workOrders.filter(wo => wo.tiket === this.keluhan.tiket);
+        },
+
+        /* ================= UPDATE STATUS ================= */
+        simpanKeputusan(){
+
             if (!this.keputusan.catatan.trim()) {
-                alert('Catatan keputusan wajib diisi');
+                Swal.fire('Oops!', 'Catatan wajib diisi', 'warning');
                 return;
             }
 
-            this.riwayat.push({
-                tipe: 'tr',
-                judul: this.keputusan.judul || 'Keputusan TR',
-                ket: this.keputusan.catatan,
-                waktu: this.now()
+            Swal.fire({
+                title: 'Simpan Penanganan?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, simpan'
+            }).then((result) => {
+                if(result.isConfirmed){
+                    this.prosesSimpan();
+                }
             });
-
-            if (this.keputusan.status === 'Close') {
-                this.keputusanAkhir = {
-                    judul: this.keputusan.judul,
-                    solusi: this.keputusan.catatan,
-                    lampiran: this.keputusan.lampiran.map(f => f.name),
-                    tanggal: this.now(),
-                    dibuatOleh: 'Tenant Relation'
-                };
-            }
-
-            this.keluhan.status = this.keputusan.status;
-
-            // Reset form
-            this.keputusan.catatan = '';
-            this.keputusan.lampiran = [];
-            this.keputusan.judul = '';
         },
 
-        kirimWO() {
+        openPreviewFile(file){
+            this.previewFile = file;
+            this.openPreview = true;
+        },
+
+        updateStatusLangsung(){
+
+            // ❗ kalau sudah close, stop
+            if(this.normalizeStatus(this.keluhan.status) === 'close'){
+                return;
+            }
+
+            fetch(`/keluhan/${this.keluhan.id}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    status: this.normalizeStatus(this.keputusan.status),
+                    catatan: null
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+
+                // 🔥 update UI
+                this.keluhan.status = this.normalizeStatus(res.status);
+
+                // 🔥 optional notif kecil
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status diperbarui',
+                    timer: 1000,
+                    showConfirmButton: false
+                });
+
+            })
+            .catch(() => {
+                Swal.fire('Error!', 'Gagal update status', 'error');
+            });
+            },
+
+        simpanKeputusanAkhir(){
+
+            if (!this.keputusanAkhir.judul || !this.keputusanAkhir.solusi) {
+                Swal.fire('Oops!', 'Lengkapi data keputusan', 'warning');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('judul', this.keputusanAkhir.judul);
+            formData.append('solusi', this.keputusanAkhir.solusi);
+
+            let files = this.$refs.fileKeputusan.files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('lampiran[]', files[i]);
+            }
+
+            fetch(`/keluhan/${this.keluhan.id}/keputusan-akhir`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: formData
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw data;
+                return data;
+            })
+            .then(res => {
+                Swal.fire('Berhasil!', res.message, 'success');
+
+                this.keluhan.status = 'Close';
+
+                this.keputusanAkhir = {
+                    judul: '',
+                    solusi: ''
+                };
+
+                this.$refs.fileKeputusan.value = null;
+            })
+            .catch(err => {
+                Swal.fire('Error!', err.message || 'Gagal menyimpan keputusan', 'error');
+            });
+            },
+
+        prosesSimpan(){
+
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch(`/keluhan/${this.keluhan.id}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    status: this.normalizeStatus(this.keputusan.status),
+                    catatan: this.keputusan.catatan
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // 🔥 UPDATE UI DARI BACKEND (INI YANG BENAR)
+                this.keluhan.status = this.normalizeStatus(res.status);
+
+                // 🔥 TAMBAH RIWAYAT
+                this.riwayat.push({
+                    tipe: 'tr',
+                    judul: this.keputusan.judul || 'Update Penanganan',
+                    ket: this.keputusan.catatan,
+                    waktu: this.now()
+                });
+
+                // reset
+                this.keputusan = {
+                    judul: '',
+                    status: 'on_progress',
+                    catatan: '',
+                    lampiran: []
+                };
+            })
+            .catch(() => {
+                Swal.fire('Error!', 'Gagal menyimpan', 'error');
+            });
+        },
+
+        /* ================= LAMPIRAN ================= */
+        handleUploadKeputusan(e){
+            const files = Array.from(e.target.files);
+            this.keputusan.lampiran.push(...files);
+        },
+
+        hapusLampiranKeputusan(index){
+            this.keputusan.lampiran.splice(index, 1);
+        },
+
+        /* ================= WORK ORDER ================= */
+        kirimWO(){
             if (!this.woForm.dept || !this.woForm.instruction) {
-                alert('Lengkapi data WO');
+                Swal.fire('Oops!', 'Lengkapi data WO', 'warning');
+                return;
+            }
+
+            if (!this.woForm.lokasi.trim()) {
+                Swal.fire('Oops!', 'Lokasi wajib diisi', 'warning');
                 return;
             }
 
@@ -1412,30 +1403,29 @@ function detailKeluhanApp() {
                 no: `WO-${String(id).padStart(3, '0')}`,
                 dept: this.woForm.dept,
                 instruksi: this.woForm.instruction,
-                status: 'On Progress',
-                petugas: '-',
-                laporan: [],
-                lampiran: [],
+                lokasi: this.woForm.lokasi, // 🔥 langsung string
+                status: 'on_progress',
                 tanggal: this.now()
             });
 
-            this.riwayat.push({
-                tipe: 'tr',
-                judul: 'Work Order Dibuat',
-                ket: `WO dikirim ke departemen ${this.woForm.dept}`,
-                waktu: this.now()
-            });
+            this.woForm = {
+                dept: '',
+                instruction: '',
+                lokasi: ''
+            };
 
-            this.woForm = { dept: '', instruction: '' };
             this.openWO = false;
-        },
 
-        bukaLaporanWO(wo) {
+            Swal.fire('Berhasil!', 'Work Order dibuat', 'success');
+            },
+
+        bukaLaporanWO(wo){
             this.selectedWO = wo;
             this.openLaporan = true;
         },
 
-        now() {
+        /* ================= TIME ================= */
+        now(){
             const d = new Date();
             return d.toLocaleString('id-ID', {
                 day: '2-digit',
@@ -1444,23 +1434,8 @@ function detailKeluhanApp() {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-        },
-
-        /* ================= INIT ================= */
-        init() {
-            const params = new URLSearchParams(window.location.search);
-            const id = parseInt(params.get('id'));
-
-            const data = this.detailKeluhan.find(d => d.keluhan.id === id);
-
-            if (data) {
-                this.keluhan = data.keluhan;
-                this.riwayat = data.riwayat;
-            } else {
-                alert('Data keluhan tidak ditemukan');
-            }
         }
-    };
+    }
 }
 </script>
 @endsection

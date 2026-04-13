@@ -4,40 +4,6 @@
 
 @section('content')
 
-@php
-$keluhan = [
-    [
-        'id' => 1,
-        'ticket' => 'CMP-001',
-        'title' => 'Perbaikan AC',
-        'description' => 'AC tidak dingin.',
-        'status' => 'diproses',
-        'date' => '2026-02-10',
-        'solusi' => [
-            [
-                'isi' => 'AC telah dicek dan dilakukan pengisian freon.',
-                'tanggal' => '10 Feb 2026 11:00'
-            ],
-        ],
-        'konfirmasi' => null
-    ],
-    [
-        'id' => 2,
-        'ticket' => 'CMP-002',
-        'title' => 'Ganti Lampu',
-        'description' => 'Lampu kamar mandi mati.',
-        'status' => 'diproses',
-        'date' => '2026-02-09',
-        'solusi' => [
-            [
-                'isi' => 'Lampu kamar mandi telah diganti dan berfungsi normal.',
-                'tanggal' => '09 Feb 2026 14:20'
-            ],
-        ],
-        'konfirmasi' => null
-    ],
-];
-@endphp
 
 <div x-data="keluhanApp()" x-init="init()" class="p-6 space-y-6">
 
@@ -131,88 +97,89 @@ $keluhan = [
                 </div>
             </div>
 
+            {{-- 🔥 PENGAJUAN (PENGHUNI) --}}
             <div>
-                <p class="font-medium">Deskripsi</p>
-                <div class="bg-gray-100 rounded p-3 text-sm"
-                    x-text="selected.description"></div>
+                <p class="font-medium text-sm mb-1">Pengajuan Keluhan</p>
+
+                <div class="bg-gray-100 rounded p-3 text-sm space-y-2">
+                    <p x-text="selected.pengajuan?.deskripsi"></p>
+                    <p class="text-xs text-gray-400" x-text="selected.pengajuan?.tanggal"></p>
+
+                    {{-- 🔥 LAMPIRAN PENGHUNI --}}
+                    <template x-if="selected.pengajuan?.lampiran && selected.pengajuan.lampiran.length">
+                        <div class="mt-2">
+
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="(file, i) in selected.pengajuan.lampiran" :key="i">
+                                    <a :href="'/storage/' + file"
+                                    target="_blank"
+                                    class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
+                                        📎 Lampiran Pengajuan
+                                    </a>
+                                </template>
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <template x-if="!selected.pengajuan?.lampiran || selected.pengajuan.lampiran.length === 0">
+                        <p class="text-xs text-gray-400 italic">Tidak ada lampiran</p>
+                    </template>
+                </div>
             </div>
 
-            {{-- SOLUSI --}}
+            {{-- Keputusan --}}
             <div>
-                <p class="font-medium text-sm mb-1">Solusi</p>
+                <p class="font-medium text-sm mb-1">Keputusan</p>
 
-                <template x-if="selected.solusi.length">
+                <template x-if="selected.keputusan && selected.keputusan.length">
                     <div class="space-y-2">
-                        <template x-for="(s,i) in selected.solusi" :key="i">
-                            <div class="border-l-4 border-green-500 pl-3">
-                                <p class="text-sm" x-text="s.isi"></p>
-                                <p class="text-xs text-gray-400" x-text="s.tanggal"></p>
+                        <template x-for="(s,i) in selected.keputusan" :key="i">
+                        <div class="border-l-4 border-green-500 pl-3 space-y-1">
+                            <p class="text-sm" x-text="s.isi"></p>
+                            <p class="text-xs text-gray-400" x-text="s.tanggal"></p>
+
+                            {{-- 🔥 LAMPIRAN --}}
+                            <template x-if="s.lampiran">
+                                <div class="mt-1">
+
+                                    {{-- kalau array --}}
+                                    <template x-if="Array.isArray(s.lampiran)">
+                                        <div class="flex flex-wrap gap-2">
+                                            <template x-for="(file, i) in s.lampiran" :key="i">
+                                                <a :href="'/storage/' + file"
+                                                target="_blank"
+                                                class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
+                                                    📎 Lampiran
+                                                </a>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    {{-- kalau string --}}
+                                    <template x-if="!Array.isArray(s.lampiran)">
+                                        <a :href="'/storage/' + s.lampiran"
+                                        target="_blank"
+                                        class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline inline-block">
+                                            📎 Lihat Lampiran
+                                        </a>
+                                    </template>
+
+                                </div>
+                            </template>
+
                             </div>
                         </template>
                     </div>
                 </template>
 
-                <template x-if="!selected.solusi.length">
-                    <p class="text-sm italic text-gray-400">Belum ada solusi</p>
+                <template x-if="!selected.keputusan || selected.keputusan.length === 0">
+                    <p class="text-sm italic text-gray-400">Belum ada keputusan</p>
                 </template>
             </div>
 
-            {{-- KONFIRMASI --}}
-            <template
-                x-if="
-                    selected.status === 'diproses' &&
-                    selected.solusi.length > 0 &&
-                    !selected.konfirmasi
-                "
-            >
-                <div class="border-t pt-3">
-                    <p class="text-sm mb-2">Apakah solusi sudah sesuai?</p>
-                    <div class="flex gap-2">
-                        <button @click="konfirmasiPuas()"
-                            class="bg-green-600 text-white px-4 py-2 rounded">
-                            Puas
-                        </button>
-                        <button @click="openTidakPuasModal()"
-                            class="bg-red-600 text-white px-4 py-2 rounded">
-                            Tidak Puas
-                        </button>
-                    </div>
-                </div>
-            </template>
-
-            <div class="text-right">
-                <button @click="closeModal()" class="border px-4 py-2 rounded">
-                    Tutup
-                </button>
-            </div>
-
         </div>
     </div>
-
-    {{-- MODAL TIDAK PUAS --}}
-    <div x-show="openTidakPuas" x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-        <div class="bg-white max-w-md w-full rounded-lg p-6 space-y-4">
-            <h3 class="font-semibold">Keluhan Belum Selesai</h3>
-
-            <textarea x-model="alasanTidakPuas"
-                class="w-full border rounded p-2"
-                rows="4"
-                placeholder="Tuliskan alasan..."></textarea>
-
-            <div class="flex justify-end gap-2">
-                <button @click="openTidakPuas=false" class="border px-4 py-2 rounded">
-                    Batal
-                </button>
-                <button @click="kirimTidakPuas()"
-                    class="bg-red-600 text-white px-4 py-2 rounded">
-                    Kirim
-                </button>
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <script>
@@ -223,16 +190,24 @@ function keluhanApp() {
         keluhan: @json($keluhan),
         filteredKeluhan: [],
         openModal: false,
-        openTidakPuas: false,
-        alasanTidakPuas: '',
-        selected: {},
+        selected: {
+            keputusan: []
+        },
 
         init() {
-            this.filteredKeluhan = this.keluhan;
+            const allowedStatus = ['open', 'on progress', 'close'];
+
+            this.filteredKeluhan = this.keluhan.filter(k =>
+                allowedStatus.includes((k.status || '').toLowerCase())
+            );
         },
 
         applyFilter() {
+            const allowedStatus = ['open', 'on progress', 'close'];
+
             this.filteredKeluhan = this.keluhan.filter(k =>
+                allowedStatus.includes((k.status || '').toLowerCase()) &&
+
                 (this.search === '' ||
                     k.ticket.toLowerCase().includes(this.search.toLowerCase()) ||
                     k.title.toLowerCase().includes(this.search.toLowerCase())
@@ -248,7 +223,10 @@ function keluhanApp() {
         },
 
         openDetail(k) {
-            this.selected = k;
+            this.selected = {
+                ...k,
+                keputusan: k.keputusan ?? []
+            };
             this.openModal = true;
         },
 
@@ -256,38 +234,14 @@ function keluhanApp() {
             this.openModal = false;
         },
 
-        konfirmasiPuas() {
-            this.selected.konfirmasi = {
-                status: 'Puas',
-                waktu: new Date().toLocaleString()
-            };
-        },
-
-        openTidakPuasModal() {
-            this.openTidakPuas = true;
-        },
-
-        kirimTidakPuas() {
-            if (!this.alasanTidakPuas) return;
-
-            this.selected.status = 'diproses';
-            this.selected.konfirmasi = {
-                status: 'Belum Puas',
-                alasan: this.alasanTidakPuas,
-                waktu: new Date().toLocaleString()
-            };
-
-            this.alasanTidakPuas = '';
-            this.openTidakPuas = false;
-            this.openModal = false;
-        },
-
         badgeHtml(status) {
             const map = {
-                diproses: 'bg-yellow-100 text-yellow-800',
-                selesai: 'bg-green-100 text-green-800'
+                'open': 'bg-blue-100 text-blue-800',
+                'on progress': 'bg-yellow-100 text-yellow-800',
+                'close': 'bg-green-100 text-green-800'
             };
-            return `<span class="px-2 py-1 text-xs rounded ${map[status]}">${status}</span>`;
+
+            return `<span class="px-2 py-1 text-xs rounded ${map[status?.toLowerCase()] || 'bg-gray-100'}">${status}</span>`;
         }
     }
 }
