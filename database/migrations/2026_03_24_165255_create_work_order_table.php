@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('keluhan_id')->constrained('keluhans')->onDelete('cascade');
             $table->enum('departemen_tujuan', ['Operational', 'Engineering', 'Finance', 'Legal', 'Developer']);
             $table->text('instruksi');
+            $table->string('lokasi');
             $table->enum('status', ['unassigned', 'open', 'on_progress', 'waiting', 'close'])->default('open');
             $table->foreignId('penanggung_jawab_id')->nullable()->constrained('penggunas')->nullOnDelete();
             $table->timestamp('taken_at')->nullable();

@@ -157,7 +157,7 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="/workOrderMasuk"
+            <a href="/work-order-masuk"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('workOrderMasuk', $currentPath) }}">
                 @include('components.icons.clipboardList')
                 <span>Work Order Masuk</span>

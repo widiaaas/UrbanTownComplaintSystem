@@ -17,6 +17,7 @@ class WorkOrder extends Model
         'departemen_tujuan',
         'instruksi',
         'status',
+        'lokasi',
         'penanggung_jawab_id',
         'taken_at',
         'laporan',

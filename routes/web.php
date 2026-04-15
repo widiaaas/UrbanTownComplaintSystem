@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PenghuniController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeluhanController;
+use App\Http\Controllers\WorkOrderController;
 
 
 /*
@@ -200,6 +201,11 @@ Route::middleware(['auth'])->group(function () {
 
         // 🔥 KEPUTUSAN AKHIR
         Route::post('/keluhan/{id}/keputusan-akhir', [KeluhanController::class, 'keputusanAkhir']);
+
+        // WORK ORDER
+        Route::post('/keluhan/{id}/work-order', [WorkOrderController::class, 'store']);
+        
+
         // 🔥 LAPORAN
         Route::get('/rekap-penanganan', [KeluhanController::class, 'rekap'])->name('tr.rekap');
 
@@ -211,8 +217,9 @@ Route::middleware(['auth'])->group(function () {
     // ================= DEPARTEMEN =================
     Route::middleware(['role:departemen'])->group(function () {
         Route::get('/dashboardDepartemen', fn() => view('departemen.dashboard'));
-        Route::get('/workOrderMasuk', fn() => view('departemen.workOrder.workOrderMasuk'));
-        Route::get('/daftarWorkOrder', fn() => view('departemen.workOrder.daftarPenangananWO'));
+        Route::get('/work-order-masuk', [WorkOrderController::class, 'woMasuk']);
+        Route::post('/work-order/{id}/ambil', [WorkOrderController::class, 'ambilWO']);
+        Route::get('/daftar-work-order', [WorkOrderController::class, 'daftarPenanganan']);
         Route::get('/detailWorkOrder', fn() => view('departemen.workOrder.detailWorkOrder'));
     });
 

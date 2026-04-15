@@ -69,51 +69,6 @@
         </div>
     </div>
 
-    <!-- {{-- MODAL UBAH STATUS WO --}}
-    <div x-show="statusModalOpen" x-cloak x-transition
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b">
-                <h3 class="text-lg font-semibold text-gray-800">
-                    Ubah Status Work Order
-                </h3>
-                <button @click="statusModalOpen=false" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
-            </div>
-
-            <div class="px-6 py-4 space-y-4">
-                <p class="text-sm"><span class="font-medium">No WO:</span> <span x-text="selectedWO.no"></span></p>
-                <p class="text-sm"><span class="font-medium">Unit:</span> <span x-text="selectedWO.unit"></span></p>
-                <p class="text-sm">
-                    <span class="font-medium">Status Saat Ini:</span> 
-                    <span class="px-2 py-0.5 rounded-full text-xs"
-                          :class="statusClass(selectedWO.status)"
-                          x-text="selectedWO.status">
-                    </span>
-                </p>
-
-                <div>
-                    <label class="text-sm font-medium mb-1 block">Status Baru</label>
-                    <select x-model="newStatus" class="w-full border rounded-lg px-3 py-2 text-sm">
-                        <option value="Open">Open</option>
-                        <option value="On Progress">On Progress</option>
-                        <option value="Close">Close (Selesai)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 border-t flex justify-end gap-2">
-                <button @click="statusModalOpen=false"
-                        class="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700">
-                    Batal
-                </button>
-                <button @click="simpanPerubahanStatus"
-                        class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
-                    Simpan Perubahan
-                </button>
-            </div>
-        </div>
-    </div> -->
-
 </div>
 
 <script>

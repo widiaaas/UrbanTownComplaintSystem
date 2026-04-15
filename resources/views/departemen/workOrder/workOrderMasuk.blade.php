@@ -16,24 +16,20 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-100 text-gray-700">
                 <tr>
-                    <th class="px-5 py-3 text-left">Unit</th>
-                    <th class="px-5 py-3 text-left">Tanggal</th>
-                    <th class="px-5 py-3 text-left">Instruksi</th>
-                    <th class="px-5 py-3 text-left">Status</th>
+                    <th class="px-5 py-3 text-center">No</th>
+                    <th class="px-5 py-3 text-center">Unit</th>
+                    <th class="px-5 py-3 text-center">Tanggal</th>
+                    <th class="px-5 py-3 text-center">Instruksi</th>
                     <th class="px-5 py-3 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <template x-for="wo in dataWOMasuk" :key="wo.id">
                     <tr class="border-t hover:bg-gray-50">
+                        <td class="px-5 py-3" x-text="wo.no"></td>
                         <td class="px-5 py-3 font-medium" x-text="wo.unit"></td>
                         <td class="px-5 py-3" x-text="wo.tanggal"></td>
                         <td class="px-5 py-3" x-text="wo.instruksi"></td>
-                        <td class="px-5 py-3">
-                            <span class="px-3 py-1 rounded-full text-xs inline-block"
-                                  :class="statusClass(wo.status)"
-                                  x-text="wo.status"></span>
-                        </td>
                         <td class="px-5 py-3 text-center space-x-1">
                             {{-- Tombol Ambil WO --}}
                             <button 
@@ -78,7 +74,7 @@
 
             {{-- Body --}}
             <div class="p-6 flex-1 overflow-y-auto space-y-6 text-sm">
-
+                <p x-text="JSON.stringify(selected)"></p>
                 {{-- Info WO --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 rounded-lg p-4">
                     <div class="space-y-2">
@@ -89,6 +85,7 @@
                     <div class="space-y-2">
                         <p><strong>Telepon:</strong> <span x-text="selected.telepon"></span></p>
                         <p><strong>Tanggal:</strong> <span x-text="selected.tanggal"></span></p>
+                        <p><strong>TR penanggung Jawab:</strong> <span x-text="selected.tr"></span></p>
                     </div>
                 </div>
 
@@ -98,10 +95,28 @@
                     <div class="bg-gray-100 p-3 rounded" x-text="selected.instruksi"></div>
                 </div>
 
+
                 {{-- Lampiran --}}
-                <div x-show="selected.lampiran" class="bg-white rounded-lg p-4 border">
+                <div>
                     <p class="font-medium mb-2">Lampiran:</p>
-                    <a :href="selected.lampiran" target="_blank" class="text-blue-600 hover:underline">Lihat File</a>
+
+                    <div class="flex gap-2 flex-wrap">
+
+                        <template x-if="selected.lampiran && selected.lampiran.length">
+                            <template x-for="file in selected.lampiran" :key="file">
+                                <button
+                                    @click="previewFile(file)"
+                                    class="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded hover:underline">
+                                    Lihat File
+                                </button>
+                            </template>
+                        </template>
+
+                        <template x-if="!selected.lampiran || !selected.lampiran.length">
+                            <span class="text-gray-400 text-sm italic">Tidak ada lampiran</span>
+                        </template>
+
+                    </div>
                 </div>
 
             </div>
@@ -112,67 +127,126 @@
             </div>
 
         </div>
+
+            <!-- ================= MODAL PREVIEW FILE ================= -->
+        <div x-show="openPreview" x-cloak
+            class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+
+            <div class="bg-white rounded-lg p-4 max-w-4xl w-full relative">
+
+                <button @click="openPreview=false"
+                    class="absolute top-2 right-2 text-xl">✕</button>
+
+                <div class="mt-6">
+
+                    <!-- IMAGE -->
+                    <template x-if="previewUrl.endsWith('.jpg') || previewUrl.endsWith('.png') || previewUrl.endsWith('.jpeg')">
+                        <img :src="'/storage/' + previewUrl" class="w-full rounded">
+                    </template>
+
+                    <!-- PDF -->
+                    <template x-if="previewUrl.endsWith('.pdf')">
+                        <iframe :src="'/storage/' + previewUrl" class="w-full h-[70vh]"></iframe>
+                    </template>
+
+                </div>
+            </div>
+        </div>
     </div>
 
-</div>
-
 <script>
-function workOrderApp() {
+function workOrderApp(){
     return {
+
         showModal: false,
+        openPreview: false,
         selected: {},
-        currentPetugas: 'Petugas1', // ganti dengan Auth::user()->name
-        dataWOMasuk: [
-            {
-                id: 'WO-001',
-                unit: 'A-101',
-                tanggal: 'Senin, 12 Feb 2026',
-                requestor: 'Budi Santoso',
-                telepon: '08123456789',
-                instruksi: 'Periksa AC unit A-101',
-                lampiran: 'https://example.com/file/ac_photo.jpg',
-                status: 'Unassign',
-                penanggungJawab: null
-            },
-            {
-                id: 'WO-002',
-                unit: 'B-203',
-                tanggal: 'Selasa, 13 Feb 2026',
-                requestor: 'Siti Aminah',
-                telepon: '08198765432',
-                instruksi: 'Ganti lampu ruang B-203',
-                lampiran: '',
-                status: 'Unassign',
-                penanggungJawab: null
-            }
-        ],
+        previewUrl: '',
 
-        dataWOPetugas: [],
+        // 🔥 DATA DARI BACKEND
+        dataWOMasuk: @json($wo),
 
+        // ================= AMBIL WO =================
         ambilWO(wo){
-            wo.status = 'Open';
-            wo.penanggungJawab = this.currentPetugas;
 
-            // pindahkan ke daftar WO petugas
-            this.dataWOPetugas.push(wo);
+        Swal.fire({
+            title: 'Ambil Work Order?',
+            text: `Work Order ${wo.id} akan menjadi tanggung jawab Anda`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Ambil',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
 
-            // hapus dari daftar WO masuk
-            this.dataWOMasuk = this.dataWOMasuk.filter(x => x.id !== wo.id);
+            if (result.isConfirmed) {
 
-            alert('WO berhasil diambil! Silakan cek halaman "Work Order Tanggung Jawab".');
+                // 🔥 LOADING
+                Swal.fire({
+                    title: 'Memproses...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch(`/work-order/${wo.id}/ambil`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw data;
+                    return data;
+                })
+                .then(res => {
+
+                    Swal.close();
+
+                    // hapus dari tabel
+                    this.dataWOMasuk = this.dataWOMasuk.filter(x => x.id !== wo.id);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: res.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                })
+                .catch(err => {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: err.message || 'Terjadi kesalahan'
+                    });
+
+                });
+
+            }
+
+        });
         },
 
+        previewFile(file){
+            this.previewUrl = file;
+            this.openPreview = true;
+        },
+
+        // ================= MODAL =================
         openModal(wo){
-            this.selected = JSON.parse(JSON.stringify(wo));
+            this.selected = {
+                ...wo,
+                tr: wo.tr ?? '-'
+            };
             this.showModal = true;
         },
 
-        statusClass(status){
-            return {
-                'bg-yellow-100 text-yellow-700': status === 'Unassign',
-                'bg-green-100 text-green-700': status === 'Open'
-            }
-        }
     }
 }
 </script>

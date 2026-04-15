@@ -130,7 +130,7 @@
 
             {{-- Tombol Buat WO --}}
             <button
-                x-show="normalizeStatus(keluhan.status) !== 'close' && workOrdersByTiket.length === 0"
+                x-show="normalizeStatus(keluhan.status) !== 'close' && !sudahAdaWO"
                 @click="openWO = true"
                 class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                 + Buat Work Order
@@ -140,42 +140,55 @@
         {{-- LIST WO --}}
         <template x-if="workOrdersByTiket.length">
             <template x-for="(wo, index) in workOrdersByTiket" :key="wo.id">
-                <div class="border rounded-lg p-4 space-y-2">
-                    
+                <div class="border rounded-lg p-4 space-y-3">
+
+                    {{-- HEADER --}}
                     <div class="flex justify-between items-center">
-                        <p class="font-medium text-sm">
-                            WO #<span x-text="index + 1"></span>
-                            (<span x-text="wo.no"></span>)
+    
+                        <p class="text-sm font-medium text-gray-700">
+                            <span x-text="wo.no"></span>
                         </p>
 
                         <span
-                            class="text-xs px-2 py-1 rounded"
+                            class="text-xs px-2 py-1 rounded capitalize"
                             :class="statusClass(wo.status)"
-                            x-text="wo.status">
+                            x-text="formatStatus(wo.status)">
                         </span>
+
                     </div>
 
-                    <p class="text-sm">
-                        <b>Departemen:</b> <span x-text="wo.dept"></span>
-                    </p>
+                    {{-- DETAIL --}}
+                    <div class="text-sm space-y-1">
+                        <p>
+                            <b>Departemen:</b> 
+                            <span x-text="wo.dept"></span>
+                        </p>
 
-                    <p class="text-sm">
-                        <b>Tanggal:</b> <span x-text="wo.tanggal"></span>
-                    </p>
+                        <p>
+                            <b>Tanggal:</b> 
+                            <span x-text="wo.tanggal"></span>
+                        </p>
 
-                    <p class="text-sm">
-                        <b>Lokasi:</b> <span x-text="wo.lokasi"></span>
-                    </p>
+                        <p>
+                            <b>Lokasi:</b> 
+                            <span x-text="wo.lokasi"></span>
+                        </p>
 
-                    <p class="text-sm text-gray-600">
-                        <b>Instruksi:</b> <span x-text="wo.instruksi"></span>
-                    </p>
+                        <p class="text-gray-600">
+                            <b>Instruksi:</b> 
+                            <span x-text="wo.instruksi"></span>
+                        </p>
+                    </div>
 
-                    <button
-                        @click="bukaLaporanWO(wo)"
-                        class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                        Lihat Laporan
-                    </button>
+                    {{-- ACTION --}}
+                    <div class="pt-2">
+                        <button
+                            @click="bukaLaporanWO(wo)"
+                            class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                            Lihat Laporan
+                        </button>
+                    </div>
+
                 </div>
             </template>
         </template>
@@ -186,7 +199,6 @@
                 Belum ada Work Order untuk tiket ini.
             </p>
         </template>
-
     </div>
 
     {{-- ================= MODAL RIWAYAT PENANGANAN ================= --}}
@@ -467,31 +479,85 @@
 
     {{-- ================= MODAL LAPORAN WO ================= --}}
     <div x-show="openLaporan" x-cloak
-         class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div class="bg-white w-full max-w-xl rounded-xl p-6 space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold">Laporan Penyelesaian WO</h3>
-                <button @click="openLaporan=false">✕</button>
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+        <div class="bg-white w-full max-w-2xl rounded-xl p-6 space-y-5">
+
+            {{-- HEADER --}}
+            <div class="flex justify-between items-center border-b pb-2">
+                <div>
+                    <h3 class="text-lg font-semibold">Laporan Penyelesaian WO</h3>
+                    <p class="text-xs text-gray-500">
+                        No WO: <span x-text="selectedWO.no"></span>
+                    </p>
+                </div>
+
+                <button @click="openLaporan=false" class="text-lg">✕</button>
             </div>
 
-            <p class="text-sm"><b>Departemen:</b> <span x-text="selectedWO.dept"></span></p>
-            <p class="text-sm"><b>Petugas:</b> <span x-text="selectedWO.petugas"></span></p>
+            {{-- INFO --}}
+            <div class="grid grid-cols-2 gap-3 text-sm">
 
-            <div class="bg-gray-100 rounded-lg p-3 text-sm"
-                 x-text="selectedWO.laporan"></div>
+                <p>
+                    <b>Departemen</b><br>
+                    <span x-text="selectedWO.dept || '-'"></span>
+                </p>
 
+                <p>
+                    <b>Petugas</b><br>
+                    <span x-text="selectedWO.petugas || '-'"></span>
+                </p>
+
+                <p class="col-span-2">
+                    <b>Status</b><br>
+                    <span
+                        class="text-xs px-2 py-1 rounded"
+                        :class="statusClass(selectedWO.status)"
+                        x-text="formatStatus(selectedWO.status)">
+                    </span>
+                </p>
+
+            </div>
+
+            {{-- LAPORAN --}}
             <div>
-                <p class="text-sm font-medium">Lampiran Pekerjaan</p>
-                <div class="flex gap-2 flex-wrap mt-1">
-                    <template x-for="file in selectedWO.lampiran">
-                        <span class="px-3 py-1 border rounded text-xs" x-text="file"></span>
+                <p class="text-sm font-medium mb-1">Laporan Pekerjaan</p>
+
+                <div class="bg-gray-100 rounded-lg p-3 text-sm min-h-[60px]">
+                    <span x-text="selectedWO.laporan || 'Belum ada laporan dari departemen'"></span>
+                </div>
+            </div>
+
+            {{-- LAMPIRAN --}}
+            <div>
+                <p class="text-sm font-medium mb-1">Lampiran Pekerjaan</p>
+
+                <div class="flex gap-2 flex-wrap">
+                    <template x-if="selectedWO.lampiran && selectedWO.lampiran.length">
+                        <template x-for="file in selectedWO.lampiran" :key="file">
+                            <a 
+                                :href="'/storage/' + file"
+                                target="_blank"
+                                class="px-3 py-1 border rounded text-xs bg-blue-50 text-blue-700 hover:underline">
+                                Lihat File
+                            </a>
+                        </template>
+                    </template>
+
+                    <template x-if="!selectedWO.lampiran || !selectedWO.lampiran.length">
+                        <span class="text-xs text-gray-400 italic">
+                            Tidak ada lampiran
+                        </span>
                     </template>
                 </div>
             </div>
 
-            <p class="text-xs text-gray-500">
-                Diselesaikan: <span x-text="selectedWO.tanggal"></span>
-            </p>
+            {{-- FOOTER --}}
+            <div class="text-xs text-gray-500 border-t pt-2">
+                Diselesaikan: 
+                <span x-text="selectedWO.tanggal || '-'"></span>
+            </div>
+
         </div>
     </div>
 
@@ -514,15 +580,16 @@
 
             {{-- INFORMASI UTAMA --}}
             <div class="grid grid-cols-2 gap-4 text-sm">
-                <p><b>Ticket</b><br><span x-text="keluhan.tiket"></span></p>
+                <p><b>Ticket Keluhan</b><br><span x-text="keluhan.tiket"></span></p>
                 <p><b>Tanggal WO</b><br><span x-text="selectedWO.tanggal"></span></p>
                 <p><b>Requestor</b><br><span x-text="keluhan.nama"></span></p>
                 <p><b>Departemen</b><br><span x-text="selectedWO.dept"></span></p>
                 <p><b>Petugas</b><br><span x-text="selectedWO.petugas"></span></p>
                 <p>
                     <b>Status</b><br>
-                    <span :class="statusClass(keluhan.status)"
-                        x-text="keluhan.status">
+                    <span :class="statusClass(selectedWO.status)"
+                        x-text="selectedWO.status"
+                        x-text="formatStatus(selectedWO.status)">
                     </span>
                 </p>
             </div>
@@ -605,19 +672,10 @@
             {{-- HEADER WO --}}
             <div class="grid grid-cols-2 gap-4 text-sm">
 
-                {{-- NO WO AUTO --}}
-                <div>
-                    <label class="font-medium">No WO</label>
-                    <input
-                        class="w-full border rounded px-3 py-1 bg-gray-100 text-gray-500"
-                        :value="'WO-' + new Date().getFullYear() + '-' + String(workOrders.length + 1).padStart(3,'0')"
-                        disabled
-                    >
-                </div>
 
                 {{-- TICKET --}}
                 <div>
-                    <label class="font-medium">Ticket</label>
+                    <label class="font-medium">Ticket Keluhan</label>
                     <input
                         class="w-full border rounded px-3 py-1 bg-gray-100"
                         x-model="keluhan.tiket"
@@ -1175,6 +1233,8 @@ function detailKeluhanApp() {
                 ket: item.isi,
                 waktu: item.tanggal
             }));
+
+            this.workOrders = data.work_orders || [];
         },
 
         /* ================= STATUS ================= */
@@ -1208,7 +1268,7 @@ function detailKeluhanApp() {
 
         /* ================= COMPUTED ================= */
         get workOrdersByTiket(){
-            return this.workOrders.filter(wo => wo.tiket === this.keluhan.tiket);
+            return this.workOrders;
         },
 
         /* ================= UPDATE STATUS ================= */
@@ -1385,6 +1445,11 @@ function detailKeluhanApp() {
 
         /* ================= WORK ORDER ================= */
         kirimWO(){
+            if(this.sudahAdaWO){
+                Swal.fire('Info', 'Work Order sudah dibuat untuk keluhan ini', 'info');
+                return;
+            }
+
             if (!this.woForm.dept || !this.woForm.instruction) {
                 Swal.fire('Oops!', 'Lengkapi data WO', 'warning');
                 return;
@@ -1395,35 +1460,52 @@ function detailKeluhanApp() {
                 return;
             }
 
-            const id = this.workOrders.length + 1;
+            fetch(`/keluhan/${this.keluhan.id}/work-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    departemen: this.woForm.dept,
+                    instruksi: this.woForm.instruction,
+                    lokasi: this.woForm.lokasi
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw data;
+                return data;
+            })
+            .then(res => {
 
-            this.workOrders.push({
-                id,
-                tiket: this.keluhan.tiket,
-                no: `WO-${String(id).padStart(3, '0')}`,
-                dept: this.woForm.dept,
-                instruksi: this.woForm.instruction,
-                lokasi: this.woForm.lokasi, // 🔥 langsung string
-                status: 'on_progress',
-                tanggal: this.now()
+                // 🔥 TAMBAH KE LIST
+                this.workOrders.push(res.data);
+
+                // RESET FORM
+                this.woForm = {
+                    dept: '',
+                    instruction: '',
+                    lokasi: ''
+                };
+
+                this.openWO = false;
+
+                Swal.fire('Berhasil!', res.message, 'success');
+            })
+            .catch(err => {
+                Swal.fire('Error!', err.message || 'Gagal membuat WO', 'error');
             });
-
-            this.woForm = {
-                dept: '',
-                instruction: '',
-                lokasi: ''
-            };
-
-            this.openWO = false;
-
-            Swal.fire('Berhasil!', 'Work Order dibuat', 'success');
             },
 
         bukaLaporanWO(wo){
             this.selectedWO = wo;
             this.openLaporan = true;
         },
-
+            
+        get sudahAdaWO(){
+            return this.workOrders.length > 0;
+        },
         /* ================= TIME ================= */
         now(){
             const d = new Date();

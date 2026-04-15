@@ -1,0 +1,139 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Keluhan;
+use App\Models\WorkOrder;
+
+class WorkOrderController extends Controller
+{
+    public function store(Request $request, $keluhan_id)
+    {
+        $keluhan = Keluhan::findOrFail($keluhan_id);
+
+        // 🔒 VALIDASI: hanya 1 WO
+        if ($keluhan->workOrders()->exists()) {
+            return response()->json([
+                'message' => 'Work Order sudah ada'
+            ], 400);
+        }
+
+        $request->validate([
+            'departemen' => 'required',
+            'instruksi' => 'required|string',
+            'lokasi' => 'required|string'
+        ]);
+
+        // GENERATE NO WO
+        $last = WorkOrder::latest()->first();
+        $no = $last ? ((int) substr($last->nomor_wo, -3)) + 1 : 1;
+
+        $nomorWO = 'WO-' . date('Y') . '-' . str_pad($no, 3, '0', STR_PAD_LEFT);
+
+        $wo = WorkOrder::create([
+            'nomor_wo' => $nomorWO,
+            'keluhan_id' => $keluhan->id,
+            'departemen_tujuan' => $request->departemen,
+            'lokasi' => $request->lokasi,
+            'instruksi' => $request->instruksi,
+        ]);
+
+        // 🔥 BONUS: otomatis ubah status keluhan
+        $keluhan->update([
+            'status' => 'on_progress'
+        ]);
+
+        return response()->json([
+            'message' => 'Work Order berhasil dibuat',
+            'data' => [
+                'id' => $wo->id,
+                'no' => $wo->nomor_wo,
+                'dept' => $wo->departemen_tujuan,
+                'instruksi' => $wo->instruksi,
+                'status' => $wo->status,
+                'tanggal' => $wo->created_at->format('d-m-Y H:i'),
+                'lokasi' => $request->lokasi
+            ]
+        ]);
+    }
+
+    public function woMasuk()
+    {   
+        $wo = WorkOrder::with(['keluhan.unit', 'keluhan.penghuni','keluhan.penanggungJawab'])
+            ->whereNull('penanggung_jawab_id')
+            ->latest()
+            ->get()
+            ->values()
+            ->map(function ($item, $index) {
+
+                // dd([
+                //     'pj_id' => $item->keluhan->penanggung_jawab_id,
+                //     'relasi' => $item->keluhan->penanggungJawab
+                // ]);
+            
+                return [
+                    'no' => $index + 1,
+                    'id' => $item->nomor_wo,
+                    'unit' => $item->keluhan->unit->no_unit ?? '-',
+                    'tanggal' => optional($item->created_at)->format('d-m-Y H:i'),
+                    'penghuni' => $item->keluhan->penghuni->nama ?? '-',
+                    'telepon' => $item->keluhan->penghuni->telepon ?? '-',
+                    'instruksi' => $item->instruksi,
+                    'lampiran' => $item->lampiran ?? [],
+                    'tr' => $item->keluhan->penanggungJawab->name ?? '-',
+                    'penanggungJawab' => $item->penanggung_jawab_id 
+                ];
+            });
+
+        return view('departemen.workOrder.workOrderMasuk', compact('wo')); // 🔥 INI WAJIB
+    }
+
+    public function ambilWO($id)
+    {
+        $user = auth()->user();
+
+        $wo = WorkOrder::where('nomor_wo', $id)->firstOrFail();
+
+        $wo->update([
+            'penanggung_jawab_id' => $user->id,
+            'status' => 'open',
+            'taken_at' => now()
+        ]);
+
+        return response()->json([
+            'message' => 'WO berhasil diambil'
+        ]);
+    }
+
+    public function daftarPenanganan()
+    {
+        $user = auth()->user();
+
+        $wo = WorkOrder::with(['keluhan.unit', 'keluhan.penghuni'])
+            ->where('penanggung_jawab_id', $user->id) // 🔥 WO milik user login
+            ->latest()
+            ->get()
+            ->values()
+            ->map(function ($item) {
+
+                return [
+                    'id' => $item->id,
+                    'no' => $item->nomor_wo,
+                    'unit' => $item->keluhan->unit->no_unit ?? '-',
+                    'tanggal' => optional($item->created_at)->format('d-m-Y H:i'),
+
+                    // 🔥 FORMAT STATUS BIAR SESUAI FE
+                    'status' => ucfirst(str_replace('_', ' ', $item->status)),
+
+                    // tambahan (optional kalau nanti dipakai)
+                    'penghuni' => $item->keluhan->penghuni->nama ?? '-',
+                    'telepon' => $item->keluhan->penghuni->telepon ?? '-',
+                    'instruksi' => $item->instruksi,
+                    'lampiran' => $item->lampiran ?? []
+                ];
+            });
+
+        return view('departemen.workOrder.daftarPenangananWO', compact('wo'));
+    }
+}

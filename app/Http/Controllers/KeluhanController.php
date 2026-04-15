@@ -236,7 +236,7 @@ class KeluhanController extends Controller
 
         // ================= VALIDASI =================
         $validator = Validator::make($request->all(), [
-            'status' => ['required', 'in:open,on progress'],
+            'status' => ['required', 'in:open,on_progress'],
             'catatan' => ['nullable', 'string']
         ]);
 
@@ -265,7 +265,7 @@ class KeluhanController extends Controller
 
         return response()->json([
             'message' => 'Status berhasil diperbarui',
-            'status' => str_replace('_', ' ', $status)
+            'status' => $status
         ]);
     }
 
@@ -276,7 +276,8 @@ class KeluhanController extends Controller
         $keluhan = Keluhan::with([
             'unit',
             'penghuni',
-            'riwayat'
+            'riwayat',
+            'workOrders'
         ])->findOrFail($id);
 
         // 🔥 SECURITY (WAJIB)
@@ -299,26 +300,41 @@ class KeluhanController extends Controller
             'telepon' => $keluhan->penghuni->telepon ?? '-',
             'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'open')),
             'tanggal' => optional($keluhan->created_at)->format('d-m-Y H:i'),
-
-            // 🔥 PENGAJUAN (PENGHUNI)
+        
+            // 🔥 PENGAJUAN
             'pengajuan' => [
                 'judul' => $keluhan->judul,
                 'deskripsi' => $keluhan->deskripsi,
                 'tanggal' => optional($keluhan->created_at)->format('d-m-Y H:i'),
                 'lampiran' => $keluhan->lampiran ?? [],
             ],
-
-            // 🔥 RIWAYAT (TR)
+        
+            // 🔥 RIWAYAT
             'keputusan' => $keluhan->riwayat
-                ->sortBy('waktu') // 🔥 biar urut timeline
+                ->sortBy('waktu')
                 ->map(function ($r) {
                     return [
                         'isi' => $r->keterangan,
                         'tanggal' => optional($r->waktu)->format('d-m-Y H:i'),
                         'lampiran' => $r->lampiran ?? []
                     ];
-                })->values()
+                })->values(),
+        
+            // 🔥 INI YANG KURANG
+            'work_orders' => $keluhan->workOrders->map(function ($wo) {
+                return [
+                    'id' => $wo->id,
+                    'no' => $wo->nomor_wo,
+                    'dept' => $wo->departemen_tujuan,
+                    'status' => $wo->status,
+                    'tanggal' => optional($wo->created_at)->format('d-m-Y H:i'),
+                    'lokasi' => $wo->lokasi ?? '-',
+                    'instruksi' => $wo->instruksi,
+                    'lampiran' => $wo->lampiran ?? []
+                ];
+            })->values()
         ];
+
 
         return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen'));
     }
@@ -367,5 +383,53 @@ class KeluhanController extends Controller
         return response()->json([
             'message' => 'Keputusan berhasil disimpan & keluhan ditutup'
         ]);
+    }
+
+
+    ////  BUAT WORK ORDER
+    public function storeWO(Request $request, $id)
+    {
+        $keluhan = Keluhan::findOrFail($id);
+
+        // VALIDASI
+        $request->validate([
+            'departemen' => 'required',
+            'instruksi' => 'required|string',
+            'lokasi' => 'required|string'
+        ]);
+
+        // GENERATE NOMOR WO
+        $last = WorkOrder::latest()->first();
+        $no = $last ? ((int) substr($last->nomor_wo, -3)) + 1 : 1;
+
+        $nomorWO = 'WO-' . date('Y') . '-' . str_pad($no, 3, '0', STR_PAD_LEFT);
+
+        // SIMPAN
+        $wo = WorkOrder::create([
+            'nomor_wo' => $nomorWO,
+            'keluhan_id' => $keluhan->id,
+            'departemen_tujuan' => $request->departemen,
+            'instruksi' => $request->instruksi,
+            'status' => 'open'
+        ]);
+
+        return response()->json([
+            'message' => 'Work Order berhasil dibuat',
+            'data' => [
+                'id' => $wo->id,
+                'no' => $wo->nomor_wo,
+                'dept' => $wo->departemen_tujuan,
+                'instruksi' => $wo->instruksi,
+                'status' => $wo->status,
+                'tanggal' => $wo->created_at->format('d-m-Y H:i'),
+                'lokasi' => $request->lokasi
+            ]
+        ]);
+
+        if ($keluhan->workOrders()->exists()) {
+            return response()->json([
+                'message' => 'Work Order sudah ada untuk keluhan ini'
+            ], 400);
+        }
     }
 }
