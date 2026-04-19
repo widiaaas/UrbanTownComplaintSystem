@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <a href="/daftarPenanganan" class="text-sm text-blue-600 hover:underline">
+        <a href="/daftar-penanganan" class="text-sm text-blue-600 hover:underline">
             ← Kembali
         </a>
     </div>
@@ -477,90 +477,6 @@
         </div>
     </div>
 
-    {{-- ================= MODAL LAPORAN WO ================= --}}
-    <div x-show="openLaporan" x-cloak
-        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-        <div class="bg-white w-full max-w-2xl rounded-xl p-6 space-y-5">
-
-            {{-- HEADER --}}
-            <div class="flex justify-between items-center border-b pb-2">
-                <div>
-                    <h3 class="text-lg font-semibold">Laporan Penyelesaian WO</h3>
-                    <p class="text-xs text-gray-500">
-                        No WO: <span x-text="selectedWO.no"></span>
-                    </p>
-                </div>
-
-                <button @click="openLaporan=false" class="text-lg">✕</button>
-            </div>
-
-            {{-- INFO --}}
-            <div class="grid grid-cols-2 gap-3 text-sm">
-
-                <p>
-                    <b>Departemen</b><br>
-                    <span x-text="selectedWO.dept || '-'"></span>
-                </p>
-
-                <p>
-                    <b>Petugas</b><br>
-                    <span x-text="selectedWO.petugas || '-'"></span>
-                </p>
-
-                <p class="col-span-2">
-                    <b>Status</b><br>
-                    <span
-                        class="text-xs px-2 py-1 rounded"
-                        :class="statusClass(selectedWO.status)"
-                        x-text="formatStatus(selectedWO.status)">
-                    </span>
-                </p>
-
-            </div>
-
-            {{-- LAPORAN --}}
-            <div>
-                <p class="text-sm font-medium mb-1">Laporan Pekerjaan</p>
-
-                <div class="bg-gray-100 rounded-lg p-3 text-sm min-h-[60px]">
-                    <span x-text="selectedWO.laporan || 'Belum ada laporan dari departemen'"></span>
-                </div>
-            </div>
-
-            {{-- LAMPIRAN --}}
-            <div>
-                <p class="text-sm font-medium mb-1">Lampiran Pekerjaan</p>
-
-                <div class="flex gap-2 flex-wrap">
-                    <template x-if="selectedWO.lampiran && selectedWO.lampiran.length">
-                        <template x-for="file in selectedWO.lampiran" :key="file">
-                            <a 
-                                :href="'/storage/' + file"
-                                target="_blank"
-                                class="px-3 py-1 border rounded text-xs bg-blue-50 text-blue-700 hover:underline">
-                                Lihat File
-                            </a>
-                        </template>
-                    </template>
-
-                    <template x-if="!selectedWO.lampiran || !selectedWO.lampiran.length">
-                        <span class="text-xs text-gray-400 italic">
-                            Tidak ada lampiran
-                        </span>
-                    </template>
-                </div>
-            </div>
-
-            {{-- FOOTER --}}
-            <div class="text-xs text-gray-500 border-t pt-2">
-                Diselesaikan: 
-                <span x-text="selectedWO.tanggal || '-'"></span>
-            </div>
-
-        </div>
-    </div>
-
     {{-- ================= MODAL DETAIL LAPORAN WO ================= --}}
     <div x-show="openLaporan" x-cloak
         class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -609,52 +525,85 @@
             </div>
 
             {{-- RIWAYAT PENANGANAN PEKERJAAN (WO) --}}
-            <div class="space-y-3">
+            <div class="bg-white rounded-xl p-4 space-y-4">
                 <p class="font-medium text-sm">Riwayat Penanganan Pekerjaan</p>
 
                 <template x-if="selectedWO.laporan && selectedWO.laporan.length">
-                    <div class="space-y-3">
+                    <div class="relative">
 
+                    <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                         <template x-for="(lapor, index) in selectedWO.laporan" :key="index">
-                            <div
-                                class="relative pl-5 py-3 rounded-md"
-                                :class="{
-                                    'border-l-4 border-blue-500 bg-blue-50/30': lapor.status === 'On_Progress',
-                                    'border-l-4 border-orange-500 bg-orange-50/30': lapor.status === 'Waiting',
-                                    'border-l-4 border-green-500 bg-green-50/30': lapor.status === 'Close'
-                                }"
-                            >
+                            <div class="relative pl-5 py-3 rounded-md"
+                                :class="statusClassRiwayat(lapor.status)">
+
+                                <!-- JUDUL -->
                                 <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
+
+                                <!-- CATATAN -->
                                 <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
-                                <p class="text-xs text-gray-400 mt-1" x-text="lapor.waktu"></p>
+
+                                <!-- LAMPIRAN -->
+                                <div class="flex flex-wrap gap-2 mt-2"
+                                    x-show="lapor.lampiran && lapor.lampiran.length">
+
+                                    <template x-for="(file, i) in lapor.lampiran" :key="i">
+                                        <button
+                                            @click="openPreviewFile(file)"
+                                            class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+
+                                            <span x-text="file.split('/').pop()"></span>
+                                        </button>
+                                    </template>
+
+                                </div>
+
+                                <!-- WAKTU -->
+                                <p class="text-xs text-gray-400 mt-2" x-text="lapor.waktu"></p>
+
                             </div>
                         </template>
+                    </div>
 
                     </div>
                 </template>
 
                 <template x-if="!selectedWO.laporan || !selectedWO.laporan.length">
-                    <p class="text-sm text-gray-400 italic">
+                    <p class="text-sm text-gray-400 italic text-center py-4">
                         Belum ada laporan pekerjaan dari departemen.
                     </p>
                 </template>
             </div>
-            {{-- LAMPIRAN --}}
-            <div>
-                <p class="font-medium text-sm mb-1">Lampiran Pekerjaan</p>
-                <div class="flex flex-wrap gap-2">
-                    <template x-if="selectedWO.lampiran && selectedWO.lampiran.length">
-                        <template x-for="file in selectedWO.lampiran">
-                            <span class="px-3 py-1 border rounded text-xs bg-gray-50"
-                                x-text="file"></span>
-                        </template>
-                    </template>
+    </div>
 
-                    <template x-if="!selectedWO.lampiran || !selectedWO.lampiran.length">
-                        <span class="text-xs text-gray-400">Tidak ada lampiran</span>
-                    </template>
+    <!-- MODAL PREVIEW FILE -->
+    <div x-show="openPreview" x-cloak
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+        <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
+
+            <button
+                @click="openPreview = false"
+                class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">
+                ✕
+            </button>
+
+            <p class="text-sm font-semibold mb-3" x-text="previewFile"></p>
+
+            <template x-if="isImage(previewFile)">
+                <img :src="'/storage/' + previewFile"
+                    class="max-h-[70vh] mx-auto rounded">
+            </template>
+
+            <template x-if="isPDF(previewFile)">
+                <iframe :src="'/storage/' + previewFile"
+                        class="w-full h-[70vh] rounded"></iframe>
+            </template>
+
+            <template x-if="!isImage(previewFile) && !isPDF(previewFile)">
+                <div class="text-center text-gray-500 py-10">
+                    Preview tidak tersedia
                 </div>
-            </div>
+            </template>
 
         </div>
     </div>
@@ -1498,10 +1447,26 @@ function detailKeluhanApp() {
             });
             },
 
-        bukaLaporanWO(wo){
-            this.selectedWO = wo;
-            this.openLaporan = true;
-        },
+            bukaLaporanWO(wo){
+
+                const laporan = (wo.laporan || []).map(item => {
+
+                    return {
+                        judul: item.judul || 'Update Penanganan',
+                        ket: item.ket || '',
+                        waktu: item.waktu,
+                        status: item.status,
+                        lampiran: item.lampiran || []
+                    };
+                });
+
+                this.selectedWO = {
+                    ...wo,
+                    laporan: laporan
+                };
+
+                this.openLaporan = true;
+                },
             
         get sudahAdaWO(){
             return this.workOrders.length > 0;
@@ -1516,6 +1481,48 @@ function detailKeluhanApp() {
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        },
+
+        // ================= HELPER =================
+        normalizeStatus(status){
+            return (status || '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_');
+        },
+
+        formatStatus(status){
+            const s = this.normalizeStatus(status);
+
+            if(s === 'open') return 'Open';
+            if(s === 'on_progress') return 'On Progress';
+            if(s === 'waiting') return 'Waiting';
+            if(s === 'close') return 'Close';
+
+            return status;
+        },
+
+        statusClass(status){
+            const s = this.normalizeStatus(status);
+
+            return {
+                'bg-blue-100 text-blue-700': s === 'open',
+                'bg-yellow-100 text-yellow-700': s === 'on_progress',
+                'bg-orange-100 text-orange-700': s === 'waiting',
+                'bg-green-100 text-green-700': s === 'close',
+                'bg-gray-100 text-gray-700': !['open','on_progress','waiting','close'].includes(s)
+            }
+        },
+
+        statusClassRiwayat(status){
+            const s = this.normalizeStatus(status);
+
+            return {
+                'border-l-4 border-blue-500 bg-blue-50/30': s === 'open',
+                'border-l-4 border-yellow-500 bg-yellow-50/30': s === 'on_progress',
+                'border-l-4 border-orange-500 bg-orange-50/30': s === 'waiting',
+                'border-l-4 border-green-500 bg-green-50/30': s === 'close'
+            }
         }
     }
 }

@@ -163,7 +163,7 @@
                 <span>Work Order Masuk</span>
             </a>
 
-            <a href="/daftarWorkOrder"
+            <a href="/daftar-work-order"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('daftarWorkOrder', $currentPath) }}">
                 @include('components.icons.clipboardList')
                 <span>Penanganan WO</span>

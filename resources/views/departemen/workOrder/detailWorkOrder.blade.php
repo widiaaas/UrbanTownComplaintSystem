@@ -26,59 +26,166 @@
         <p><b>Petugas</b><br><span x-text="wo.petugas"></span></p>
         <p><b>Tanggal WO</b><br><span x-text="wo.tanggal"></span></p>
         <p><b>Status WO</b><br>
-            <span class="inline-block text-xs px-2 py-1 rounded"
-                  :class="statusClass(wo.status)"
-                  x-text="wo.status">
-            </span>
+        <span 
+            class="inline-block text-xs px-2 py-1 rounded"
+            :class="statusClass(wo.status)"
+            x-text="formatStatus(wo.status)">
+        </span>
         </p>
     </div>
 
-    {{-- ================= INSTRUKSI ================= --}}
-    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+    {{-- ================= INSTRUKSI PEKERJAAN ================= --}}
+    <div class="bg-white p-6 rounded-xl shadow space-y-5">
+
+        <!-- HEADER -->
         <h3 class="font-semibold">Instruksi Pekerjaan</h3>
-        <div class="bg-gray-100 rounded-lg p-4 text-sm" x-text="wo.instruksi"></div>
+
+        <!-- INSTRUKSI -->
+        <div>
+            <p class="text-sm font-medium mb-1">Instruksi</p>
+            <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700"
+                x-text="wo.instruksi || '-'">
+            </div>
+        </div>
+
+        <!-- LOKASI -->
+        <div>
+            <p class="text-sm font-medium mb-1">Lokasi</p>
+            <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700"
+                x-text="wo.lokasi || '-'">
+            </div>
+        </div>
+
     </div>
 
     {{-- ================= RIWAYAT PENANGANAN ================= --}}
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+        <!-- HEADER -->
         <div class="flex items-center justify-between">
             <h3 class="font-semibold">Riwayat Penanganan</h3>
         </div>
 
+        <!-- DATA ADA -->
         <template x-if="wo.laporan && wo.laporan.length">
-            <div class="space-y-3">
-                <template x-for="(lapor, index) in wo.laporan" :key="index">
-                    <div class="relative pl-5 py-3 rounded-md"
-                         :class="{
-                             'border-l-4 border-blue-500 bg-blue-50/30': lapor.status === 'On Progress',
-                             'border-l-4 border-orange-500 bg-orange-50/30': lapor.status === 'Waiting',
-                             'border-l-4 border-green-500 bg-green-50/30': lapor.status === 'Close'
-                         }">
-                        <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
-                        <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
-                        <p class="text-xs text-gray-400 mt-1" x-text="lapor.waktu"></p>
-                    </div>
-                </template>
+            <div class="relative">
+
+                <!-- SCROLL AREA -->
+                <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+
+                    <template x-for="(lapor, index) in wo.laporan" :key="index">
+                        <div class="relative pl-6 py-3 rounded-md border-l-2"
+                            :class="statusClassRiwayat(lapor.status)">
+
+                            <!-- DOT -->
+                            <span class="absolute -left-2 top-4 w-3 h-3 rounded-full"
+                                :class="{
+                                    'bg-blue-500': normalizeStatus(lapor.status) === 'open',
+                                    'bg-yellow-500': normalizeStatus(lapor.status) === 'on_progress',
+                                    'bg-orange500': normalizeStatus(lapor.status) === 'waiting',
+                                    'bg-green-500': normalizeStatus(lapor.status) === 'close'
+                                }">
+                            </span>
+
+                            <!-- JUDUL -->
+                            <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
+
+                            <!-- CATATAN -->
+                            <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
+
+                            <!-- LAMPIRAN -->
+                            <div class="flex flex-wrap gap-2 mt-2"
+                                x-show="lapor.lampiran && lapor.lampiran.length">
+
+                                <template x-for="(file, i) in lapor.lampiran" :key="i">
+                                    <button
+                                        @click="openPreviewFile(file)"
+                                        class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+
+                                        <span x-text="file.split('/').pop()"></span>
+                                    </button>
+                                </template>
+
+                            </div>
+
+                            <!-- WAKTU -->
+                            <p class="text-xs text-gray-400 mt-2" x-text="lapor.waktu"></p>
+
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- FADE EFFECT (OPSIONAL BIAR KEREN) -->
+                <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+
             </div>
         </template>
 
+        <!-- DATA KOSONG -->
         <template x-if="!wo.laporan || !wo.laporan.length">
-            <p class="text-sm text-gray-400 italic">
+            <p class="text-sm text-gray-400 italic text-center py-4">
                 Belum ada laporan pekerjaan dari departemen.
             </p>
         </template>
+
     </div>
+
+    <!-- MODAL PREVIEW FILE -->
+    <div x-show="openPreview" x-cloak
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+        <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
+
+            <!-- CLOSE -->
+            <button
+                @click="openPreview = false"
+                class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">
+                ✕
+            </button>
+
+            <!-- TITLE -->
+            <p class="text-sm font-semibold mb-3" x-text="previewFile"></p>
+
+            <!-- IMAGE -->
+            <template x-if="isImage(previewFile)">
+                <img
+                    :src="'/storage/' + previewFile"
+                    class="max-h-[70vh] mx-auto rounded">
+            </template>
+
+            <!-- PDF -->
+            <template x-if="isPDF(previewFile)">
+                <iframe
+                    :src="'/storage/' + previewFile"
+                    class="w-full h-[70vh] rounded">
+                </iframe>
+            </template>
+
+            <!-- OTHER -->
+            <template x-if="!isImage(previewFile) && !isPDF(previewFile)">
+                <div class="text-center text-gray-500 py-10">
+                    Preview tidak tersedia
+                </div>
+            </template>
+
+        </div>
+    </div>
+
 
     {{-- STATUS workOrder --}}
     <div class="bg-white p-4 rounded-xl border space-y-2">
         <h3 class="font-semibold text-sm">Status Work Order</h3>
 
-        <select x-model="workOrder.status"
+        <select 
+            x-model="newStatus"
+            @change="ubahStatus"
             class="w-full border rounded-lg px-3 py-2">
-            <option>Open</option>
-            <option>On Progress</option>
-            <option>Waiting</option>
-            <option>Close</option>
+            
+            <option value="Open">Open</option>
+            <option value="On Progress">On Progress</option>
+            <option value="Waiting">Waiting</option>
+            <option value="Close">Close</option>
         </select>
     </div>
 
@@ -123,7 +230,7 @@
                 <input
                     type="file"
                     multiple
-                    @change="handleUploadpenanganan($event)"
+                    @change="handleUploadPenanganan($event)"
                     class="text-sm"
                 >
 
@@ -132,7 +239,7 @@
                         <div class="relative border rounded px-3 py-1 text-xs bg-gray-50">
                             <span x-text="file.name"></span>
                             <button
-                                @click="hapusLampiranpenanganan(index)"
+                                @click="hapusLampiranPenanganan(index)"
                                 class="ml-2 text-red-500 hover:text-red-700">
                                 ✕
                             </button>
@@ -141,21 +248,10 @@
                 </div>
             </div>
 
-            <!-- {{-- UBAH STATUS --}}
-            <div>
-                <label class="text-sm font-medium mb-1 block">Ubah Status WO</label>
-                <select x-model="newStatus" class="w-full border rounded-lg px-3 py-2 text-sm">
-                    <option value="Open">Open</option>
-                    <option value="On Progress">On Progress</option>
-                    <option value="Waiting">Waiting</option>
-                    <option value="Close">Close</option>
-                </select>
-            </div> -->
-
             {{-- ACTION --}}
             <div class="flex gap-3 pt-2">
                 <button
-                    @click="simpanpenanganan"
+                    @click="simpanPenanganan"
                     class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
                     Simpan Penanganan 
                 </button>
@@ -168,128 +264,256 @@
 <script>
 function detailWOApp() {
     return {
-        wo: {},
+        wo: @json($wo),
+
         penanganan: {
             judul: '',
             catatan: '',
             lampiran: []
         },
-        newStatus: '',
-        workOrders: [
-            {
-                id: 1,
-                tiket: 'TCK-001',
-                no: 'WO-001',
-                dept: 'Teknik',
-                instruksi: 'Periksa AC ruang tamu A-101',
-                status: 'Open',
-                petugas: 'Budi Santoso',
-                laporan: [],
-                lampiran: ['foto_ac_1.jpg','foto_ac_2.jpg'],
-                tanggal: '12 Feb 2026 10:30'
-            },
-            {
-                id: 2,
-                tiket: 'TCK-002',
-                no: 'WO-002',
-                dept: 'Teknik',
-                instruksi: 'Periksa kran wastafel kamar mandi B-205',
-                status: 'Waiting',
-                petugas: 'Siti Aminah',
-                laporan: [
-                    {
-                        status: 'Waiting',
-                        judul: 'Menunggu Sparepart',
-                        ket: 'Sparepart kran belum tersedia',
-                        waktu: '13 Feb 2026 14:00'
-                    }
-                ],
-                lampiran: ['lampu_mati.jpg'],
-                tanggal: '13 Feb 2026 09:30'
-            },
-            {
-                id: 3,
-                tiket: 'TCK-003',
-                no: 'WO-003',
-                dept: 'Teknik',
-                instruksi: 'Ganti lampu ruang tamu C-310',
-                status: 'Close',
-                petugas: 'Ahmad Rizki',
-                laporan: [
-                    {
-                        status: 'On Progress',
-                        judul: 'Pekerjaan Dimulai',
-                        ket: 'Pengecekan instalasi lampu',
-                        waktu: '14 Feb 2026 13:30'
-                    },
-                    {
-                        status: 'Close',
-                        judul: 'Pekerjaan Selesai',
-                        ket: 'Lampu diganti dan menyala normal',
-                        waktu: '14 Feb 2026 14:00'
-                    }
-                ],
-                lampiran: ['wo_before.jpg','wo_after.jpg'],
-                tanggal: '14 Feb 2026 14:00'
-            }
-        ],
 
-        init() {
-            const params = new URLSearchParams(window.location.search);
-            const id = parseInt(params.get('id'));
-            const woData = this.workOrders.find(w => w.id === id);
-            if (woData) {
-                this.wo = woData;
-                this.newStatus = woData.status; // set default select
-            } else {
-                alert('Data Work Order tidak ditemukan');
-            }
+        openPreview: false,
+        previewFile: null,
+
+        openPreviewFile(file){
+            this.previewFile = file;
+            this.openPreview = true;
         },
 
-        // Upload lampiran penanganan
+        isImage(file){
+            return file && (
+                file.endsWith('.jpg') ||
+                file.endsWith('.jpeg') ||
+                file.endsWith('.png')
+            );
+        },
+
+        isPDF(file){
+            return file && file.endsWith('.pdf');
+        },
+
+        newStatus: '',
+
+        init() {
+            this.wo.status = this.normalizeStatus(this.wo.status);
+            this.newStatus = this.formatStatus(this.wo.status);
+        },
+
+        // ================= UPLOAD =================
         handleUploadPenanganan(event) {
             for (let i = 0; i < event.target.files.length; i++) {
                 this.penanganan.lampiran.push(event.target.files[i]);
             }
         },
 
-        // Hapus lampiran penanganan
         hapusLampiranPenanganan(index) {
             this.penanganan.lampiran.splice(index, 1);
         },
 
-        // Simpan penanganan + status (dummy)
-        simpanPenanganan() {
+        // ================= SIMPAN =================
+        async simpanPenanganan() {
+
+            // VALIDASI
             if (!this.penanganan.judul) {
-                alert('Judul penanganan tidak boleh kosong');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'Judul penanganan tidak boleh kosong'
+                });
                 return;
             }
+
             if (!this.penanganan.catatan) {
-                alert('Catatan penanganan tidak boleh kosong');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'Catatan penanganan tidak boleh kosong'
+                });
                 return;
             }
 
-            // Simpan status
-            const oldStatus = this.wo.status;
-            this.wo.status = this.newStatus;
+            // 🔥 FIX STATUS (IMPORTANT)
+            const status = this.newStatus || this.formatStatus(this.wo.status);
 
-            alert(`penanganan tersimpan!\nJudul: ${this.penanganan.judul}\nCatatan: ${this.penanganan.catatan}\nLampiran: ${this.penanganan.lampiran.length} file\nStatus berubah: ${oldStatus} → ${this.newStatus}`);
+            // CONFIRM
+            const confirm = await Swal.fire({
+                title: 'Simpan Penanganan?',
+                text: 'Data akan disimpan dan status akan diperbarui',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, simpan!',
+                cancelButtonText: 'Batal'
+            });
 
-            // Reset form
-            this.penanganan.judul = '';
-            this.penanganan.catatan = '';
-            this.penanganan.lampiran = [];
+            if (!confirm.isConfirmed) return;
+
+            try {
+                Swal.fire({
+                    title: 'Menyimpan...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const formData = new FormData();
+                formData.append('judul', this.penanganan.judul);
+                formData.append('catatan', this.penanganan.catatan);
+
+
+                this.penanganan.lampiran.forEach(file => {
+                    formData.append('lampiran[]', file);
+                });
+
+                const res = await fetch(`/work-order/${this.wo.id}/penanganan`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json' // 🔥 WAJIB
+                    },
+                    body: formData
+                });
+
+                const text = await res.text();
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Response bukan JSON:', text);
+                    throw new Error('Server error (bukan JSON)');
+                }
+
+                if (!res.ok) throw data;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message || 'Penanganan berhasil disimpan',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                setTimeout(() => location.reload(), 1500);
+
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: err.message || 'Terjadi kesalahan'
+                });
+            }
         },
 
-        statusClass(status) {
-            const classes = {
-                'Open': 'bg-blue-100 text-blue-800',
-                'On Progress': 'bg-yellow-100 text-yellow-800',
-                'Waiting': 'bg-orange-100 text-orange-800',
-                'Close': 'bg-green-100 text-green-800'
-            };
-            return classes[status] || 'bg-gray-100 text-gray-700';
-        }
+        // ================= STATUS =================
+        async ubahStatus() {
+
+            if (this.newStatus === this.formatStatus(this.wo.status)) return;
+
+            const confirm = await Swal.fire({
+                title: 'Ubah Status?',
+                text: `Status akan diubah menjadi ${this.newStatus}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, ubah',
+                cancelButtonText: 'Batal'
+            });
+
+            if (!confirm.isConfirmed) {
+                this.newStatus = this.formatStatus(this.wo.status);
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Memproses...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const res = await fetch(`/work-order/${this.wo.id}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        status: this.newStatus
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw data;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message,
+                    timer: 1200,
+                    showConfirmButton: false
+                });
+
+                // 🔥 UPDATE UI
+                this.wo.status = this.normalizeStatus(this.newStatus);
+
+            } catch (err) {
+                this.newStatus = this.formatStatus(this.wo.status);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: err.message || 'Terjadi kesalahan'
+                });
+            }
+        },
+
+        // ================= HELPER =================
+        normalizeStatus(status){
+            return (status || '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_');
+        },
+
+        formatStatus(status){
+            const s = this.normalizeStatus(status);
+
+            if(s === 'open') return 'Open';
+            if(s === 'on_progress') return 'On Progress';
+            if(s === 'waiting') return 'Waiting';
+            if(s === 'close') return 'Close';
+
+            return status;
+        },
+
+        statusClass(status){
+            const s = this.normalizeStatus(status);
+
+            return {
+                'bg-blue-100 text-blue-700': s === 'open',
+                'bg-yellow-100 text-yellow-700': s === 'on_progress',
+                'bg-orange-100 text-orange-700': s === 'waiting',
+                'bg-green-100 text-green-700': s === 'close',
+                'bg-gray-100 text-gray-700': !['open','on_progress','waiting','close'].includes(s)
+            }
+        },
+
+        statusClassRiwayat(status){
+            const s = this.normalizeStatus(status);
+
+            return {
+                'border-l-4 border-blue-500 bg-blue-50/30': s === 'open',
+                'border-l-4 border-yellow-500 bg-yellow-50/30': s === 'on_progress',
+                'border-l-4 border-orange-500 bg-orange-50/30': s === 'waiting',
+                'border-l-4 border-green-500 bg-green-50/30': s === 'close'
+            }
+        },
+
+        openPreviewFile(file){
+            if(!file) return;
+            this.previewFile = file;
+            this.openPreview = true;
+        },
     }
 }
 </script>

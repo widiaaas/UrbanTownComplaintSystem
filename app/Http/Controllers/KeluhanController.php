@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Keluhan;
 use App\Models\WorkOrder;
+use App\Models\RiwayatPenangananWO;
 use App\Models\RiwayatPenangananKeluhan;
 
 class KeluhanController extends Controller
@@ -277,7 +278,8 @@ class KeluhanController extends Controller
             'unit',
             'penghuni',
             'riwayat',
-            'workOrders'
+            'workOrders',
+            'workOrders.riwayat'
         ])->findOrFail($id);
 
         // 🔥 SECURITY (WAJIB)
@@ -327,10 +329,30 @@ class KeluhanController extends Controller
                     'no' => $wo->nomor_wo,
                     'dept' => $wo->departemen_tujuan,
                     'status' => $wo->status,
-                    'tanggal' => optional($wo->created_at)->format('d-m-Y H:i'),
-                    'lokasi' => $wo->lokasi ?? '-',
+                    'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
+                    'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
-                    'lampiran' => $wo->lampiran ?? []
+            
+                    // 🔥 INI YANG KURANG
+                    'laporan' => $wo->riwayat->map(function ($r) {
+
+                        $judul = 'Update Penanganan';
+                        $ket = $r->keterangan;
+                    
+                        if ($r->keterangan && str_contains($r->keterangan, ' - ')) {
+                            $split = explode(' - ', $r->keterangan);
+                            $judul = $split[0];
+                            $ket = implode(' - ', array_slice($split, 1));
+                        }
+                    
+                        return [
+                            'status' => $r->status,
+                            'judul' => $judul,
+                            'ket' => $ket, // ✅ FIX
+                            'waktu' => optional($r->waktu)->format('d M Y H:i'),
+                            'lampiran' => $r->lampiran ?? []
+                        ];
+                    })
                 ];
             })->values()
         ];
