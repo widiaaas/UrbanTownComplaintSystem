@@ -109,15 +109,15 @@
                     <template x-if="selected.pengajuan?.lampiran && selected.pengajuan.lampiran.length">
                         <div class="mt-2">
 
-                            <div class="flex flex-wrap gap-2">
-                                <template x-for="(file, i) in selected.pengajuan.lampiran" :key="i">
-                                    <a :href="'/storage/' + file"
-                                    target="_blank"
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="(file, i) in selected.pengajuan.lampiran" :key="i">
+                                <button 
+                                    @click="previewFile = '/storage/' + file; previewOpen = true"
                                     class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
-                                        📎 Lampiran Pengajuan
-                                    </a>
-                                </template>
-                            </div>
+                                    <span x-text="'📎 Lampiran ' + (i+1)"></span>
+                                </button>
+                            </template>
+                        </div>
 
                         </div>
                     </template>
@@ -127,6 +127,7 @@
                     </template>
                 </div>
             </div>
+
 
             {{-- Keputusan --}}
             <div>
@@ -180,6 +181,47 @@
 
         </div>
     </div>
+
+    <!-- ================= MODAL PREVIEW FILE ================= -->
+    <div x-show="previewOpen" x-cloak
+        class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
+
+        <div class="bg-white w-full max-w-3xl rounded-lg p-4 relative">
+
+            <!-- CLOSE -->
+            <button 
+                @click="previewOpen=false"
+                class="absolute top-2 right-2 text-xl">
+                ✕
+            </button>
+
+            <!-- CONTENT -->
+            <div class="mt-6">
+
+                <!-- IMAGE -->
+                <template x-if="previewFile.match(/\.(jpg|jpeg|png|gif)$/i)">
+                    <img :src="previewFile" class="max-h-[70vh] mx-auto rounded">
+                </template>
+
+                <!-- PDF -->
+                <template x-if="previewFile.match(/\.pdf$/i)">
+                    <iframe :src="previewFile" class="w-full h-[70vh]"></iframe>
+                </template>
+
+                <!-- FILE LAIN -->
+                <template x-if="!previewFile.match(/\.(jpg|jpeg|png|gif|pdf)$/i)">
+                    <div class="text-center">
+                        <p class="mb-2">Preview tidak tersedia</p>
+                        <a :href="previewFile" target="_blank"
+                            class="text-blue-600 underline">
+                            Download File
+                        </a>
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -193,6 +235,8 @@ function keluhanApp() {
         selected: {
             keputusan: []
         },
+        previewFile: '',
+        previewOpen: false, 
 
         init() {
             const allowedStatus = ['open', 'on progress', 'close'];

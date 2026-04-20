@@ -74,8 +74,6 @@
 
             {{-- Body --}}
             <div class="p-6 flex-1 overflow-y-auto space-y-6 text-sm">
-                <p x-text="JSON.stringify(selected)"></p>
-                {{-- Info WO --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 rounded-lg p-4">
                     <div class="space-y-2">
                         <p><strong>No. Unit:</strong> <span x-text="selected.unit"></span></p>

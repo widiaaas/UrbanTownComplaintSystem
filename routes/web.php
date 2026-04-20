@@ -163,8 +163,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/units/{unit}', [UnitController::class, 'destroy'])->name('admin.units.destroy');
 
         Route::post('/units/{unit}/reset-password', [UnitController::class, 'resetPassword'])->name('admin.units.resetPassword');
-        Route::post('/units/{unit}/change-occupant', [UnitController::class, 'changeOccupant'])->name('admin.units.changeOccupant');
-        Route::post('/units/{unit}/toggle-status', [UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
+        Route::post('/units/{unit}/ganti-penghuni', [UnitController::class, 'gantiPenghuni'])->name('admin.units.gantiPenghuni');
+        Route::put('/units/{unit}/toggle', [UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
         Route::get('/penghuni-available', [UnitController::class, 'getAvailablePenghuni'])->name('admin.penghuni.available');
 
         // ================= PENGHUNI =================

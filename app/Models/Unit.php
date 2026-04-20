@@ -24,6 +24,7 @@ class Unit extends Model
     protected $casts = [
         'status' => 'string',
     ];
+    protected $appends = ['current_penghuni'];
 
     public function user()
     {
@@ -44,5 +45,10 @@ class Unit extends Model
     public function keluhans()
     {
         return $this->hasMany(Keluhan::class, 'unit_id');
+    }
+
+    public function getCurrentPenghuniAttribute()
+    {
+        return $this->penghuniAktif?->nama;
     }
 }

@@ -71,7 +71,7 @@
                     <td class="px-4 py-2" x-text="unit.nomor_kamar"></td>
 
                     <!-- PENGHUNI -->
-                    <td class="px-4 py-2" x-text="unit.currentPenghuni || '-'"></td>
+                    <td class="px-4 py-2" x-text="unit.current_penghuni || '-'"></td>
 
                     <!-- STATUS -->
                     <td class="px-4 py-2">
@@ -125,13 +125,13 @@
 
                                     <div class="border-t my-1"></div>
 
-                                    <template x-if="status == 'Aktif'">
+                                    <template x-if="unit.status == 'Aktif'">
                                         <button @click="toggleStatus('nonaktif')" class="w-full text-left px-3 py-2 text-orange-600 hover:bg-orange-50">
                                             ⛔ Nonaktifkan
                                         </button>
                                     </template>
 
-                                    <template x-if="status == 'Nonaktif'">
+                                    <template x-if="unit.status == 'Nonaktif'">
                                         <button @click="toggleStatus('aktif')" class="w-full text-left px-3 py-2 text-green-600 hover:bg-green-50">
                                             ✅ Aktifkan
                                         </button>
@@ -152,13 +152,13 @@
 
     {{-- ================= MODAL TAMBAH UNIT ================= --}}
     <div x-show="openCreateUnit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div @click.outside="openCreateUnit = false" class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 space-y-5">
+        <div @click.self="openCreateUnit = false" class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 space-y-5">
             <div class="flex justify-between items-center">
                 <h2 class="text-lg font-semibold text-gray-800">Tambah Unit Baru</h2>
                 <button @click="openCreateUnit = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
 
-            <form @submit.prevent="saveUnit" class="space-y-4">
+            <form @submit.prevent="saveUnit" novalidate class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Nomor Unit</label>
                     <input type="text" x-model="newUnit.no_unit" placeholder="Contoh: A-101" class="w-full mt-1 border rounded-lg px-3 py-2" required>
@@ -221,7 +221,7 @@
 
     {{-- ================= MODAL EDIT UNIT ================= --}}
     <div x-show="openEdit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div @click.outside="openEdit = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
+        <div @click.self="openEdit = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
             <h2 class="font-semibold text-lg">Edit Unit (<span x-text="selectedUnit.no_unit"></span>)</h2>
             
             <div class="space-y-3">
@@ -285,27 +285,61 @@
             <div class="px-6 py-4 border-b">
                 <h2 class="text-lg font-semibold text-gray-800">Pergantian Penghuni Unit <span class="text-blue-600" x-text="selectedUnit.no_unit"></span></h2>
             </div>
-            <div class="px-6 py-4 space-y-5 overflow-y-auto">
+            <div class="px-6 py-4 space-y-5 overflow-visible">
                 <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
                     <p><strong>Gedung:</strong> <span x-text="selectedUnit.gedung"></span></p>
                     <p><strong>Lantai:</strong> <span x-text="selectedUnit.lantai"></span></p>
+                    <p><strong>Nomor Kamar:</strong> <span x-text="selectedUnit.nomor_kamar"></span></p>
                 </div>
 
-                <div class="space-y-2">
-                    <p class="text-sm font-medium text-gray-700">Penghuni Aktif Saat Ini</p>
-                    <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
-                        <p><strong>Nama:</strong> <span x-text="selectedUnit.currentPenghuni || '-'"></span></p>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4 space-y-4">
+                <div class="border-t pt-4 space-y-4" x-data="{ open: false, searchPenghuni: '' }">
+    
                     <h3 class="text-sm font-semibold text-red-600">Pilih Penghuni Baru</h3>
-                    <select x-model="selectedPenghuniId" @change="fetchPenghuniDetail" class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-                        <option value="">-- Pilih Penghuni --</option>
-                        <template x-for="p in penghuniList" :key="p.id">
-                            <option :value="p.id" x-text="p.nama"></option>
-                        </template>
-                    </select>
+
+                    <!-- INPUT SEARCH -->
+                    <div class="relative">
+                        <input 
+                            type="text"
+                            x-model="searchPenghuni"
+                            @focus="open = true"
+                            @click.outside="open = false"
+                            placeholder="Cari penghuni..."
+                            class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"
+                        >
+
+                        <!-- DROPDOWN LIST -->
+                        <div x-show="open"
+                            x-transition
+                            class="absolute z-50 w-full bg-white border rounded-lg shadow max-h-48 overflow-y-auto mt-1">
+
+                            <template x-for="p in penghuniList.filter(p => 
+                                p.nama.toLowerCase().includes(searchPenghuni.toLowerCase())
+                            )" :key="p.id">
+
+                                <div 
+                                    @click="
+                                        selectedPenghuniId = p.id;
+                                        selectedPenghuniDetail = p;
+                                        searchPenghuni = p.nama;
+                                        open = false;
+                                    "
+                                    class="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                                    x-text="p.nama">
+                                </div>
+
+                            </template>
+
+                            <!-- EMPTY STATE -->
+                            <div x-show="penghuniList.filter(p => 
+                                p.nama.toLowerCase().includes(searchPenghuni.toLowerCase())
+                            ).length === 0"
+                            class="px-3 py-2 text-sm text-gray-500">
+                                Tidak ditemukan
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DETAIL -->
                     <template x-if="selectedPenghuniDetail">
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm space-y-1">
                             <p><strong>Nama:</strong> <span x-text="selectedPenghuniDetail.nama"></span></p>
@@ -313,6 +347,7 @@
                             <p><strong>Email:</strong> <span x-text="selectedPenghuniDetail.email"></span></p>
                         </div>
                     </template>
+
                 </div>
 
                 <template x-if="passwordGenerated">
@@ -378,22 +413,6 @@
     </div>
 </div>
 
-{{-- ================= MODAL ALERT ================= --}}
-<div x-show="alertMessage"
-    x-transition.opacity.duration.200ms
-     class="fixed inset-0 bg-black/30 flex items-center justify-center z-[100]"
-     x-cloak>
-    <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-        <p x-text="alertMessage" class="text-gray-800"></p>
-        <div class="mt-4">
-            <button @click="alertMessage = ''"
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                OK
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
 function unitManager() {
     return {
@@ -403,19 +422,29 @@ function unitManager() {
         openDelete: false,
         openToggle: false,
         openReset: false,
+        
+
         selectedUnit: { id: null, no_unit: '', gedung: '', lantai: '', currentPenghuni: '' },
+
         newUnit: { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
-        editForm: { gedung: '', lantai: '', nomor_kamar: '' },
+
+        // 🔥 FIX: tambah no_unit
+        editForm: { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
+
         createdUnit: null,
         search: '',
         floorFilter: '',
+
         unitsData: [],
         filteredUnits: [],
+
         penghuniList: [],
         selectedPenghuniId: '',
         selectedPenghuniDetail: null,
+
         passwordGenerated: false,
         newPassword: '',
+
         toggleAction: '',
         resetPasswordGenerated: false,
 
@@ -434,13 +463,16 @@ function unitManager() {
         applyFilter() {
             this.filteredUnits = this.unitsData.filter(unit => {
                 let match = true;
+
                 if (this.search) {
                     match = unit.no_unit.toLowerCase().includes(this.search.toLowerCase()) ||
                             unit.gedung.toLowerCase().includes(this.search.toLowerCase());
                 }
+
                 if (this.floorFilter && unit.lantai != this.floorFilter) {
                     match = false;
                 }
+
                 return match;
             });
         },
@@ -455,32 +487,46 @@ function unitManager() {
             fetch('/penghuni-available')
                 .then(res => res.json())
                 .then(data => this.penghuniList = data)
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Gagal mengambil data penghuni', 'error');
+                });
         },
 
         fetchPenghuniDetail() {
             this.selectedPenghuniDetail = this.penghuniList.find(p => p.id == this.selectedPenghuniId) || null;
         },
 
+        openGantiPenghuni(id, no_unit, currentPenghuni) {
+            this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
+            this.selectedUnit.no_unit = no_unit;
+            this.selectedUnit.currentPenghuni = currentPenghuni;
+            this.openEditPenghuni = true;
+        },
+
+        openResetPassword(id, no_unit) {
+            this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
+            this.selectedUnit.no_unit = no_unit;
+            this.resetPasswordGenerated = false;
+            this.newPassword = '';
+            this.openReset = true;
+        },
+
+        toggleStatus(id, no_unit, action) {
+            this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
+            this.selectedUnit.no_unit = no_unit;
+            this.toggleAction = action;
+            this.openToggle = true;
+        },
+
+        confirmDelete(id, no_unit) {
+            this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
+            this.selectedUnit.no_unit = no_unit;
+            this.openDelete = true;
+        },
+
+        // ================= CREATE =================
         saveUnit() {
-            if (!this.newUnit.no_unit) {
-                Swal.fire('Error', 'No Unit wajib diisi', 'error');
-                return;
-            }
-            if (!/^Tower [A-Z]$/.test(this.newUnit.gedung)) {
-                Swal.fire('Error', 'Gedung harus format "Tower A"', 'error');
-                return;
-            }
-
-            if (this.newUnit.lantai < 1 || this.newUnit.lantai > 30) {
-                Swal.fire('Error', 'Lantai harus 1 - 30', 'error');
-                return;
-            }
-
-            if (this.newUnit.nomor_kamar < 1 || this.newUnit.nomor_kamar > 30) {
-                Swal.fire('Error', 'Nomor kamar harus 1 - 30', 'error');
-                return;
-            }
             fetch('/units', {
                 method: 'POST',
                 headers: {
@@ -490,112 +536,43 @@ function unitManager() {
                 body: JSON.stringify(this.newUnit)
             })
             .then(async res => {
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw err;
-                }
-                return res.json();
+                const data = await res.json();
+                if (!res.ok) throw data;
+                return data;
             })
             .then(data => {
-                if (data.success) {
+                this.createdUnit = { ...data.unit, password: data.password };
 
-                    // 🔥 FIX REACTIVE
-                    this.createdUnit = {
-                        ...data.unit,
-                        password: data.password
-                    };
+                this.unitsData.push(data.unit);
 
-                    this.newUnit = { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' };
+                // 🔥 FIX FILTER
+                this.applyFilter();
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Unit Berhasil Ditambahkan',
-                        html: `
-                            Username: <b>${this.createdUnit.no_unit}</b><br>
-                            Password sementara: <b>${this.createdUnit.password}</b>
-                        `,
-                        confirmButtonText: 'OK'
-                    });
+                this.openCreateUnit = false;
 
-                    this.unitsData.push(data.unit);
-                    this.filteredUnits = this.unitsData;
-
-                    // 🔥 OPTIONAL: delay close biar user lihat
-                    setTimeout(() => {
-                        this.openCreateUnit = false;
-                    }, 500);
-
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
-                }
+                Swal.fire('Berhasil', 'Unit berhasil ditambahkan', 'success');
             })
             .catch(err => {
-                console.error(err);
-
-                let message = err.message;
-
-                if (err.errors) {
-                    message = Object.values(err.errors).flat().join('<br>');
-                }
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validasi Gagal',
-                    html: message
-                });
+                Swal.fire('Error', 'Gagal menambahkan unit', 'error');
             });
         },
 
+        // ================= EDIT =================
         editUnit(id, gedung, lantai, nomor_kamar) {
-            const unit = this.unitsData.find(u => String(u.id) === String(id));
+            this.selectedUnit.id = id;
 
-            if (unit) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian',
-                    text: 'Perubahan No Unit akan mengubah username login',
-                    showCancelButton: true,
-                    confirmButtonText: 'Lanjutkan',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
+            this.editForm = {
+                no_unit: this.unitsData.find(u => u.id === id)?.no_unit || '',
+                gedung,
+                lantai,
+                nomor_kamar
+            };
 
-                    // ❗ HANYA jalan kalau klik lanjutkan
-                    if (result.isConfirmed) {
-
-                        this.selectedUnit.id = id;
-                        this.selectedUnit.no_unit = unit.no_unit;
-
-                        this.editForm.no_unit = unit.no_unit;
-                        this.editForm.gedung = unit.gedung;
-                        this.editForm.lantai = unit.lantai;
-                        this.editForm.nomor_kamar = unit.nomor_kamar;
-
-                        this.openEdit = true;
-                    }
-                });
-            }
+            this.openEdit = true;
         },
 
         updateUnit() {
-            if (!this.editForm.no_unit) {
-                Swal.fire('Error', 'No Unit wajib diisi', 'error');
-                return;
-            }
-            if (!/^Tower [A-Z]$/.test(this.editForm.gedung)) {
-                Swal.fire('Error', 'Gedung harus format "Tower A"', 'error');
-                return;
-            }
-
-            if (this.editForm.lantai < 1 || this.editForm.lantai > 30) {
-                Swal.fire('Error', 'Lantai harus 1 - 30', 'error');
-                return;
-            }
-
-            if (this.editForm.nomor_kamar < 1 || this.editForm.nomor_kamar > 30) {
-                Swal.fire('Error', 'Nomor kamar harus 1 - 30', 'error');
-                return;
-            }
-                        fetch(`/units/${this.selectedUnit.id}`, {
+            fetch(`/units/${this.selectedUnit.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -603,67 +580,25 @@ function unitManager() {
                 },
                 body: JSON.stringify(this.editForm)
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Tutup modal
-                    this.openEdit = false;
-
-                    // Update unitsData
-                    this.unitsData = this.unitsData.map(u => 
-                        u.id === this.selectedUnit.id ? {...u, ...this.editForm} : u
-                    );
-
-                    // Update filteredUnits juga
-                    this.applyFilter();
-
-                    // **Update selectedUnit agar placeholder input edit baru**
-                    
-                    this.selectedUnit.gedung = this.editForm.gedung;
-                    this.selectedUnit.lantai = this.editForm.lantai;
-                    this.selectedUnit.nomor_kamar = this.editForm.nomor_kamar;
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Unit Berhasil Diperbarui',
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
-                }
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw data;
+                return data;
             })
-            .catch(async err => {
-                let message = 'Terjadi kesalahan';
+            .then(data => {
+                this.unitsData = this.unitsData.map(u =>
+                    u.id === this.selectedUnit.id ? { ...u, ...this.editForm } : u
+                );
 
-                if (err.errors) {
-                    message = Object.values(err.errors).flat().join('<br>');
-                }
+                this.applyFilter();
+                this.openEdit = false;
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validasi Gagal',
-                    html: message
-                });
-            });
+                Swal.fire('Berhasil', 'Unit berhasil diupdate', 'success');
+            })
+            .catch(() => Swal.fire('Error', 'Gagal update', 'error'));
         },
 
-        confirmDelete(id, no_unit) {
-            this.selectedUnit.id = id;
-            this.selectedUnit.no_unit = no_unit;
-            Swal.fire({
-                title: `Hapus Unit ${no_unit}?`,
-                text: "Data unit dan relasinya akan dihapus!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Hapus',
-                cancelButtonText: 'Batal',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) this.deleteUnit();
-            });
-        },
-
+        // ================= DELETE =================
         deleteUnit() {
             fetch(`/units/${this.selectedUnit.id}`, {
                 method: 'DELETE',
@@ -672,39 +607,81 @@ function unitManager() {
                 }
             })
             .then(res => res.json())
+            .then(() => {
+                this.unitsData = this.unitsData.filter(u => u.id !== this.selectedUnit.id);
+                this.applyFilter();
+                this.openDelete = false;
+
+                Swal.fire('Berhasil', 'Unit dihapus', 'success');
+            });
+        },
+
+        // ================= TOGGLE =================
+        submitToggle() {
+            fetch(`/units/${this.selectedUnit.id}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ action: this.toggleAction })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw data;
+                return data;
+            })
             .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', 'Unit berhasil dihapus', 'success')
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
+                this.unitsData = this.unitsData.map(u =>
+                    u.id === this.selectedUnit.id
+                        ? { ...u, status: data.status }
+                        : u
+                );
+
+                this.applyFilter();
+                this.openToggle = false;
+
+                Swal.fire('Berhasil', 'Status diperbarui', 'success');
+            })
+            .catch(err => {
+                console.error(err);
+
+                this.openToggle = false; // 🔥 INI YANG KURANG
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.message || 'Gagal update status'
+                });
+            });
+        },
+
+        // ================= RESET PASSWORD =================
+        submitResetPassword() {
+            fetch(`/units/${this.selectedUnit.id}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             })
-            .catch(err => console.error(err));
+            .then(res => res.json())
+            .then(data => {
+                this.resetPasswordGenerated = true;
+
+                // 🔥 FIX
+                this.newPassword = data.new_password;
+            });
         },
 
-        openGantiPenghuni(id, no_unit, currentPenghuni) {
-            this.selectedUnit.id = id;
-            this.selectedUnit.no_unit = no_unit;
-            this.selectedUnit.currentPenghuni = currentPenghuni;
-            const unit = this.unitsData.find(u => u.id == id);
-            if (unit) {
-                this.selectedUnit.gedung = unit.gedung;
-                this.selectedUnit.lantai = unit.lantai;
-            }
-            this.selectedPenghuniId = '';
-            this.selectedPenghuniDetail = null;
-            this.passwordGenerated = false;
-            this.newPassword = '';
-            this.openEditPenghuni = true;
-        },
-
+        // ================= GANTI PENGHUNI =================
         submitGantiPenghuni() {
+
             if (!this.selectedPenghuniId) {
-                Swal.fire('Peringatan', 'Pilih penghuni baru terlebih dahulu', 'warning');
+                Swal.fire('Error', 'Pilih penghuni terlebih dahulu', 'error');
                 return;
             }
-            fetch(`/units/${this.selectedUnit.id}/change-occupant`, {
+
+            fetch(`/units/${this.selectedUnit.id}/ganti-penghuni`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -712,111 +689,65 @@ function unitManager() {
                 },
                 body: JSON.stringify({ penghuni_id: this.selectedPenghuniId })
             })
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json();
+
+                if (!res.ok) throw data; // 🔥 WAJIB
+
+                return data;
+            })
             .then(data => {
-                if (data.success) {
-                    this.passwordGenerated = true;
-                    this.newPassword = data.new_password;
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Penghuni Berhasil Diganti',
-                        html: `Password sementara: <b>${this.newPassword}</b>`,
-                        timer: 3000,
-                        timerProgressBar: true
-                    }).then(() => location.reload());
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
-                }
+                // 🔥 update UI
+                this.unitsData = this.unitsData.map(u =>
+                    u.id === this.selectedUnit.id
+                        ? { ...u, currentPenghuni: this.penghuniList.find(p => p.id == this.selectedPenghuniId)?.nama || '-' }
+                        : u
+                );
+
+                this.applyFilter();
+
+                // reset state
+                this.passwordGenerated = false;
+                this.selectedPenghuniId = '';
+                this.selectedPenghuniDetail = null;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Penghuni berhasil diganti'
+                });
             })
-            .catch(err => console.error(err));
-        },
+            .catch(err => {
 
-        openResetPassword(id, no_unit) {
-            this.selectedUnit.id = id;
-            this.selectedUnit.no_unit = no_unit;
-            this.resetPasswordGenerated = false;
-            this.newPassword = '';
-            this.openReset = true;
-        },
+                console.error(err);
 
-        submitResetPassword() {
-            Swal.fire({
-                title: `Reset password ${this.selectedUnit.no_unit}?`,
-                text: "Password lama akan diganti",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Reset',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
+                let message = 'Gagal mengganti penghuni';
 
-                if (!result.isConfirmed) return;
+                if (err.message) {
+                    message = err.message;
+                }
 
-                fetch(`/units/${this.selectedUnit.id}/reset-password`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        this.resetPasswordGenerated = true;
-                        this.newPassword = data.new_password;
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Password Berhasil Direset',
-                            html: `Password baru: <b>${this.newPassword}</b>`
-                        });
-                    } else {
-                        Swal.fire('Gagal', data.message, 'error');
-                    }
-                })
-                .catch(err => console.error(err));
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message
+                });
             });
-            },
-
-        toggleStatus(id, no_unit, action) {
-            this.selectedUnit.id = id;
-            this.selectedUnit.no_unit = no_unit;
-            this.toggleAction = action;
-            Swal.fire({
-                title: `${action === 'nonaktif' ? 'Nonaktifkan' : 'Aktifkan'} Unit ${no_unit}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) this.submitToggle();
-            });
-        },
-
-        submitToggle() {
-            fetch(`/units/${this.selectedUnit.id}/toggle-status`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
-                }
-            })
-            .catch(err => console.error(err));
-        }
+            }
     };
 }
 
-// Dropdown tetap sama
+
+// ================= DROPDOWN =================
 function dropdownMenu(data) {
     return {
         open: false,
-        status: data.status,
+
+        get status() {
+            return data.status;
+        },
+
         id: data.id,
         gedung: data.gedung,
         lantai: data.lantai,
@@ -824,17 +755,60 @@ function dropdownMenu(data) {
         no_unit: data.no_unit,
         currentPenghuni: data.currentPenghuni,
 
-        editUnit() { window.dispatchEvent(new CustomEvent('edit-unit', { detail: { id: this.id, gedung: this.gedung, lantai: this.lantai, nomor_kamar: this.nomor_kamar } })); this.open=false },
-        gantiPenghuni() { window.dispatchEvent(new CustomEvent('ganti-penghuni', { detail: { id: this.id, no_unit: this.no_unit, currentPenghuni: this.currentPenghuni } })); this.open=false },
-        resetPassword() { window.dispatchEvent(new CustomEvent('reset-password', { detail: { id: this.id, no_unit: this.no_unit } })); this.open=false },
-        toggleStatus(action) { window.dispatchEvent(new CustomEvent('toggle-status', { detail: { id: this.id, no_unit: this.no_unit, action } })); this.open=false },
-        confirmDelete() { window.dispatchEvent(new CustomEvent('confirm-delete', { detail: { id: this.id, no_unit: this.no_unit } })); this.open=false }
-    };
-}
+        editUnit() {
+            window.dispatchEvent(new CustomEvent('edit-unit', {
+                detail: {
+                    id: this.id,
+                    gedung: this.gedung,
+                    lantai: this.lantai,
+                    nomor_kamar: this.nomor_kamar
+                }
+            }));
+            this.open = false;
+        },
 
-if (typeof window.Alpine !== 'undefined') {
-    window.Alpine.data('unitManager', unitManager);
-    window.Alpine.data('dropdownMenu', dropdownMenu);
+        gantiPenghuni() {
+            window.dispatchEvent(new CustomEvent('ganti-penghuni', {
+                detail: {
+                    id: this.id,
+                    no_unit: this.no_unit,
+                    currentPenghuni: this.currentPenghuni
+                }
+            }));
+            this.open = false;
+        },
+
+        resetPassword() {
+            window.dispatchEvent(new CustomEvent('reset-password', {
+                detail: {
+                    id: this.id,
+                    no_unit: this.no_unit
+                }
+            }));
+            this.open = false;
+        },
+
+        toggleStatus(action) {
+            window.dispatchEvent(new CustomEvent('toggle-status', {
+                detail: {
+                    id: this.id,
+                    no_unit: this.no_unit,
+                    action
+                }
+            }));
+            this.open = false;
+        },
+
+        confirmDelete() {
+            window.dispatchEvent(new CustomEvent('confirm-delete', {
+                detail: {
+                    id: this.id,
+                    no_unit: this.no_unit
+                }
+            }));
+            this.open = false;
+        }
+    };
 }
 </script>
 @endsection

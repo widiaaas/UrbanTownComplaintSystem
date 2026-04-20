@@ -278,13 +278,6 @@
                     </select>
                 </div>
 
-                <!-- <div>
-                    <label class="text-sm font-medium">Status</label>
-                    <select class="w-full border rounded-lg px-3 py-2">
-                        <option>Aktif</option>
-                        <option>Nonaktif</option>
-                    </select>
-                </div> -->
             </div>
 
             <template x-if="passwordGenerated">
@@ -311,12 +304,20 @@
             </template>
             
             <div class="flex justify-end gap-2 pt-4 border-t">
-            <button 
-                type="button"
-                @click="store()"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                Simpan
-            </button>
+                
+                <button 
+                    type="button"
+                    @click="openCreate = false"
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-100">
+                    Batal
+                </button>
+            
+                <button 
+                    type="button"
+                    @click="store()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    Simpan
+                </button>
             </div>
         </div>
     </div>
@@ -358,8 +359,22 @@
                     <input type="email" x-model="selectedEmployee.email"
                         class="w-full border rounded-lg px-3 py-2">
                 </div>
+                
 
                 <div>
+                    <label class="text-sm">Role</label>
+                    <select 
+                        x-model="selectedEmployee.role"
+                        @change="selectedEmployee.departemen = ''"
+                        class="w-full border rounded-lg px-3 py-2">
+
+                        <option value="">Pilih Role</option>
+                        <option value="tenant_relation">Tenant Relation</option>
+                        <option value="departemen">Departemen</option>
+                    </select>
+                </div>
+
+                <div x-show="selectedEmployee.role === 'departemen'" x-transition.opacity.duration.200ms>
                     <label class="text-sm">Departemen</label>
                     <select x-model="selectedEmployee.departemen"
                         class="w-full border rounded-lg px-3 py-2">
@@ -390,11 +405,16 @@
             </div>
 
             <div class="flex justify-end gap-2 pt-4 border-t">
-            <button 
-                @click="update()"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                Simpan Perubahan
-            </button>
+                <button 
+                    @click="openEdit = false"
+                    class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
+                    Batal
+                </button>
+                <button 
+                    @click="update()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    Simpan Perubahan
+                </button>
             </div>
         </div>
     </div>

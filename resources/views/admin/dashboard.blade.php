@@ -45,26 +45,6 @@
 
     </div>
 
-    {{-- ========================= --}}
-    {{-- AKTIVITAS TERBARU (OPSIONAL) --}}
-    {{-- ========================= --}}
-    @if(isset($activities) && count($activities) > 0)
-    <div class="bg-white rounded-lg border shadow-sm">
-        <div class="p-6 border-b">
-            <h2 class="text-lg font-semibold">Aktivitas Terbaru</h2>
-        </div>
-
-        <div class="divide-y">
-            @foreach($activities as $a)
-                <div class="p-6">
-                    <p class="font-medium">{{ $a['title'] }}</p>
-                    <p class="text-sm text-gray-500">{{ $a['time'] }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
 </div>
 
 @endsection

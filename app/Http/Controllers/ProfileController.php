@@ -53,136 +53,136 @@ class ProfileController extends Controller
     }
 
     // ================= UPDATE PROFILE =================
-public function update(Request $request)
-{
-    $user = auth()->user();
+    public function update(Request $request)
+    {
+        $user = auth()->user();
 
-    // ================= KARYAWAN =================
-    if ($user->role === 'karyawan') {
+        // ================= KARYAWAN =================
+        if ($user->role === 'karyawan') {
 
-        $karyawan = $user->karyawan;
+            $karyawan = $user->karyawan;
 
-        if (!$karyawan) {
-            return response()->json([
-                'message' => 'Data karyawan tidak ditemukan'
-            ], 404);
+            if (!$karyawan) {
+                return response()->json([
+                    'message' => 'Data karyawan tidak ditemukan'
+                ], 404);
+            }
+
+            // 🔥 VALIDASI
+            $validator = Validator::make($request->all(), [
+                'nama' => [
+                    'required',
+                    'regex:/^[a-zA-Z\s]+$/',
+                    'max:100'
+                ],
+                'email' => [
+                    'required',
+                    'email:rfc,dns',
+                    'max:100',
+                    Rule::unique('karyawans', 'email')->ignore($karyawan->id)
+                ],
+                'telp' => [
+                    'required',
+                    'regex:/^[0-9]{10,13}$/'
+                ],
+                'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
+            ], [
+                // 🔥 CUSTOM MESSAGE
+                'nama.required' => 'Nama wajib diisi',
+                'nama.regex' => 'Nama hanya boleh huruf dan spasi',
+                'email.required' => 'Email wajib diisi',
+                'email.email' => 'Format email tidak valid',
+                'email.unique' => 'Email sudah digunakan',
+                'telp.required' => 'Nomor telepon wajib diisi',
+                'telp.regex' => 'Nomor telepon harus angka dan 10-13 digit',
+                'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // 🔥 UPDATE
+            $karyawan->update([
+                'nama' => trim($request->nama),
+                'email' => trim($request->email),
+                'telp' => trim($request->telp),
+                'jenis_kelamin' => $request->jenis_kelamin,
+            ]);
         }
 
-        // 🔥 VALIDASI
-        $validator = Validator::make($request->all(), [
-            'nama' => [
-                'required',
-                'regex:/^[a-zA-Z\s]+$/',
-                'max:100'
-            ],
-            'email' => [
-                'required',
-                'email:rfc,dns',
-                'max:100',
-                Rule::unique('karyawans', 'email')->ignore($karyawan->id)
-            ],
-            'telp' => [
-                'required',
-                'regex:/^[0-9]{10,13}$/'
-            ],
-            'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
-        ], [
-            // 🔥 CUSTOM MESSAGE
-            'nama.required' => 'Nama wajib diisi',
-            'nama.regex' => 'Nama hanya boleh huruf dan spasi',
-            'email.required' => 'Email wajib diisi',
-            'email.email' => 'Format email tidak valid',
-            'email.unique' => 'Email sudah digunakan',
-            'telp.required' => 'Nomor telepon wajib diisi',
-            'telp.regex' => 'Nomor telepon harus angka dan 10-13 digit',
-            'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
-        ]);
+        // ================= UNIT =================
+        elseif ($user->role === 'unit') {
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
+            $unit = $user->unit;
+        
+            if (!$unit) {
+                return response()->json([
+                    'message' => 'Data unit tidak ditemukan'
+                ], 404);
+            }
+        
+            // 🔥 ambil penghuni aktif
+            $penghuni = $unit->penghuniAktif;
+        
+            if (!$penghuni) {
+                return response()->json([
+                    'message' => 'Tidak ada penghuni aktif pada unit ini'
+                ], 404);
+            }
+        
+            // 🔥 VALIDASI (SAMA SEPERTI KARYAWAN)
+            $validator = Validator::make($request->all(), [
+                'nama' => [
+                    'required',
+                    'regex:/^[a-zA-Z\s]+$/',
+                    'max:100'
+                ],
+                'email' => [
+                    'nullable',
+                    'email:rfc',
+                    'max:100',
+                    Rule::unique('penghunis', 'email')->ignore($penghuni->id)
+                ],
+                'telp' => [
+                    'required',
+                    'regex:/^[0-9]{10,13}$/'
+                ],
+                'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
+            ], [
+                'nama.required' => 'Nama wajib diisi',
+                'nama.regex' => 'Nama hanya boleh huruf dan spasi',
+        
+                'email.email' => 'Format email tidak valid',
+                'email.unique' => 'Email sudah digunakan',
+        
+                'telp.required' => 'Nomor telepon wajib diisi',
+                'telp.regex' => 'Nomor telepon harus angka dan 10-13 digit',
+        
+                'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
+            ]);
+        
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+        
+            // 🔥 UPDATE KE PENGHUNI
+            $penghuni->update([
+                'nama' => trim($request->nama),
+                'email' => $request->email ? trim($request->email) : null,
+                'telepon' => trim($request->telp),
+                'jenis_kelamin' => $request->jenis_kelamin,
+            ]);
         }
 
-        // 🔥 UPDATE
-        $karyawan->update([
-            'nama' => trim($request->nama),
-            'email' => trim($request->email),
-            'telp' => trim($request->telp),
-            'jenis_kelamin' => $request->jenis_kelamin,
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui'
         ]);
     }
-
-    // ================= UNIT =================
-    elseif ($user->role === 'unit') {
-
-        $unit = $user->unit;
-    
-        if (!$unit) {
-            return response()->json([
-                'message' => 'Data unit tidak ditemukan'
-            ], 404);
-        }
-    
-        // 🔥 ambil penghuni aktif
-        $penghuni = $unit->penghuniAktif;
-    
-        if (!$penghuni) {
-            return response()->json([
-                'message' => 'Tidak ada penghuni aktif pada unit ini'
-            ], 404);
-        }
-    
-        // 🔥 VALIDASI (SAMA SEPERTI KARYAWAN)
-        $validator = Validator::make($request->all(), [
-            'nama' => [
-                'required',
-                'regex:/^[a-zA-Z\s]+$/',
-                'max:100'
-            ],
-            'email' => [
-                'nullable',
-                'email:rfc',
-                'max:100',
-                Rule::unique('penghunis', 'email')->ignore($penghuni->id)
-            ],
-            'telp' => [
-                'required',
-                'regex:/^[0-9]{10,13}$/'
-            ],
-            'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
-        ], [
-            'nama.required' => 'Nama wajib diisi',
-            'nama.regex' => 'Nama hanya boleh huruf dan spasi',
-    
-            'email.email' => 'Format email tidak valid',
-            'email.unique' => 'Email sudah digunakan',
-    
-            'telp.required' => 'Nomor telepon wajib diisi',
-            'telp.regex' => 'Nomor telepon harus angka dan 10-13 digit',
-    
-            'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
-        ]);
-    
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
-    
-        // 🔥 UPDATE KE PENGHUNI
-        $penghuni->update([
-            'nama' => trim($request->nama),
-            'email' => $request->email ? trim($request->email) : null,
-            'telepon' => trim($request->telp),
-            'jenis_kelamin' => $request->jenis_kelamin,
-        ]);
-    }
-
-    return response()->json([
-        'message' => 'Profil berhasil diperbarui'
-    ]);
-}
 
     public function updatePassword(Request $request)
     {

@@ -39,4 +39,16 @@ class Penghuni extends Model
     {
         return $this->hasMany(Keluhan::class, 'penghuni_id');
     }
+
+    public function getCurrentPenghuniAttribute()
+    {
+        return $this->penghuniAktif?->nama;
+    }
+
+    public function scopeAvailable($query)
+    {
+        return $query->where('status', 'Aktif')
+                    ->whereNull('unit_id');
+    }
+
 }

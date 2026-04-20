@@ -27,7 +27,7 @@
 
             <div class="grid grid-cols-3 gap-4">
 
-            <a href="/daftarWorkOrder?status=open" class="p-4 bg-blue-50 rounded-lg hover:shadow transition block cursor-pointer">
+            <a href="/daftarWorkOrder?status=open" class="p-4 bg-blue-100 rounded-lg hover:shadow transition block cursor-pointer">
                 <p class="text-sm">Open</p>
                 <p class="text-2xl font-bold">{{ $statsKeluhan['open'] }}</p>
             </a>
@@ -52,17 +52,17 @@
 
             <div class="grid grid-cols-4 gap-4">
 
-                <a href="/daftarWorkOrder?status=open" class="p-4 bg-blue-50 rounded-lg hover:shadow transition block">
+                <a href="/daftarWorkOrder?status=open" class="p-4 bg-blue-100 rounded-lg hover:shadow transition block cursor-pointer">
                     <p class="text-sm">Open</p>
                     <p class="text-2xl font-bold">{{ $statsWO['open'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=on_progress" class="p-4 bg-yellow-50 rounded-lg hover:shadow transition block">
+                <a href="/daftarWorkOrder?status=on_progress" class="p-4 bg-yellow-50 rounded-lg hover:shadow transition block cursor-pointer">
                     <p class="text-sm">On Progress</p>
                     <p class="text-2xl font-bold">{{ $statsWO['on_progress'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=waiting" class="p-4 bg-orange-50 rounded-lg hover:shadow transition block">
+                <a href="/daftarWorkOrder?status=waiting" class="p-4 bg-orange-50 rounded-lg hover:shadow transition block cursor-pointer">
                     <p class="text-sm">Waiting</p>
                     <p class="text-2xl font-bold">{{ $statsWO['waiting'] }}</p>
                 </a>

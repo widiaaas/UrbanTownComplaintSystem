@@ -278,7 +278,7 @@ class KeluhanController extends Controller
             'unit',
             'penghuni',
             'riwayat',
-            'workOrders',
+            'workOrders.penanggungJawab.karyawan',
             'workOrders.riwayat'
         ])->findOrFail($id);
 
@@ -324,6 +324,7 @@ class KeluhanController extends Controller
         
             // 🔥 INI YANG KURANG
             'work_orders' => $keluhan->workOrders->map(function ($wo) {
+                $pj = $wo->penanggungJawab; 
                 return [
                     'id' => $wo->id,
                     'no' => $wo->nomor_wo,
@@ -332,6 +333,9 @@ class KeluhanController extends Controller
                     'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
                     'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
+                    'petugas' => $pj 
+                        ? ($pj->karyawan?->nama ?? $pj->username) 
+                        : '-',
             
                     // 🔥 INI YANG KURANG
                     'laporan' => $wo->riwayat->map(function ($r) {

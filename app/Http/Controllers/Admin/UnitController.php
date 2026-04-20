@@ -8,6 +8,7 @@ use App\Models\Penghuni;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 
@@ -15,28 +16,15 @@ class UnitController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Unit::with(['penghunis' => function ($q) {
-            $q->where('status', 'Aktif');
-        }]);
+        
+        $query = Unit::with('penghuniAktif');
 
-        // 🔥 FILTER STATUS DARI URL
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        
+        $units = $query->get();
+        if ($request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json($units);
         }
-
-        $units = $query->get()->map(function ($u) {
-            $penghuniAktif = $u->penghunis->first();
-
-            return [
-                'id' => $u->id,
-                'no_unit' => $u->no_unit,
-                'gedung' => $u->gedung,
-                'lantai' => $u->lantai,
-                'nomor_kamar' => $u->nomor_kamar,
-                'status' => $u->status,
-                'currentPenghuni' => $penghuniAktif->nama ?? null,
-            ];
-        });
+        // dd($units);
 
         return view('admin.units.index', compact('units'));
     }
@@ -46,79 +34,89 @@ class UnitController extends Controller
      */
     public function getAvailablePenghuni()
     {
-        $available = Penghuni::whereNull('unit_id')
-            ->get(['id', 'nama', 'telepon', 'email']);
-
-        return response()->json($available);
+        return Penghuni::available()
+            ->select('id','nama','telepon','email')
+            ->get();
     }
 
     /**
      * FIX: unit tidak punya kolom password
      * password ada di tabel pengguna
      */
+    
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'no_unit' => 'required|string|unique:units,no_unit',
-        
-            'gedung' => [
-                'required',
-                'string',
-                'regex:/^Tower\s[A-Z]$/'
-            ],
-        
-            'lantai' => 'required|integer|min:1|max:30',
-            'nomor_kamar' => 'required|integer|min:1|max:30',
-        ], [
-            
-            'gedung.regex' => 'Format gedung harus "Tower A", "Tower B", dst.',
-            'lantai.min' => 'Lantai minimal 1.',
-            'lantai.max' => 'Lantai maksimal 30.',
-            'nomor_kamar.min' => 'Nomor kamar minimal 1.',
-            'nomor_kamar.max' => 'Nomor kamar maksimal 30.',
-        ]);
-
-        DB::beginTransaction();
-
         try {
-            $password = Str::random(8);
-
-            // buat akun (penggunas)
-            $user = \App\Models\Pengguna::create([
-                'username' => $validated['no_unit'],
-                'password' => Hash::make($password),
-                'role' => 'unit',
-                'is_active' => true,
-                'must_change_password' => true
+            $validated = $request->validate([
+                'no_unit' => 'required|string|unique:units,no_unit',
+    
+                'gedung' => [
+                    'required',
+                    'string',
+                    'regex:/^Tower\s[A-Z]$/'
+                ],
+    
+                'lantai' => 'required|integer|min:1|max:30',
+                'nomor_kamar' => 'required|integer|min:1|max:30',
+            ], [
+                'no_unit.unique' => 'Nomor unit sudah terdaftar.',
+                'gedung.regex' => 'Format gedung harus "Tower A", "Tower B", dst.',
+                'lantai.min' => 'Lantai minimal 1.',
+                'lantai.max' => 'Lantai maksimal 30.',
+                'nomor_kamar.min' => 'Nomor kamar minimal 1.',
+                'nomor_kamar.max' => 'Nomor kamar maksimal 30.',
             ]);
 
-            // buat unit (pakai user_id)
-            $unit = Unit::create([
-                'no_unit'     => $validated['no_unit'],
-                'gedung'      => $validated['gedung'],
-                'lantai'      => $validated['lantai'],
-                'nomor_kamar' => $validated['nomor_kamar'],
-                'status'      => 'Aktif',
-                'user_id'     => $user->id
-            ]);
+            $prefix = strtoupper(substr($validated['no_unit'], 0, 1)); // ambil huruf depan
+            $expectedGedung = 'Tower ' . $prefix;
 
-            DB::commit();
-
+            if ($validated['gedung'] !== $expectedGedung) {
+                throw ValidationException::withMessages([
+                    'gedung' => ["Gedung harus sesuai dengan nomor unit (harus {$expectedGedung})."]
+                ]);
+            }
+    
+        } catch (ValidationException $e) {
             return response()->json([
-                'success'  => true,
-                'unit'     => $unit,
-                'password' => $password
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+        }
+    
+        try {
+            return DB::transaction(function () use ($validated) {
+    
+                $password = Str::random(8);
+    
+                $user = \App\Models\Pengguna::create([
+                    'username' => $validated['no_unit'],
+                    'password' => Hash::make($password),
+                    'role' => 'unit',
+                    'is_active' => true,
+                    'must_change_password' => true
+                ]);
+    
+                $unit = Unit::create([
+                    ...$validated,
+                    'status' => 'Aktif',
+                    'user_id' => $user->id
+                ]);
+    
+                return response()->json([
+                    'success' => true,
+                    'unit' => $unit,
+                    'password' => $password
+                ]);
+            });
+    
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
     }
+
 
     public function update(Request $request, Unit $unit)
     {
@@ -131,43 +129,58 @@ class UnitController extends Controller
                     'string',
                     'regex:/^Tower\s[A-Z]$/'
                 ],
+
                 'lantai' => 'required|integer|min:1|max:30',
                 'nomor_kamar' => 'required|integer|min:1|max:30',
+
             ], [
+                'no_unit.unique' => 'Nomor unit sudah terdaftar.',
                 'gedung.regex' => 'Format gedung harus "Tower A", "Tower B", dst.',
+                'lantai.min' => 'Lantai minimal 1.',
+                'lantai.max' => 'Lantai maksimal 30.',
+                'nomor_kamar.min' => 'Nomor kamar minimal 1.',
+                'nomor_kamar.max' => 'Nomor kamar maksimal 30.',
             ]);
 
-            DB::beginTransaction();
+            // 🔥 SAMA DENGAN STORE (CROSS VALIDATION)
+            $noUnit = strtoupper(trim($validated['no_unit']));
 
-            // 🔥 update username di pengguna
+            if (!preg_match('/^[A-Z]/', $noUnit)) {
+                throw ValidationException::withMessages([
+                    'no_unit' => ['Nomor unit harus diawali huruf (contoh: A101).']
+                ]);
+            }
+
+            $prefix = substr($noUnit, 0, 1);
+            $expectedGedung = 'Tower ' . $prefix;
+
+            if ($validated['gedung'] !== $expectedGedung) {
+                throw ValidationException::withMessages([
+                    'gedung' => ["Gedung harus sesuai dengan nomor unit (harus {$expectedGedung})."]
+                ]);
+            }
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($unit, $validated) {
+
             $unit->user->update([
                 'username' => $validated['no_unit']
             ]);
 
-            // 🔥 update unit
             $unit->update($validated);
-
-            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'unit' => $unit,
                 'message' => 'Unit berhasil diperbarui'
             ]);
-
-        } catch (ValidationException $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        });
     }
 
     /**
@@ -175,60 +188,45 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
-        // kosongkan penghuni yang terkait
-        Penghuni::where('unit_id', $unit->id)->update([
+        $unit->penghunis()->update([
             'unit_id' => null,
             'status' => 'Nonaktif'
         ]);
-
+    
         $unit->delete();
-
+    
         return response()->json(['success' => true]);
     }
 
     public function resetPassword(Unit $unit)
     {
-        DB::beginTransaction();
+        return DB::transaction(function () use ($unit) {
 
-        try {
-            // generate password baru
             $newPassword = Str::random(8);
 
-            // update ke tabel pengguna
             $unit->user->update([
                 'password' => Hash::make($newPassword),
                 'must_change_password' => true
             ]);
 
-            DB::commit();
-
             return response()->json([
                 'success' => true,
                 'new_password' => $newPassword
             ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        });
     }
 
     /**
      * 🔥 PERBAIKAN PALING PENTING
      */
-    public function changeOccupant(Request $request, Unit $unit)
+    public function gantiPenghuni(Request $request, Unit $unit)
     {
         $request->validate([
             'penghuni_id' => 'required|exists:penghunis,id',
         ]);
 
-        DB::beginTransaction();
+        return DB::transaction(function () use ($request, $unit) {
 
-        try {
             $penghuniBaru = Penghuni::findOrFail($request->penghuni_id);
 
             if ($penghuniBaru->unit_id !== null) {
@@ -238,7 +236,7 @@ class UnitController extends Controller
                 ], 422);
             }
 
-            // Nonaktifkan semua penghuni aktif di unit ini lewat relasi
+            // nonaktifkan penghuni lama
             $unit->penghunis()
                 ->where('status', 'Aktif')
                 ->update([
@@ -247,45 +245,49 @@ class UnitController extends Controller
                     'unit_id' => null,
                 ]);
 
-            // Set penghuni baru
+            // set penghuni baru
             $penghuniBaru->update([
                 'unit_id' => $unit->id,
                 'status' => 'Aktif',
                 'tanggal_masuk' => now(),
             ]);
 
-            // Update status unit (tanpa penghuni_aktif_id)
             $unit->update(['status' => 'Aktif']);
 
-            DB::commit();
-
             return response()->json(['success' => true]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        });
     }
 
-    /**
-     * ❌ DIHAPUS (tidak relevan)
-     * password unit sekarang ada di tabel pengguna
-     */
-
-    public function toggleStatus(Unit $unit)
+    public function toggleStatus(Request $request, Unit $unit)
     {
-        $newStatus = $unit->status === 'Aktif' ? 'Nonaktif' : 'Aktif';
-
-        $unit->update(['status' => $newStatus]);
-
-        return response()->json([
-            'success' => true,
-            'message' => $newStatus === 'Aktif'
-                ? 'Unit berhasil diaktifkan.'
-                : 'Unit berhasil dinonaktifkan.',
+        $request->validate([
+            'action' => 'required|in:aktif,nonaktif'
         ]);
+
+        return DB::transaction(function () use ($request, $unit) {
+
+            if ($request->action === 'nonaktif') {
+
+                // nonaktifkan unit
+                $unit->update(['status' => 'Nonaktif']);
+
+                // 🔥 hapus penghuni dari unit
+                $unit->penghunis()
+                    ->where('status', 'Aktif')
+                    ->update([
+                        'status' => 'Nonaktif',
+                        'tanggal_keluar' => now(),
+                        'unit_id' => null,
+                    ]);
+
+            } else {
+                $unit->update(['status' => 'Aktif']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'status' => $unit->status
+            ]);
+        });
     }
 }

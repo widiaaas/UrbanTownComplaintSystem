@@ -21,7 +21,10 @@ class KaryawanController extends Controller
     {
         $karyawans = Karyawan::with('user')->get();
 
-        $departemens = ['Operational','Engineering','Finance','Legal','Developer'];
+        $departemens = Karyawan::whereNotNull('departemen')
+            ->distinct()
+            ->pluck('departemen')
+            ->values();
 
         return view('admin.karyawan.index', compact('karyawans','departemens'));
     }

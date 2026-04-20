@@ -57,7 +57,7 @@ class PenghuniController extends Controller
                 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]+$/'],
             'status' => 'required|in:Aktif,Nonaktif',
 
-            // 🔥 TAMBAHAN WAJIB
+            
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             
         ], [
