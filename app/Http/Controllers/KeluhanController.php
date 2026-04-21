@@ -9,6 +9,7 @@ use App\Models\WorkOrder;
 use App\Models\RiwayatPenangananWO;
 use App\Models\RiwayatPenangananKeluhan;
 
+
 class KeluhanController extends Controller
 {
     public function index()
@@ -119,61 +120,22 @@ class KeluhanController extends Controller
             abort(404, 'Unit tidak ditemukan');
         }
 
-        $keluhan = Keluhan::with(['riwayat'])
+        $keluhan = Keluhan::with(['riwayat', 'penghuni'])
             ->where('unit_id', $unit->id)
-            ->whereIn('status', ['open', 'on progress', 'close'])
+            ->whereIn('status', ['unassigned','open', 'on_progress', 'close'])
             ->latest()
-            ->get()
-            ->map(function ($k) {
-                return [
-                    'id' => $k->id,
-                    'ticket' => $k->ticket,
-                    'title' => $k->judul,
-                    'status' => $k->status,
-                    'date' => optional($k->created_at)->format('d-m-Y H:i'),
+            ->get();
 
-                    // 🔥 PENGAJUAN (PENGHUNI)
-                    'pengajuan' => [
-                        'deskripsi' => $k->deskripsi,
-                        'tanggal' => optional($k->created_at)->format('d-m-Y H:i'),
-                        'lampiran' => $k->lampiran ?? [],
-                    ],
-
-                    // 🔥 KEPUTUSAN (TIM RESPON)
-                    'keputusan' => $k->riwayat->map(function ($r) {
-                        return [
-                            'isi' => $r->keterangan, // ✅ FIX
-                            'tanggal' => optional($r->waktu)->format('d-m-Y H:i'), // ✅ FIX
-                            'lampiran' => $r->lampiran ?? [],
-                        ];
-                    })->values()
-                ];
-            });
-
+        // dd($keluhan);
         return view('penghuni.riwayatKeluhan', compact('keluhan'));
     }
 
     public function keluhanMasuk()
     {
         $keluhan = Keluhan::with(['unit', 'penghuni', 'penanggungJawab'])
-            ->whereDoesntHave('penanggungJawab') // 🔥 RELASI
+            ->whereDoesntHave('penanggungJawab')
             ->latest()
-            ->get()
-            ->map(function ($k) {
-                return [
-                    'id' => $k->id,
-                    'ticket' => $k->ticket,
-                    'unit' => $k->unit->no_unit ?? '-',
-                    'tanggal' => optional($k->created_at)->format('d-m-Y H:i'),
-                    'penghuni' => $k->penghuni->nama ?? '-',
-                    'telepon' => $k->penghuni->telepon ?? '-',
-                    'judul' => $k->judul,
-                    'deskripsi' => $k->deskripsi,
-                    'lampiran' => $k->lampiran ?? [],
-                    'status' => 'Unassign',
-                    'penanggungJawab' => null
-                ];
-            });
+            ->get();
 
         return view('tenantrelation.keluhan.keluhanMasuk', compact('keluhan'));
     }
@@ -202,9 +164,27 @@ class KeluhanController extends Controller
         ]);
     }
 
-    public function daftarPenanganan()
+    public function daftarPenanganan(Request $request)
     {
         $user = auth()->user();
+
+         // 🔥 pakai query builder
+        $query = $user->keluhanDiambil()
+        ->with(['unit', 'penghuni']);
+
+        // 🔥 FILTER STATUS DARI URL
+        if ($request->filled('status')) {
+            $statuses = explode(',', $request->status);
+        
+            // 🔥 normalisasi (biar aman)
+            $statuses = array_map(function ($s) {
+                return strtolower(str_replace(' ', '_', $s));
+            }, $statuses);
+        
+            $query->whereIn('status', $statuses);
+        }
+        // dd($statuses);
+
 
         $keluhan = $user->keluhanDiambil()
             ->with(['unit', 'penghuni'])

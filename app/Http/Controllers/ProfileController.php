@@ -188,14 +188,16 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        // 🔥 VALIDASI
+        // 🔥 VALIDASI (SAMAKAN DENGAN change())
         $validator = Validator::make($request->all(), [
             'password_lama' => ['required'],
             'password_baru' => [
                 'required',
                 'string',
                 'min:6',
-                'confirmed'
+                'confirmed',
+                'regex:/[A-Z]/', // huruf besar
+                'regex:/[0-9]/', // angka
             ],
         ], [
             // 🔥 CUSTOM MESSAGE
@@ -204,6 +206,7 @@ class ProfileController extends Controller
             'password_baru.required' => 'Password baru wajib diisi',
             'password_baru.min' => 'Password minimal 6 karakter',
             'password_baru.confirmed' => 'Konfirmasi password tidak cocok',
+            'password_baru.regex' => 'Password harus mengandung huruf besar dan angka',
         ]);
 
         if ($validator->fails()) {
@@ -233,7 +236,8 @@ class ProfileController extends Controller
         // 🔥 UPDATE PASSWORD
         $user->update([
             'password' => Hash::make(trim($request->password_baru)),
-            'must_change_password' => false
+            'must_change_password' => false,
+            'last_login' => now()
         ]);
 
         return response()->json([

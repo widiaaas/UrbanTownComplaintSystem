@@ -13,22 +13,26 @@ class RiwayatPenangananKeluhan extends Model
 
     protected $fillable = [
         'keluhan_id',
+        'status',
         'judul',
-        'keterangan',
-        'waktu',
-        'user_id',
+        'catatan',
+        'lampiran',
+        'penanggung_jawab_id',
+        'waktu'
     ];
 
     protected $casts = [
         'waktu' => 'datetime',
+        'lampiran' => 'array',
     ];
 
     public function keluhan()
     {
         return $this->belongsTo(Keluhan::class);
     }
-    public function user()
+
+    public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'user_id');
+        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
     }
 }

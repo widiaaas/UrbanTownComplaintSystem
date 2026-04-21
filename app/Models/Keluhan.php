@@ -33,6 +33,12 @@ class Keluhan extends Model
         'lampiran' => 'array',
     ];
 
+    protected $appends = [
+        'tanggal',
+        'status_label',
+        'telepon'
+    ];
+
     public function unit()
     {
         return $this->belongsTo(Unit::class);
@@ -62,4 +68,20 @@ class Keluhan extends Model
     {
         return $this->hasMany(Diagnosis::class, 'keluhan_id');
     }
+
+    public function getTanggalAttribute()
+    {
+        return optional($this->created_at)->format('d-m-Y H:i');
+    }
+    
+    public function getStatusLabelAttribute()
+    {
+        return strtolower(str_replace('_', ' ', $this->status ?? 'open'));
+    }
+    
+    public function getTeleponAttribute()
+    {
+        return optional($this->penghuni)->telepon ?? '-';
+    }
+
 }

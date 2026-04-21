@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeluhanController;
 use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\RiwayatPenangananWOController;
+use App\Http\Controllers\RiwayatPenangananKeluhanController;
 
 
 
@@ -142,9 +143,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ==================== AUTHENTICATED ROUTES ====================
 Route::middleware(['auth'])->group(function () {
 
-    // --- Change Password ---
-    Route::get('/change-password', [AuthController::class, 'showChangeForm'])->name('password.change');
-    Route::post('/change-password', [AuthController::class, 'change']);
+    // --- GantiPassword ---
+    Route::get('/ganti-password', [AuthController::class, 'showChangeForm'])->name('password.change');
+    Route::post('/ganti-password', [AuthController::class, 'change']);
 
     // ================= PROFILE UNIVERSAL =================
     Route::get('/profile', [ProfileController::class, 'index']); // view
@@ -200,6 +201,10 @@ Route::middleware(['auth'])->group(function () {
 
         // 🔥 UPDATE STATUS (WAJIB)
         Route::post('/keluhan/{id}/status', [KeluhanController::class, 'updateStatus']);
+
+        // Penanganan 
+
+        Route::post('/keluhan/{id}/penanganan', [RiwayatPenangananKeluhanController::class, 'simpanPenanganan']);
 
         // 🔥 KEPUTUSAN AKHIR
         Route::post('/keluhan/{id}/keputusan-akhir', [KeluhanController::class, 'keputusanAkhir']);

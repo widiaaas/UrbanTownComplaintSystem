@@ -68,20 +68,20 @@
             </div>
 
             {{-- LAMPIRAN --}}
-            <div>
-                <p class="text-sm font-medium mb-1">
-                    Lampiran Keluhan
-                </p>
-                <div class="flex gap-2 flex-wrap">
-                    <template x-for="file in keluhan.lampiranKeluhan" :key="file">
-                        <a 
-                            :href="'/storage/' + file"
-                            target="_blank"
-                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
-                            Lihat File
-                        </a>
-                    </template>
-                </div>
+            <div class="flex gap-2 flex-wrap">
+                <template x-for="file in keluhan.lampiranKeluhan" :key="file">
+                    <button 
+                        @click="previewFile = file; openPreview = true"
+                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
+                        📎 <span x-text="file.split('/').pop()"></span>
+                    </button>
+                </template>
+
+                <template x-if="!keluhan.lampiranKeluhan || keluhan.lampiranKeluhan.length === 0">
+                    <p class="text-xs text-gray-400 italic">
+                        Tidak ada lampiran
+                    </p>
+                </template>
             </div>
         </div>
     </div>
@@ -201,6 +201,47 @@
         </template>
     </div>
 
+    <!-- ================= MODAL PREVIEW FILE ================= -->
+    <div x-show="previewOpen" x-cloak
+        class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
+
+        <div class="bg-white w-full max-w-3xl rounded-lg p-4 relative">
+
+            <!-- CLOSE -->
+            <button 
+                @click="previewOpen=false"
+                class="absolute top-2 right-2 text-xl">
+                ✕
+            </button>
+
+            <!-- CONTENT -->
+            <div class="mt-6">
+
+                <!-- IMAGE -->
+                <template x-if="previewFile.match(/\.(jpg|jpeg|png|gif)$/i)">
+                    <img :src="previewFile" class="max-h-[70vh] mx-auto rounded">
+                </template>
+
+                <!-- PDF -->
+                <template x-if="previewFile.match(/\.pdf$/i)">
+                    <iframe :src="previewFile" class="w-full h-[70vh]"></iframe>
+                </template>
+
+                <!-- FILE LAIN -->
+                <template x-if="!previewFile.match(/\.(jpg|jpeg|png|gif|pdf)$/i)">
+                    <div class="text-center">
+                        <p class="mb-2">Preview tidak tersedia</p>
+                        <a :href="previewFile" target="_blank"
+                            class="text-blue-600 underline">
+                            Download File
+                        </a>
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
+
     {{-- ================= MODAL RIWAYAT PENANGANAN ================= --}}
     <div
         x-show="openRiwayat"
@@ -226,19 +267,52 @@
             {{-- BODY --}}
             <div class="px-6 py-4 space-y-4 text-sm max-h-[400px] overflow-y-auto">
 
-                <template x-for="(r, index) in riwayat" :key="index">
-                    <div
-                        class="relative pl-5 py-3 rounded-md"
+            <template x-for="(r, index) in riwayat" :key="index">
+                <div class="relative pl-6 py-3 rounded-md border-l-2"
+                    :class="statusClassRiwayat(r.status)">
+
+                    <!-- DOT -->
+                    <span class="absolute -left-2 top-4 w-3 h-3 rounded-full"
                         :class="{
-                            'border-l-4 border-blue-500 bg-blue-50/30': r.tipe === 'tr',
-                            'border-l-4 border-green-500 bg-green-50/30': r.tipe === 'penghuni'
-                        }"
-                    >
-                        <p class="font-medium text-gray-800" x-text="r.judul"></p>
-                        <p class="text-gray-600 mt-1" x-text="r.ket"></p>
-                        <p class="text-xs text-gray-400 mt-1" x-text="r.waktu"></p>
+                            'bg-blue-500': normalizeStatus(r.status) === 'open',
+                            'bg-yellow-500': normalizeStatus(r.status) === 'on_progress',
+                            'bg-orange-500': normalizeStatus(r.status) === 'waiting',
+                            'bg-green-500': normalizeStatus(r.status) === 'close'
+                        }">
+                    </span>
+
+                    <!-- JUDUL -->
+                    <p class="font-medium text-gray-800"
+                    x-text="r.judul || 'Update Penanganan'">
+                    </p>
+
+                    <!-- CATATAN -->
+                    <p class="text-gray-600 mt-1"
+                    x-text="r.ket">
+                    </p>
+
+                    <!-- LAMPIRAN -->
+                    <div class="flex flex-wrap gap-2 mt-2"
+                        x-show="r.lampiran && r.lampiran.length">
+
+                        <template x-for="file in r.lampiran" :key="file">
+                            <button
+                                @click="openPreviewFile(file)"
+                                class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+
+                                <span x-text="file.split('/').pop()"></span>
+                            </button>
+                        </template>
+
                     </div>
-                </template>
+
+                    <!-- WAKTU -->
+                    <p class="text-xs text-gray-400 mt-2"
+                    x-text="r.waktu">
+                    </p>
+
+                </div>
+            </template>
 
                 {{-- jika riwayat kosong --}}
                 <template x-if="riwayat.length === 0">
@@ -1176,43 +1250,20 @@ function detailKeluhanApp() {
             
             this.keputusan.status = this.normalizeStatus(data.status);
 
-            this.riwayat = data.keputusan.map(item => ({
-                tipe: 'tr',
-                judul: 'Update Penanganan',
-                ket: item.isi,
-                waktu: item.tanggal
-            }));
+            this.riwayat = data.riwayat_penanganan || [];
 
             this.workOrders = data.work_orders || [];
         },
 
         /* ================= STATUS ================= */
-        normalizeStatus(status){
-            return (status || '')
-                .toLowerCase()
-                .trim()
-                .replace(/\s+/g, '_');
+
+
+        isImage(file){
+            return /\.(jpg|jpeg|png|gif)$/i.test(file);
         },
 
-        formatStatus(status){
-            const s = this.normalizeStatus(status);
-
-            if(s === 'open') return 'Open';
-            if(s === 'on_progress') return 'On Progress';
-            if(s === 'close') return 'Close';
-
-            return status;
-        },
-
-        statusClass(status){
-            const s = this.normalizeStatus(status);
-
-            return {
-                'bg-blue-100 text-blue-700': s === 'open',
-                'bg-yellow-100 text-yellow-700': s === 'on_progress',
-                'bg-green-100 text-green-700': s === 'close',
-                'bg-gray-100 text-gray-700': !['open','on_progress','close'].includes(s)
-            }
+        isPDF(file){
+            return /\.pdf$/i.test(file);
         },
 
         /* ================= COMPUTED ================= */
@@ -1222,6 +1273,11 @@ function detailKeluhanApp() {
 
         /* ================= UPDATE STATUS ================= */
         simpanKeputusan(){
+
+            if (!this.keputusan.judul.trim()) {
+                Swal.fire('Oops!', 'Judul wajib diisi', 'warning');
+                return;
+            }
 
             if (!this.keputusan.catatan.trim()) {
                 Swal.fire('Oops!', 'Catatan wajib diisi', 'warning');
@@ -1266,10 +1322,19 @@ function detailKeluhanApp() {
             .then(res => res.json())
             .then(res => {
 
-                // 🔥 update UI
-                this.keluhan.status = this.normalizeStatus(res.status);
+                const newStatus = this.normalizeStatus(res.status);
 
-                // 🔥 optional notif kecil
+                this.keluhan.status = newStatus;
+
+                // 🔥 TAMBAH KE RIWAYAT
+                this.riwayat.push({
+                    judul: 'Update Status',
+                    catatan: 'Status diubah menjadi ' + this.formatStatus(newStatus),
+                    waktu: this.now(),
+                    status: newStatus,
+                    lampiran: []
+                });
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Status diperbarui',
@@ -1277,7 +1342,7 @@ function detailKeluhanApp() {
                     showConfirmButton: false
                 });
 
-            })
+                })
             .catch(() => {
                 Swal.fire('Error!', 'Gagal update status', 'error');
             });
@@ -1314,7 +1379,13 @@ function detailKeluhanApp() {
             .then(res => {
                 Swal.fire('Berhasil!', res.message, 'success');
 
-                this.keluhan.status = 'Close';
+                this.riwayat.push({
+                judul: this.keputusanAkhir.judul,
+                catatan: this.keputusanAkhir.solusi,
+                waktu: this.now(),
+                status: 'close',
+                lampiran: []
+            });
 
                 this.keputusanAkhir = {
                     judul: '',
@@ -1328,59 +1399,57 @@ function detailKeluhanApp() {
             });
             },
 
-        prosesSimpan(){
+            prosesSimpan(){
 
-            Swal.fire({
-                title: 'Menyimpan...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
+                let formData = new FormData();
+                formData.append('judul', this.keputusan.judul);
+                formData.append('catatan', this.keputusan.catatan);
 
-            fetch(`/keluhan/${this.keluhan.id}/status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    status: this.normalizeStatus(this.keputusan.status),
-                    catatan: this.keputusan.catatan
+                this.keputusan.lampiran.forEach(file => {
+                    formData.append('lampiran[]', file);
+                });
+
+                fetch(`/keluhan/${this.keluhan.id}/penanganan`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: formData
                 })
-            })
-            .then(res => res.json())
-            .then(res => {
+                .then(async res => {
+                    const data = await res.json();
+                    if(!res.ok) throw data;
+                    return data;
+                })
+                .then(res => {
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: res.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                    Swal.fire('Berhasil!', res.message, 'success');
 
-                // 🔥 UPDATE UI DARI BACKEND (INI YANG BENAR)
-                this.keluhan.status = this.normalizeStatus(res.status);
+                    this.riwayat.push({
+                        judul: res.data.judul,
+                        ket: res.data.ket,
+                        waktu: res.data.waktu,
+                        status: res.data.status,
+                        lampiran: res.data.lampiran
+                    });
 
-                // 🔥 TAMBAH RIWAYAT
-                this.riwayat.push({
-                    tipe: 'tr',
-                    judul: this.keputusan.judul || 'Update Penanganan',
-                    ket: this.keputusan.catatan,
-                    waktu: this.now()
-                });
+                    this.keputusan = {
+                        judul: '',
+                        status: 'on_progress',
+                        catatan: '',
+                        lampiran: []
+                    };
+                    })
+                    .catch(async (err) => {
+                        console.log(err);
 
-                // reset
-                this.keputusan = {
-                    judul: '',
-                    status: 'on_progress',
-                    catatan: '',
-                    lampiran: []
-                };
-            })
-            .catch(() => {
-                Swal.fire('Error!', 'Gagal menyimpan', 'error');
-            });
-        },
+                        Swal.fire(
+                            'Error!',
+                            err?.error || err?.message || 'Terjadi kesalahan',
+                            'error'
+                        );
+                    });
+                },
 
         /* ================= LAMPIRAN ================= */
         handleUploadKeputusan(e){

@@ -35,6 +35,7 @@ class RiwayatPenangananKeluhanController extends Controller
             // 🔥 AMBIL KELUHAN
             $keluhan = Keluhan::findOrFail($id);
 
+            // 🔥 HANDLE LAMPIRAN
             $lampiran = [];
 
             if ($request->hasFile('lampiran')) {
@@ -45,8 +46,7 @@ class RiwayatPenangananKeluhanController extends Controller
                 }
             }
 
-            // 🔥 SIMPAN RIWAYAT (SAMA KAYAK WO)
-            $riwayat = RiwayatPenangananKeluhan::create([
+            RiwayatPenangananKeluhan::create([
                 'keluhan_id' => $keluhan->id,
                 'keterangan' => $request->judul . ' - ' . $request->catatan,
                 'lampiran' => $lampiran,
@@ -57,14 +57,11 @@ class RiwayatPenangananKeluhanController extends Controller
             return response()->json([
                 'message' => 'Penanganan berhasil disimpan',
                 'data' => [
-                    'judul' => $request->judul,
-                    'ket' => $request->catatan,
-                    'waktu' => now()->format('d-m-Y H:i'),
-
-                    // 🔥 ambil dari keluhan (bukan riwayat)
-                    'status' => $keluhan->status,
-
-                    'lampiran' => $lampiran
+                    'judul' => $riwayat->judul,
+                    'catatan' => $riwayat->catatan,
+                    'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
+                    'status' => $riwayat->status,
+                    'lampiran' => $riwayat->lampiran ?? []
                 ]
             ]);
 

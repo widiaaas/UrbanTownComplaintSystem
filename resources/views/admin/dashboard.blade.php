@@ -7,12 +7,31 @@
 <div class="space-y-8">
 
     {{-- HEADER --}}
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
-        <p class="text-gray-600 mt-1">
-            Selamat datang, {{ $karyawan->nama ?? 'Admin' }}
-        </p>
+    <div class="bg-white border rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+        {{-- LEFT --}}
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                ⚙️ Dashboard Admin
+            </h1>
+
+            <p class="text-gray-500 mt-1">
+                Selamat datang, 
+                <span class="font-semibold text-gray-800">
+                    {{ $karyawan->nama ?? 'Admin' }}
+                </span>
+            </p>
+        </div>
+
+        {{-- RIGHT --}}
+        <div class="flex items-center gap-3">
+            <div class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-lg">
+                {{ now()->format('d M Y') }}
+            </div>
+        </div>
+
     </div>
+
 
     {{-- ========================= --}}
     {{-- STATISTIK --}}

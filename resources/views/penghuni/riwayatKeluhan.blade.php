@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Keluhan')
+@section('judul', 'Riwayat Keluhan')
 
 @section('content')
 
@@ -55,8 +55,8 @@
                         <b x-text="k.ticket"></b>
                         <span x-html="badgeHtml(k.status)"></span>
                     </div>
-                    <p class="font-medium" x-text="k.title"></p>
-                    <p class="text-sm text-gray-600" x-text="k.description"></p>
+                    <p class="font-medium" x-text="k.judul"></p>
+                    <p class="text-sm text-gray-600" x-text="k.deskripsi"></p>
                 </div>
 
                 <button @click="openDetail(k)"
@@ -80,7 +80,7 @@
 
             <div class="flex justify-between border-b pb-2">
                 <div>
-                    <h2 class="font-semibold text-lg" x-text="selected.title"></h2>
+                    <h2 class="font-semibold text-lg" x-text="selected.judul"></h2>
                     <p class="text-xs text-gray-500">Ticket <span x-text="selected.ticket"></span></p>
                 </div>
                 <button @click="closeModal()">✕</button>
@@ -93,7 +93,7 @@
                 </div>
                 <div>
                     <p class="font-medium">Tanggal</p>
-                    <p x-text="selected.date"></p>
+                    <p x-text="selected.tanggal"></p>
                 </div>
             </div>
 
@@ -102,79 +102,46 @@
                 <p class="font-medium text-sm mb-1">Pengajuan Keluhan</p>
 
                 <div class="bg-gray-100 rounded p-3 text-sm space-y-2">
-                    <p x-text="selected.pengajuan?.deskripsi"></p>
-                    <p class="text-xs text-gray-400" x-text="selected.pengajuan?.tanggal"></p>
+                <p x-text="selected.deskripsi"></p>
+                    <p class="text-xs text-gray-400" x-text="selected.tanggal"></p>
 
                     {{-- 🔥 LAMPIRAN PENGHUNI --}}
-                    <template x-if="selected.pengajuan?.lampiran && selected.pengajuan.lampiran.length">
+                    <template x-if="selected.lampiran && selected.lampiran.length">
                         <div class="mt-2">
 
-                        <div class="flex flex-wrap gap-2">
-                            <template x-for="(file, i) in selected.pengajuan.lampiran" :key="i">
-                                <button 
-                                    @click="previewFile = '/storage/' + file; previewOpen = true"
-                                    class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
-                                    <span x-text="'📎 Lampiran ' + (i+1)"></span>
-                                </button>
-                            </template>
-                        </div>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="(file, i) in selected.lampiran" :key="i">
+                                    <button 
+                                        @click="previewFile = '/storage/' + file; previewOpen = true"
+                                        class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
+                                        <span x-text="'📎 Lampiran ' + (i+1)"></span>
+                                    </button>
+                                </template>
+                            </div>
 
                         </div>
                     </template>
 
-                    <template x-if="!selected.pengajuan?.lampiran || selected.pengajuan.lampiran.length === 0">
+                    <template x-if="!selected.lampiran || selected.lampiran.length === 0">
                         <p class="text-xs text-gray-400 italic">Tidak ada lampiran</p>
                     </template>
                 </div>
             </div>
 
 
-            {{-- Keputusan --}}
+            {{-- riwayat --}}
             <div>
                 <p class="font-medium text-sm mb-1">Keputusan</p>
 
-                <template x-if="selected.keputusan && selected.keputusan.length">
-                    <div class="space-y-2">
-                        <template x-for="(s,i) in selected.keputusan" :key="i">
-                        <div class="border-l-4 border-green-500 pl-3 space-y-1">
-                            <p class="text-sm" x-text="s.isi"></p>
-                            <p class="text-xs text-gray-400" x-text="s.tanggal"></p>
-
-                            {{-- 🔥 LAMPIRAN --}}
-                            <template x-if="s.lampiran">
-                                <div class="mt-1">
-
-                                    {{-- kalau array --}}
-                                    <template x-if="Array.isArray(s.lampiran)">
-                                        <div class="flex flex-wrap gap-2">
-                                            <template x-for="(file, i) in s.lampiran" :key="i">
-                                                <a :href="'/storage/' + file"
-                                                target="_blank"
-                                                class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
-                                                    📎 Lampiran
-                                                </a>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    {{-- kalau string --}}
-                                    <template x-if="!Array.isArray(s.lampiran)">
-                                        <a :href="'/storage/' + s.lampiran"
-                                        target="_blank"
-                                        class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline inline-block">
-                                            📎 Lihat Lampiran
-                                        </a>
-                                    </template>
-
-                                </div>
-                            </template>
-
-                            </div>
-                        </template>
+                <template x-if="selected.keputusan">
+                    <div class="border-l-4 border-green-500 pl-3 space-y-1">
+                        <p class="text-sm" x-text="selected.keputusan"></p>
+                        <p class="text-xs text-gray-400"
+                        x-text="selected.tanggal_keputusan ?? '-'"></p>
                     </div>
                 </template>
 
-                <template x-if="!selected.keputusan || selected.keputusan.length === 0">
+                <template x-if="!selected.keputusan">
                     <p class="text-sm italic text-gray-400">Belum ada keputusan</p>
                 </template>
             </div>
@@ -233,17 +200,13 @@ function keluhanApp() {
         filteredKeluhan: [],
         openModal: false,
         selected: {
-            keputusan: []
+            riwayat: []
         },
         previewFile: '',
         previewOpen: false, 
 
         init() {
-            const allowedStatus = ['open', 'on progress', 'close'];
-
-            this.filteredKeluhan = this.keluhan.filter(k =>
-                allowedStatus.includes((k.status || '').toLowerCase())
-            );
+            this.filteredKeluhan = this.keluhan;
         },
 
         applyFilter() {
@@ -254,7 +217,7 @@ function keluhanApp() {
 
                 (this.search === '' ||
                     k.ticket.toLowerCase().includes(this.search.toLowerCase()) ||
-                    k.title.toLowerCase().includes(this.search.toLowerCase())
+                    k.judul.toLowerCase().includes(this.search.toLowerCase())
                 ) &&
                 (this.filterStatus === '' || k.status === this.filterStatus)
             );
@@ -267,10 +230,7 @@ function keluhanApp() {
         },
 
         openDetail(k) {
-            this.selected = {
-                ...k,
-                keputusan: k.keputusan ?? []
-            };
+            this.selected = k;
             this.openModal = true;
         },
 
@@ -279,13 +239,27 @@ function keluhanApp() {
         },
 
         badgeHtml(status) {
+            const s = (status || '').toLowerCase().replace(' ', '_');
+
             const map = {
-                'open': 'bg-blue-100 text-blue-800',
-                'on progress': 'bg-yellow-100 text-yellow-800',
-                'close': 'bg-green-100 text-green-800'
+                'unassigned': 'bg-gray-100 text-gray-700 border border-gray-300',
+                'open': 'bg-blue-100 text-blue-700 border border-blue-200',
+                'on_progress': 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+                'close': 'bg-green-100 text-green-700 border border-green-200'
             };
 
-            return `<span class="px-2 py-1 text-xs rounded ${map[status?.toLowerCase()] || 'bg-gray-100'}">${status}</span>`;
+            const labelMap = {
+                'unassigned': 'Unassigned',
+                'open': 'Open',
+                'on_progress': 'On Progress',
+                'close': 'Close'
+            };
+
+            return `
+                <span class="px-2 py-1 text-xs font-medium rounded-full ${map[s] || 'bg-gray-100'}">
+                    ${labelMap[s] || s}
+                </span>
+            `;
         }
     }
 }

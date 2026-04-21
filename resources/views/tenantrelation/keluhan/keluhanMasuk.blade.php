@@ -28,9 +28,17 @@
                 <template x-for="(k, index) in dataKeluhanMasuk" :key="k.id">
                     <tr class="border-t hover:bg-gray-50">
                         <td class="px-5 py-3 text-center" x-text="index + 1"></td>
-                        <td class="px-5 py-3 text-center font-medium" x-text="k.unit"></td>
-                        <td class="px-5 py-3 text-center " x-text="k.tanggal"></td>
-                        <td class="px-5 py-3 text-center" x-text="k.penghuni"></td>
+                        <td class="px-5 py-3 text-center font-medium" 
+                            x-text="k.unit?.no_unit ?? '-'">
+                        </td>
+
+                        <td class="px-5 py-3 text-center" 
+                            x-text="k.tanggal">
+                        </td>
+
+                        <td class="px-5 py-3 text-center" 
+                            x-text="k.penghuni?.nama ?? '-'">
+                        </td>
                         <td class="px-5 py-3 text-center" x-text="k.judul"></td>
                         <td class="px-5 py-3 text-center space-x-1">
                             
@@ -77,11 +85,10 @@
             {{-- BODY --}}
             <div class="p-6 space-y-3 text-sm bg-white">
                 <p class="text-lg font-semibold text-gray-800" x-text="selected.judul"></p>
-
-                <p><b>No. Unit:</b> <span x-text="selected.unit"></span></p>
+                <p><b>No. Unit:</b> <span x-text="selected.unit?.no_unit ?? '-'"></span></p>
                 <p><b>No. Tiket:</b> <span x-text="selected.ticket"></span></p>
-                <p><b>Nama:</b> <span x-text="selected.penghuni"></span></p>
-                <p><b>Telepon:</b> <span x-text="selected.telepon"></span></p>
+                <p><b>Nama:</b> <span x-text="selected.penghuni?.nama ?? '-'"></span></p>
+                <p><b>Telepon:</b> <span x-text="selected.penghuni?.telepon ?? '-'"></span></p>
                 <p><b>Tanggal:</b> <span x-text="selected.tanggal"></span></p>
 
                 <div>
