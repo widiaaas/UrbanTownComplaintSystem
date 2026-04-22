@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Keluhan;
-use App\Models\RiwayatPenangananKeluhan;
+use App\Models\WorkOrder;
+use App\Models\RiwayatPenangananWorkOrder;
 use Illuminate\Support\Facades\Validator;
 
-class RiwayatPenangananKeluhanController extends Controller
+class RiwayatPenangananWOController extends Controller
 {
     public function simpanPenanganan(Request $request, $id)
     {
@@ -15,7 +15,7 @@ class RiwayatPenangananKeluhanController extends Controller
             // 🔥 VALIDASI
             $validator = Validator::make($request->all(), [
                 'judul' => 'required|string',
-                'catatan' => 'required|string',
+                'deskripsi' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -32,39 +32,41 @@ class RiwayatPenangananKeluhanController extends Controller
                 ], 401);
             }
 
-            // 🔥 AMBIL KELUHAN
-            $keluhan = Keluhan::findOrFail($id);
+            // 🔥 AMBIL WO
+            $WO = WO::findOrFail($id);
 
             $lampiran = [];
 
             if ($request->hasFile('lampiran')) {
                 foreach ($request->file('lampiran') as $file) {
                     if ($file->isValid()) {
-                        $lampiran[] = $file->store('keluhan_lampiran', 'public');
+                        $lampiran[] = $file->store('WO_lampiran', 'public');
                     }
                 }
             }
 
             // 🔥 SIMPAN RIWAYAT (SAMA KAYAK WO)
-            $riwayat = RiwayatPenangananKeluhan::create([
-                'keluhan_id' => $keluhan->id,
-                'keterangan' => $request->judul . ' - ' . $request->catatan,
+            $riwayat = RiwayatPenangananWO::create([
+                'WO_id' => $WO->id,
+                'status' => $WO->status, // 🔥 ambil dari WO
+                'judul' => $request->judul,
+                'deskripsi' => $request->deskripsi,
                 'lampiran' => $lampiran,
                 'penanggung_jawab_id' => $user->id,
                 'waktu' => now()
             ]);
 
             return response()->json([
+                'success' => true,
                 'message' => 'Penanganan berhasil disimpan',
                 'data' => [
-                    'judul' => $request->judul,
-                    'ket' => $request->catatan,
-                    'waktu' => now()->format('d-m-Y H:i'),
-
-                    // 🔥 ambil dari keluhan (bukan riwayat)
-                    'status' => $keluhan->status,
-
-                    'lampiran' => $lampiran
+                    'id' => $riwayat->id,
+                    'judul' => $riwayat->judul,
+                    'deskripsi' => $riwayat->deskripsi,
+                    'status' => $riwayat->status,
+                    'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
+                    'lampiran' => $riwayat->lampiran,
+                    'penanggung_jawab' => $user->nama ?? null
                 ]
             ]);
 

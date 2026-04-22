@@ -288,7 +288,7 @@
 
                     <!-- CATATAN -->
                     <p class="text-gray-600 mt-1"
-                    x-text="r.ket">
+                    x-text="r.deskripsi">
                     </p>
 
                     <!-- LAMPIRAN -->
@@ -372,7 +372,7 @@
                         @click="
                             kbForm.judul = keluhan.judul;
                             kbForm.deskripsi = keluhan.deskripsi;
-                            kbForm.langkah = keputusan.catatan;
+                            kbForm.langkah = keputusan.deskripsi;
                             openSimpanKB = true
                         "
                         class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
@@ -405,10 +405,10 @@
                         Catatan Penanganan
                     </label>
                     <textarea
-                        x-model="keputusan.catatan"
+                        x-model="keputusan.deskripsi"
                         class="w-full border rounded-lg px-3 py-2 text-sm"
                         rows="3"
-                        placeholder="Masukkan catatan keputusan"
+                        placeholder="Masukkan deskripsi keputusan"
                     ></textarea>
                 </div>
 
@@ -614,7 +614,7 @@
                                 <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
 
                                 <!-- CATATAN -->
-                                <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
+                                <p class="text-gray-600 mt-1" x-text="lapor.deskripsi"></p>
 
                                 <!-- LAMPIRAN -->
                                 <div class="flex flex-wrap gap-2 mt-2"
@@ -1217,7 +1217,7 @@ function detailKeluhanApp() {
         keputusan: {
             judul: '',
             status: 'on_progress',
-            catatan: '',
+            deskripsi: '',
             lampiran: []
         },
 
@@ -1279,8 +1279,8 @@ function detailKeluhanApp() {
                 return;
             }
 
-            if (!this.keputusan.catatan.trim()) {
-                Swal.fire('Oops!', 'Catatan wajib diisi', 'warning');
+            if (!this.keputusan.deskripsi.trim()) {
+                Swal.fire('Oops!', 'Deskripsi wajib diisi', 'warning');
                 return;
             }
 
@@ -1316,7 +1316,7 @@ function detailKeluhanApp() {
                 },
                 body: JSON.stringify({
                     status: this.normalizeStatus(this.keputusan.status),
-                    catatan: null
+                    deskripsi: null
                 })
             })
             .then(res => res.json())
@@ -1329,7 +1329,7 @@ function detailKeluhanApp() {
                 // 🔥 TAMBAH KE RIWAYAT
                 this.riwayat.push({
                     judul: 'Update Status',
-                    catatan: 'Status diubah menjadi ' + this.formatStatus(newStatus),
+                    deskripsi: 'Status diubah menjadi ' + this.formatStatus(newStatus),
                     waktu: this.now(),
                     status: newStatus,
                     lampiran: []
@@ -1381,7 +1381,7 @@ function detailKeluhanApp() {
 
                 this.riwayat.push({
                 judul: this.keputusanAkhir.judul,
-                catatan: this.keputusanAkhir.solusi,
+                deskripsi: this.keputusanAkhir.solusi,
                 waktu: this.now(),
                 status: 'close',
                 lampiran: []
@@ -1403,7 +1403,7 @@ function detailKeluhanApp() {
 
                 let formData = new FormData();
                 formData.append('judul', this.keputusan.judul);
-                formData.append('catatan', this.keputusan.catatan);
+                formData.append('deskripsi', this.keputusan.deskripsi);
 
                 this.keputusan.lampiran.forEach(file => {
                     formData.append('lampiran[]', file);
@@ -1427,7 +1427,7 @@ function detailKeluhanApp() {
 
                     this.riwayat.push({
                         judul: res.data.judul,
-                        ket: res.data.ket,
+                        deskripsi: res.data.deskripsi,
                         waktu: res.data.waktu,
                         status: res.data.status,
                         lampiran: res.data.lampiran
@@ -1436,7 +1436,7 @@ function detailKeluhanApp() {
                     this.keputusan = {
                         judul: '',
                         status: 'on_progress',
-                        catatan: '',
+                        deskripsi: '',
                         lampiran: []
                     };
                     })
@@ -1522,7 +1522,7 @@ function detailKeluhanApp() {
 
                     return {
                         judul: item.judul || 'Update Penanganan',
-                        ket: item.ket || '',
+                        deskripsi: item.deskripsi || '',
                         waktu: item.waktu,
                         status: item.status,
                         lampiran: item.lampiran || []

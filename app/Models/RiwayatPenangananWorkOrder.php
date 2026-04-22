@@ -14,8 +14,9 @@ class RiwayatPenangananWorkOrder extends Model
     protected $fillable = [
         'work_order_id', 
         'status',
-        'keterangan',
-        'lampiran',
+        'judul',
+        'judul',
+        'deskripsi',
         'penanggung_jawab_id',
         'waktu',
     ];

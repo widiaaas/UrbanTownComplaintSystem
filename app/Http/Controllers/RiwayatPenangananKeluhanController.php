@@ -15,7 +15,7 @@ class RiwayatPenangananKeluhanController extends Controller
             // 🔥 VALIDASI
             $validator = Validator::make($request->all(), [
                 'judul' => 'required|string',
-                'catatan' => 'required|string',
+                'deskripsi' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -35,7 +35,6 @@ class RiwayatPenangananKeluhanController extends Controller
             // 🔥 AMBIL KELUHAN
             $keluhan = Keluhan::findOrFail($id);
 
-            // 🔥 HANDLE LAMPIRAN
             $lampiran = [];
 
             if ($request->hasFile('lampiran')) {
@@ -46,22 +45,28 @@ class RiwayatPenangananKeluhanController extends Controller
                 }
             }
 
-            RiwayatPenangananKeluhan::create([
+            // 🔥 SIMPAN RIWAYAT (SAMA KAYAK WO)
+            $riwayat = RiwayatPenangananKeluhan::create([
                 'keluhan_id' => $keluhan->id,
-                'keterangan' => $request->judul . ' - ' . $request->catatan,
+                'status' => $keluhan->status, // 🔥 ambil dari keluhan
+                'judul' => $request->judul,
+                'deskripsi' => $request->deskripsi,
                 'lampiran' => $lampiran,
                 'penanggung_jawab_id' => $user->id,
                 'waktu' => now()
             ]);
 
             return response()->json([
+                'success' => true,
                 'message' => 'Penanganan berhasil disimpan',
                 'data' => [
+                    'id' => $riwayat->id,
                     'judul' => $riwayat->judul,
-                    'catatan' => $riwayat->catatan,
-                    'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
+                    'deskripsi' => $riwayat->deskripsi,
                     'status' => $riwayat->status,
-                    'lampiran' => $riwayat->lampiran ?? []
+                    'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
+                    'lampiran' => $riwayat->lampiran,
+                    'penanggung_jawab' => $user->nama ?? null
                 ]
             ]);
 

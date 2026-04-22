@@ -21,7 +21,7 @@
 
     {{-- ================= INFO UTAMA WO ================= --}}
     <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
-        <p><b>Ticket</b><br><span x-text="wo.tiket"></span></p>
+        <p><b>Ticdeskripsi</b><br><span x-text="wo.tideskripsi"></span></p>
         <p><b>Departemen</b><br><span x-text="wo.dept"></span></p>
         <p><b>Petugas</b><br><span x-text="wo.petugas"></span></p>
         <p><b>Tanggal WO</b><br><span x-text="wo.tanggal"></span></p>
@@ -90,8 +90,8 @@
                             <!-- JUDUL -->
                             <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
 
-                            <!-- CATATAN -->
-                            <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
+                            <!-- deskripsi -->
+                            <p class="text-gray-600 mt-1" x-text="lapor.deskripsi"></p>
 
                             <!-- LAMPIRAN -->
                             <div class="flex flex-wrap gap-2 mt-2"
@@ -208,16 +208,16 @@
                 >
             </div>
 
-            {{-- CATATAN Penanganan --}}
+            {{-- deskripsi Penanganan --}}
             <div>
                 <label class="text-sm font-medium mb-1 block">
-                    Catatan Penanganan
+                    deskripsi Penanganan
                 </label>
                 <textarea
-                    x-model="penanganan.catatan"
+                    x-model="penanganan.deskripsi"
                     class="w-full border rounded-lg px-3 py-2 text-sm"
                     rows="3"
-                    placeholder="Masukkan catatan penanganan"
+                    placeholder="Masukkan deskripsi penanganan"
                 ></textarea>
             </div>
 
@@ -268,7 +268,7 @@ function detailWOApp() {
 
         penanganan: {
             judul: '',
-            catatan: '',
+            deskripsi: '',
             lampiran: []
         },
 
@@ -323,11 +323,11 @@ function detailWOApp() {
                 return;
             }
 
-            if (!this.penanganan.catatan) {
+            if (!this.penanganan.deskripsi) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Oops...',
-                    text: 'Catatan penanganan tidak boleh kosong'
+                    text: 'deskripsi penanganan tidak boleh kosong'
                 });
                 return;
             }
@@ -358,13 +358,13 @@ function detailWOApp() {
 
                 const formData = new FormData();
                 formData.append('judul', this.penanganan.judul);
-                formData.append('catatan', this.penanganan.catatan);
+                formData.append('deskripsi', this.penanganan.deskripsi);
 
 
                 this.penanganan.lampiran.forEach(file => {
                     formData.append('lampiran[]', file);
                 });
-
+                
                 const res = await fetch(`/work-order/${this.wo.id}/penanganan`, {
                     method: 'POST',
                     headers: {

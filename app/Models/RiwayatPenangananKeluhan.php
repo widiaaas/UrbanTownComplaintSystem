@@ -15,7 +15,7 @@ class RiwayatPenangananKeluhan extends Model
         'keluhan_id',
         'status',
         'judul',
-        'catatan',
+        'deskripsi',
         'lampiran',
         'penanggung_jawab_id',
         'waktu'
