@@ -14,7 +14,7 @@ class RiwayatPenangananWOController extends Controller
         try { 
             $validator = Validator::make($request->all(), [
                 'judul' => 'required|string',
-                'catatan' => 'required|string',
+                'deskripsi' => 'required|string',
             ]);
             
             if ($validator->fails()) {
@@ -47,7 +47,8 @@ class RiwayatPenangananWOController extends Controller
             RiwayatPenangananWorkOrder::create([
                 'work_order_id' => $wo->id,
                 'status' => $status,
-                'keterangan' => $request->judul . ' - ' . $request->catatan,
+                'judul' => $request->judul,
+                'deskripsi' => $request->deskripsi,
                 'lampiran' => $lampiran,
                 'penanggung_jawab_id' => $user->id,
                 'waktu' => now()

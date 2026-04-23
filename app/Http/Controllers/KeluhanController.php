@@ -194,7 +194,7 @@ class KeluhanController extends Controller
                 return [
                     'id' => $k->id,
                     'ticket' => $k->ticket,
-                    'tanggal' => optional($k->created_at)->format('d-m-Y H:i'),
+                    'waktu' => optional($k->created_at)->format('d-m-Y H:i'),
                     'penghuni' => $k->penghuni->nama ?? '-',
                     'unit' => $k->unit->no_unit ?? '-',
                     'status' => strtolower(str_replace('_', ' ', $k->status ?? 'open'))
@@ -257,7 +257,7 @@ class KeluhanController extends Controller
         $keluhan = Keluhan::with([
             'unit',
             'penghuni',
-            'riwayat',
+            'riwayatPenanganan', 
             'workOrders.penanggungJawab.karyawan',
             'workOrders.riwayat'
         ])->findOrFail($id);
@@ -280,25 +280,26 @@ class KeluhanController extends Controller
             'unit' => $keluhan->unit->no_unit ?? '-',
             'penghuni' => $keluhan->penghuni->nama ?? '-',
             'telepon' => $keluhan->penghuni->telepon ?? '-',
-            'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'open')),
-            'tanggal' => optional($keluhan->created_at)->format('d-m-Y H:i'),
+            'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'unassigned')),
+            'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
         
             // 🔥 PENGAJUAN
             'pengajuan' => [
                 'judul' => $keluhan->judul,
                 'deskripsi' => $keluhan->deskripsi,
-                'tanggal' => optional($keluhan->created_at)->format('d-m-Y H:i'),
+                'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
                 'lampiran' => $keluhan->lampiran ?? [],
             ],
-            'riwayat_penanganan' => $keluhan->riwayatPenanganan,
+            'riwayat_penanganan' => $keluhan->riwayatPenanganan->values(),
         
             // 🔥 RIWAYAT
-            'keputusan' => $keluhan->riwayat
+            'keputusan' => $keluhan->riwayatPenanganan
                 ->sortBy('waktu')
                 ->map(function ($r) {
                     return [
-                        'isi' => $r->keterangan,
-                        'tanggal' => optional($r->waktu)->format('d-m-Y H:i'),
+                        'judul' => $r->judul,
+                        'deskripsi' => $r->deskripsi,
+                        'waktu' => optional($r->waktu)->format('d-m-Y H:i'),
                         'lampiran' => $r->lampiran ?? []
                     ];
                 })->values(),
@@ -311,7 +312,7 @@ class KeluhanController extends Controller
                     'no' => $wo->nomor_wo,
                     'dept' => $wo->departemen_tujuan,
                     'status' => $wo->status,
-                    'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
+                    'waktu' => optional($wo->created_at)->format('d M Y H:i'),
                     'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
                     'petugas' => $pj 
@@ -320,21 +321,16 @@ class KeluhanController extends Controller
             
                     // 🔥 INI YANG KURANG
                     'laporan' => $wo->riwayat->map(function ($r) {
-
-                        $judul = 'Update Penanganan';
-                        $ket = $r->keterangan;
-                    
-                        if ($r->keterangan && str_contains($r->keterangan, ' - ')) {
-                            $split = explode(' - ', $r->keterangan);
-                            $judul = $split[0];
-                            $ket = implode(' - ', array_slice($split, 1));
-                        }
-                    
                         return [
                             'status' => $r->status,
-                            'judul' => $judul,
-                            'ket' => $ket, // ✅ FIX
-                            'waktu' => optional($r->waktu)->format('d M Y H:i'),
+                            'judul' => $r->judul ?? 'Update Penanganan',
+                            'deskripsi' => $r->deskripsi ?? '',
+                            'waktu' => $r->waktu
+                                ? \Carbon\Carbon::parse($r->waktu)->format('d M Y H:i')
+                                : ($r->created_at 
+                                    ? $r->created_at->format('d M Y H:i') 
+                                    : '-'),
+
                             'lampiran' => $r->lampiran ?? []
                         ];
                     })
@@ -382,7 +378,7 @@ class KeluhanController extends Controller
         // ================= SIMPAN KE KELUHAN =================
         $keluhan->update([
             'keputusan' => $request->judul . "\n\n" . $request->solusi,
-            'tanggal_keputusan' => now(),
+            'waktu_keputusan' => now(),
             'lampiran' => $filesPath, // 🔥 overwrite atau bisa merge kalau mau
             'status' => 'close'
         ]);
@@ -428,7 +424,7 @@ class KeluhanController extends Controller
                 'dept' => $wo->departemen_tujuan,
                 'instruksi' => $wo->instruksi,
                 'status' => $wo->status,
-                'tanggal' => $wo->created_at->format('d-m-Y H:i'),
+                'waktu' => $wo->created_at->format('d-m-Y H:i'),
                 'lokasi' => $request->lokasi
             ]
         ]);

@@ -14,16 +14,16 @@
             </p>
         </div>
 
-        <a href="/daftarWorkOrder" class="text-sm text-blue-600 hover:underline">
+        <a href="/daftar-work-order" class="text-sm text-blue-600 hover:underline">
             ← Kembali
         </a>
     </div>
 
     {{-- ================= INFO UTAMA WO ================= --}}
     <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
-        <p><b>Ticdeskripsi</b><br><span x-text="wo.tideskripsi"></span></p>
+        <!-- <p><b>Nomor Tiket</b><br><span x-text="wo.tiket"></span></p> -->
         <p><b>Departemen</b><br><span x-text="wo.dept"></span></p>
-        <p><b>Petugas</b><br><span x-text="wo.petugas"></span></p>
+        <p><b>TR Penanggung Jawab</b><br><span x-text="wo.tr"></span></p>
         <p><b>Tanggal WO</b><br><span x-text="wo.tanggal"></span></p>
         <p><b>Status WO</b><br>
         <span 
@@ -82,7 +82,7 @@
                                 :class="{
                                     'bg-blue-500': normalizeStatus(lapor.status) === 'open',
                                     'bg-yellow-500': normalizeStatus(lapor.status) === 'on_progress',
-                                    'bg-orange500': normalizeStatus(lapor.status) === 'waiting',
+                                    'bg-orange-500': normalizeStatus(lapor.status) === 'waiting',
                                     'bg-green-500': normalizeStatus(lapor.status) === 'close'
                                 }">
                             </span>
@@ -180,6 +180,7 @@
         <select 
             x-model="newStatus"
             @change="ubahStatus"
+            :disabled="normalizeStatus(wo.status) === 'close'"
             class="w-full border rounded-lg px-3 py-2">
             
             <option value="Open">Open</option>
@@ -190,7 +191,7 @@
     </div>
 
     {{-- ================= FORM Penanganan ================= --}}
-    <template x-if="wo.status !== 'Close'">
+    <template x-if="normalizeStatus(wo.status) !== 'close'">
         <div class="bg-white p-6 rounded-xl shadow space-y-4">
 
             <h3 class="font-semibold">Form Penanganan WO</h3>
@@ -435,6 +436,7 @@ function detailWOApp() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({

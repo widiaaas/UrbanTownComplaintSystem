@@ -53,7 +53,7 @@ class WorkOrderController extends Controller
                 'no' => $wo->nomor_wo,
                 'dept' => $wo->departemen_tujuan,
                 'instruksi' => $wo->instruksi,
-                'status' => $wo->status,
+                'status' => $wo->status ?? 'unassigned', 
                 'tanggal' => $wo->created_at->format('d-m-Y H:i'),
                 'lokasi' => $request->lokasi
             ]
@@ -147,7 +147,7 @@ class WorkOrderController extends Controller
                 
                 'status' => ucfirst(str_replace('_', ' ', $item->status)),
 
-                'tiket' => $item->keluhan->ticket ?? '-',
+                'tideskripsi' => $item->keluhan->ticdeskripsi ?? '-',
                 'requestor' => $item->keluhan->penghuni->nama ?? '-',
                 'telepon' => $item->keluhan->penghuni->telepon ?? '-',
                 'instruksi' => $item->instruksi,
@@ -163,18 +163,18 @@ class WorkOrderController extends Controller
                     ->map(function ($r) {
 
                     $judul = 'Update Penanganan';
-                    $ket = $r->keterangan;
+                    $deskripsi = $r->deskripsi;
                 
-                    if ($r->keterangan && str_contains($r->keterangan, ' - ')) {
-                        $split = explode(' - ', $r->keterangan);
+                    if ($r->deskripsi && str_contains($r->deskripsi, ' - ')) {
+                        $split = explode(' - ', $r->deskripsi);
                         $judul = $split[0];
-                        $ket = implode(' - ', array_slice($split, 1));
+                        $deskripsi = implode(' - ', array_slice($split, 1));
                     }
                 
                     return [
                         'status' => $r->status,
                         'judul' => $judul,
-                        'ket' => $ket,
+                        'deskripsi' => $deskripsi,
                         'waktu' => optional($r->waktu)->format('d M Y H:i'),
                         'lampiran' => $r->lampiran ?? [] 
                     ];
@@ -197,20 +197,25 @@ class WorkOrderController extends Controller
             'keluhan.unit',
             'keluhan.penghuni',
             'penanggungJawab.karyawan',
+            'keluhan.penanggungJawab.karyawan',
             'riwayat'
         ])->findOrFail($id);
         
         $pj = $wo->penanggungJawab;
+        $tr = $wo->keluhan->penanggungJawab;
 
         $data = [
             'id' => $wo->id,
             'no' => $wo->nomor_wo,
-            'tiket' => $wo->keluhan->ticket ?? '-',
+            'tideskripsi' => $wo->keluhan->ticdeskripsi ?? '-',
             'dept' => $wo->departemen_tujuan,
             'instruksi' => $wo->instruksi,
             'status' => ucfirst(str_replace('_', ' ', $wo->status)),
             'petugas' => $pj 
                 ? ($pj->karyawan?->nama ?? $pj->username) 
+                : '-',
+            'tr' => $tr 
+                ? ($tr->karyawan?->nama ?? $tr->username) 
                 : '-',
             'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
             'lampiran' => $wo->lampiran ?? [],
@@ -219,26 +224,19 @@ class WorkOrderController extends Controller
             // 🔥 RIWAYAT
             'laporan' => $wo->riwayat
                 ->sortBy('waktu')
-                ->values()
                 ->map(function ($r) {
-
-                    $judul = 'Update Penanganan';
-                    $ket = $r->keterangan;
-
-                    if ($r->keterangan && str_contains($r->keterangan, ' - ')) {
-                        $split = explode(' - ', $r->keterangan);
-                        $judul = $split[0];
-                        $ket = implode(' - ', array_slice($split, 1));
-                    }
-
                     return [
                         'status' => $r->status,
-                        'judul' => $judul,
-                        'ket' => $ket,
-                        'waktu' => optional($r->waktu)->format('d M Y H:i'),
-                        'lampiran' => $r->lampiran ?? [] // 🔥 INI YANG HILANG
+                        'judul' => $r->judul,
+                        'deskripsi' => $r->deskripsi,
+                        'waktu' => $r->waktu
+                        ? \Carbon\Carbon::parse($r->waktu)->format('d M Y H:i')
+                        : ($r->created_at 
+                            ? $r->created_at->format('d M Y H:i') 
+                            : '-'),
+                        'lampiran' => $r->lampiran ?? []
                     ];
-                })
+                })->values()
         ];
 
         return view('departemen.workOrder.detailWorkOrder', [
@@ -265,7 +263,8 @@ class WorkOrderController extends Controller
         RiwayatPenangananWorkOrder::create([
             'work_order_id' => $wo->id,
             'status' => $status,
-            'keterangan' => 'Status diubah menjadi ' . $request->status,
+            'judul' => 'Update Status', 
+            'deskripsi' => 'Status diubah menjadi ' . $request->status,
             'penanggung_jawab_id' => $user->id,
             'waktu' => now()
         ]);

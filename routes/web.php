@@ -227,7 +227,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/work-order-masuk', [WorkOrderController::class, 'woMasuk']);
         Route::post('/work-order/{id}/ambil', [WorkOrderController::class, 'ambilWO']);
         Route::get('/daftar-work-order', [WorkOrderController::class, 'daftarPenanganan']);
-        Route::get('/detailWorkOrder', [WorkOrderController::class, 'detail']);
+        Route::get('/detailWorkOrder/{id}', [WorkOrderController::class, 'detail']);
         Route::post('/work-order/{id}/status', [WorkOrderController::class, 'updateStatus']);
 
         Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);

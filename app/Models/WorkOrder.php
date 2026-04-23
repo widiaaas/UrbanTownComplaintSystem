@@ -46,6 +46,7 @@ class WorkOrder extends Model
 
     public function riwayat()
     {
-        return $this->hasMany(RiwayatPenangananWorkOrder::class, 'work_order_id');
+        return $this->hasMany(RiwayatPenangananWorkOrder::class, 'work_order_id')
+            ->latest('waktu');
     }
 }

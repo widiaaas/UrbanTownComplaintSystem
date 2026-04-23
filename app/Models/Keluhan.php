@@ -54,11 +54,6 @@ class Keluhan extends Model
         return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
     }
 
-    public function riwayat()
-    {
-        return $this->hasMany(RiwayatPenangananKeluhan::class, 'keluhan_id');
-    }
-
     public function workOrders()
     {
         return $this->hasMany(WorkOrder::class, 'keluhan_id');

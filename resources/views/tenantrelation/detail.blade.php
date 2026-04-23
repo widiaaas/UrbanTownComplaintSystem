@@ -3,7 +3,7 @@
 @section('title', 'Detail Penanganan Keluhan')
 
 @section('content')
-<div x-data="detailKeluhanApp()"  class="p-6 max-w-5xl mx-auto space-y-6">
+<div x-data="detailKeluhanApp()" class="p-6 max-w-5xl mx-auto space-y-6">
 
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-start">
@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <a href="/daftar-penanganan" class="text-sm text-blue-600 hover:underline">
+        <a href="/daftarPenanganan" class="text-sm text-blue-600 hover:underline">
             ← Kembali
         </a>
     </div>
@@ -27,7 +27,7 @@
         <p><b>No Unit</b><br><span x-text="keluhan.unit"></span></p>
         <p><b>Nama Penghuni</b><br><span x-text="keluhan.nama"></span></p>
         <p><b>No Telepon</b><br><span x-text="keluhan.telepon"></span></p>
-        <p><b>Waktu</b><br><span x-text="keluhan.waktu"></span></p>
+        <p><b>Tanggal</b><br><span x-text="keluhan.tanggal"></span></p>
         <p><b>Status Keluhan</b><br>
         <span class="inline-block text-xs px-2 py-1 rounded"
             :class="statusClass(keluhan.status)"
@@ -68,20 +68,20 @@
             </div>
 
             {{-- LAMPIRAN --}}
-            <div class="flex gap-2 flex-wrap">
-                <template x-for="file in keluhan.lampiranKeluhan" :key="file">
-                    <button 
-                        @click="previewFile = file; openPreview = true"
-                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
-                        📎 <span x-text="file.split('/').pop()"></span>
-                    </button>
-                </template>
-
-                <template x-if="!keluhan.lampiranKeluhan || keluhan.lampiranKeluhan.length === 0">
-                    <p class="text-xs text-gray-400 italic">
-                        Tidak ada lampiran
-                    </p>
-                </template>
+            <div>
+                <p class="text-sm font-medium mb-1">
+                    Lampiran Keluhan
+                </p>
+                <div class="flex gap-2 flex-wrap">
+                    <template x-for="file in keluhan.lampiranKeluhan" :key="file">
+                        <a 
+                            :href="'/storage/' + file"
+                            target="_blank"
+                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
+                            Lihat File
+                        </a>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@
 
         <select 
             x-model="keputusan.status"
-            @change="confirmUpdateStatus"
+            @change="updateStatusLangsung"
             :disabled="normalizeStatus(keluhan.status) === 'close'"
             class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
 
@@ -201,47 +201,6 @@
         </template>
     </div>
 
-    <!-- ================= MODAL PREVIEW FILE ================= -->
-    <div x-show="openPreview" x-cloak
-        class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
-
-        <div class="bg-white w-full max-w-3xl rounded-lg p-4 relative">
-
-            <!-- CLOSE -->
-            <button 
-                @click="openPreview=false"
-                class="absolute top-2 right-2 text-xl">
-                ✕
-            </button>
-
-            <!-- CONTENT -->
-            <div class="mt-6">
-
-                <!-- IMAGE -->
-                <template x-if="previewFile.match(/\.(jpg|jpeg|png|gif)$/i)">
-                    <img :src="previewFile" class="max-h-[70vh] mx-auto rounded">
-                </template>
-
-                <!-- PDF -->
-                <template x-if="previewFile.match(/\.pdf$/i)">
-                    <iframe :src="previewFile" class="w-full h-[70vh]"></iframe>
-                </template>
-
-                <!-- FILE LAIN -->
-                <template x-if="!previewFile.match(/\.(jpg|jpeg|png|gif|pdf)$/i)">
-                    <div class="text-center">
-                        <p class="mb-2">Preview tidak tersedia</p>
-                        <a :href="previewFile" target="_blank"
-                            class="text-blue-600 underline">
-                            Download File
-                        </a>
-                    </div>
-                </template>
-
-            </div>
-        </div>
-    </div>
-
     {{-- ================= MODAL RIWAYAT PENANGANAN ================= --}}
     <div
         x-show="openRiwayat"
@@ -267,52 +226,19 @@
             {{-- BODY --}}
             <div class="px-6 py-4 space-y-4 text-sm max-h-[400px] overflow-y-auto">
 
-            <template x-for="(r, index) in riwayat" :key="index">
-                <div class="relative pl-6 py-3 rounded-md border-l-2"
-                    :class="statusClassRiwayat(r.status)">
-
-                    <!-- DOT -->
-                    <span class="absolute -left-2 top-4 w-3 h-3 rounded-full"
+                <template x-for="(r, index) in riwayat" :key="index">
+                    <div
+                        class="relative pl-5 py-3 rounded-md"
                         :class="{
-                            'bg-blue-500': normalizeStatus(r.status) === 'open',
-                            'bg-yellow-500': normalizeStatus(r.status) === 'on_progress',
-                            'bg-orange-500': normalizeStatus(r.status) === 'waiting',
-                            'bg-green-500': normalizeStatus(r.status) === 'close'
-                        }">
-                    </span>
-
-                    <!-- JUDUL -->
-                    <p class="font-medium text-gray-800"
-                    x-text="r.judul">
-                    </p>
-
-                    <!-- CATATAN -->
-                    <p class="text-gray-600 mt-1"
-                    x-text="r.deskripsi">
-                    </p>
-
-                    <!-- LAMPIRAN -->
-                    <div class="flex flex-wrap gap-2 mt-2"
-                        x-show="r.lampiran && r.lampiran.length">
-
-                        <template x-for="file in r.lampiran" :key="file">
-                            <button
-                                @click="openPreviewFile(file)"
-                                class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
-
-                                <span x-text="file.split('/').pop()"></span>
-                            </button>
-                        </template>
-
+                            'border-l-4 border-blue-500 bg-blue-50/30': r.tipe === 'tr',
+                            'border-l-4 border-green-500 bg-green-50/30': r.tipe === 'penghuni'
+                        }"
+                    >
+                        <p class="font-medium text-gray-800" x-text="r.judul"></p>
+                        <p class="text-gray-600 mt-1" x-text="r.ket"></p>
+                        <p class="text-xs text-gray-400 mt-1" x-text="r.waktu"></p>
                     </div>
-
-                    <!-- WAKTU -->
-                    <p class="text-xs text-gray-400 mt-2"
-                    x-text="r.waktu">
-                    </p>
-
-                </div>
-            </template>
+                </template>
 
                 {{-- jika riwayat kosong --}}
                 <template x-if="riwayat.length === 0">
@@ -331,6 +257,7 @@
                     Tutup
                 </button>
             </div>
+
         </div>
     </div>
     {{-- ================= KEPUTUSAN PENANGANAN TR ================= --}}
@@ -371,7 +298,7 @@
                         @click="
                             kbForm.judul = keluhan.judul;
                             kbForm.deskripsi = keluhan.deskripsi;
-                            kbForm.langkah = keputusan.deskripsi;
+                            kbForm.langkah = keputusan.catatan;
                             openSimpanKB = true
                         "
                         class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
@@ -404,10 +331,10 @@
                         Catatan Penanganan
                     </label>
                     <textarea
-                        x-model="keputusan.deskripsi"
+                        x-model="keputusan.catatan"
                         class="w-full border rounded-lg px-3 py-2 text-sm"
                         rows="3"
-                        placeholder="Masukkan deskripsi keputusan"
+                        placeholder="Masukkan catatan keputusan"
                     ></textarea>
                 </div>
 
@@ -451,88 +378,49 @@
         </template>
     </div>    
 
-
     {{-- ================= KEPUTUSAN UNTUK PENGHUNI ================= --}}
-
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
 
-    
-    <!-- HEADER -->
-    <h3 class="font-semibold text-gray-800">
-        Keputusan / Solusi untuk Penghuni
-    </h3>
+        <h3 class="font-semibold">Keputusan / Solusi untuk Penghuni</h3>
 
-    {{-- FORM (HANYA JIKA BELUM CLOSE) --}}
-    <template x-if="normalizeStatus(keluhan.status) !== 'close'">
-        <div class="pl-4 space-y-4">
+        <div class="space-y-3">
+            <input type="text"
+                x-model="keputusanAkhir.judul"
+                placeholder="Judul keputusan"
+                class="w-full border rounded-lg px-3 py-2 text-sm">
 
-            {{-- JUDUL KEPUTUSAN --}}
-            <div>
-                <label class="text-sm font-medium mb-1 block">
-                    Judul Keputusan
-                </label>
-                <input
-                    type="text"
-                    x-model="keputusanAkhir.judul"
-                    class="w-full border rounded-lg px-3 py-2 text-sm"
-                    placeholder="Masukkan judul keputusan"
-                >
-            </div>
+            <textarea
+                x-model="keputusanAkhir.solusi"
+                placeholder="Solusi / hasil akhir penanganan"
+                class="w-full border rounded-lg px-3 py-2 text-sm"
+                rows="3"></textarea>
 
-            {{-- DESKRIPSI KEPUTUSAN --}}
-            <div>
-                <label class="text-sm font-medium mb-1 block">
-                    Deskripsi Keputusan
-                </label>
-                <textarea
-                    x-model="keputusanAkhir.solusi"
-                    class="w-full border rounded-lg px-3 py-2 text-sm"
-                    rows="3"
-                    placeholder="Masukkan deskripsi keputusan"
-                ></textarea>
-            </div>
+                <input type="file" multiple x-ref="fileKeputusan" @change="previewFiles = Array.from($event.target.files)">
 
-            {{-- LAMPIRAN --}}
-            <div>
-                <label class="text-sm font-medium mb-1 block">
-                    Lampiran Dokumentasi
-                </label>
-
-                <input
-                    type="file"
-                    multiple
-                    x-ref="fileKeputusan"
-                    @change="previewFiles = Array.from($event.target.files)"
-                    class="text-sm"
-                >
-
-                <!-- PREVIEW -->
+                {{-- PREVIEW FILE --}}
                 <div class="flex flex-wrap gap-2 mt-2">
                     <template x-for="(file, index) in previewFiles" :key="index">
-                        <div class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
-
+                        <div class="border px-3 py-2 rounded bg-gray-50 text-xs flex items-center gap-2">
+                            
                             <span x-text="file.name"></span>
 
                             <button
                                 @click="openPreviewFile(file)"
-                                class="text-blue-600 hover:underline">
+                                class="text-blue-600 hover:underline text-xs">
                                 Preview
                             </button>
 
                             <button
                                 @click="previewFiles.splice(index,1)"
-                                class="text-red-500 hover:text-red-700">
+                                class="text-red-500 text-xs">
                                 ✕
                             </button>
 
                         </div>
                     </template>
                 </div>
-            </div>
 
-            {{-- ACTION --}}
-            <div class="flex justify-between items-center pt-2">
-
+            <div class="flex justify-between">
                 <button
                     @click="openSimpanKB = true"
                     class="text-green-600 text-sm hover:underline">
@@ -541,25 +429,12 @@
 
                 <button
                     @click="simpanKeputusanAkhir"
-                    class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
                     Simpan Keputusan
                 </button>
-
             </div>
-
         </div>
-    </template>
-
-    {{-- INFO JIKA SUDAH CLOSE --}}
-    <template x-if="normalizeStatus(keluhan.status) === 'close'">
-        <div class="text-sm text-gray-500 italic bg-gray-50 border rounded-lg p-3">
-            Keluhan sudah selesai. Form keputusan tidak dapat diubah.
-        </div>
-    </template>
-    
-
     </div>
-
 
     {{-- ================= MODAL PREVIEW FILE ================= --}}
     <div x-show="openPreview" x-cloak
@@ -598,6 +473,90 @@
                     Preview tidak tersedia untuk file ini
                 </div>
             </template>
+
+        </div>
+    </div>
+
+    {{-- ================= MODAL LAPORAN WO ================= --}}
+    <div x-show="openLaporan" x-cloak
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+        <div class="bg-white w-full max-w-2xl rounded-xl p-6 space-y-5">
+
+            {{-- HEADER --}}
+            <div class="flex justify-between items-center border-b pb-2">
+                <div>
+                    <h3 class="text-lg font-semibold">Laporan Penyelesaian WO</h3>
+                    <p class="text-xs text-gray-500">
+                        No WO: <span x-text="selectedWO.no"></span>
+                    </p>
+                </div>
+
+                <button @click="openLaporan=false" class="text-lg">✕</button>
+            </div>
+
+            {{-- INFO --}}
+            <div class="grid grid-cols-2 gap-3 text-sm">
+
+                <p>
+                    <b>Departemen</b><br>
+                    <span x-text="selectedWO.dept || '-'"></span>
+                </p>
+
+                <p>
+                    <b>Petugas</b><br>
+                    <span x-text="selectedWO.petugas || '-'"></span>
+                </p>
+
+                <p class="col-span-2">
+                    <b>Status</b><br>
+                    <span
+                        class="text-xs px-2 py-1 rounded"
+                        :class="statusClass(selectedWO.status)"
+                        x-text="formatStatus(selectedWO.status)">
+                    </span>
+                </p>
+
+            </div>
+
+            {{-- LAPORAN --}}
+            <div>
+                <p class="text-sm font-medium mb-1">Laporan Pekerjaan</p>
+
+                <div class="bg-gray-100 rounded-lg p-3 text-sm min-h-[60px]">
+                    <span x-text="selectedWO.laporan || 'Belum ada laporan dari departemen'"></span>
+                </div>
+            </div>
+
+            {{-- LAMPIRAN --}}
+            <div>
+                <p class="text-sm font-medium mb-1">Lampiran Pekerjaan</p>
+
+                <div class="flex gap-2 flex-wrap">
+                    <template x-if="selectedWO.lampiran && selectedWO.lampiran.length">
+                        <template x-for="file in selectedWO.lampiran" :key="file">
+                            <a 
+                                :href="'/storage/' + file"
+                                target="_blank"
+                                class="px-3 py-1 border rounded text-xs bg-blue-50 text-blue-700 hover:underline">
+                                Lihat File
+                            </a>
+                        </template>
+                    </template>
+
+                    <template x-if="!selectedWO.lampiran || !selectedWO.lampiran.length">
+                        <span class="text-xs text-gray-400 italic">
+                            Tidak ada lampiran
+                        </span>
+                    </template>
+                </div>
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="text-xs text-gray-500 border-t pt-2">
+                Diselesaikan: 
+                <span x-text="selectedWO.tanggal || '-'"></span>
+            </div>
 
         </div>
     </div>
@@ -650,86 +609,52 @@
             </div>
 
             {{-- RIWAYAT PENANGANAN PEKERJAAN (WO) --}}
-            <div class="bg-white rounded-xl p-4 space-y-4">
+            <div class="space-y-3">
                 <p class="font-medium text-sm">Riwayat Penanganan Pekerjaan</p>
 
                 <template x-if="selectedWO.laporan && selectedWO.laporan.length">
-                    <div class="relative">
+                    <div class="space-y-3">
 
-                    <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                         <template x-for="(lapor, index) in selectedWO.laporan" :key="index">
-                            <div class="relative pl-5 py-3 rounded-md"
-                                :class="statusClassRiwayat(lapor.status)">
-
-                                <!-- JUDUL -->
+                            <div
+                                class="relative pl-5 py-3 rounded-md"
+                                :class="{
+                                    'border-l-4 border-blue-500 bg-blue-50/30': lapor.status === 'On_Progress',
+                                    'border-l-4 border-orange-500 bg-orange-50/30': lapor.status === 'Waiting',
+                                    'border-l-4 border-green-500 bg-green-50/30': lapor.status === 'Close'
+                                }"
+                            >
                                 <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
-
-                                <!-- CATATAN -->
-                                <p class="text-gray-600 mt-1" x-text="lapor.deskripsi"></p>
-
-                                <!-- LAMPIRAN -->
-                                <div class="flex flex-wrap gap-2 mt-2"
-                                    x-show="lapor.lampiran && lapor.lampiran.length">
-
-                                    <template x-for="(file, i) in lapor.lampiran" :key="i">
-                                        <button
-                                            @click="openPreviewFile(file)"
-                                            class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
-
-                                            <span x-text="file.split('/').pop()"></span>
-                                        </button>
-                                    </template>
-
-                                </div>
-
-                                <!-- WAKTU -->
-                                <p class="text-xs text-gray-400 mt-2" x-text="lapor.waktu"></p>
-
+                                <p class="text-gray-600 mt-1" x-text="lapor.ket"></p>
+                                <p class="text-xs text-gray-400 mt-1" x-text="lapor.waktu"></p>
                             </div>
                         </template>
-                    </div>
 
                     </div>
                 </template>
 
                 <template x-if="!selectedWO.laporan || !selectedWO.laporan.length">
-                    <p class="text-sm text-gray-400 italic text-center py-4">
+                    <p class="text-sm text-gray-400 italic">
                         Belum ada laporan pekerjaan dari departemen.
                     </p>
                 </template>
             </div>
-        </div>
-    </div>
+            {{-- LAMPIRAN --}}
+            <div>
+                <p class="font-medium text-sm mb-1">Lampiran Pekerjaan</p>
+                <div class="flex flex-wrap gap-2">
+                    <template x-if="selectedWO.lampiran && selectedWO.lampiran.length">
+                        <template x-for="file in selectedWO.lampiran">
+                            <span class="px-3 py-1 border rounded text-xs bg-gray-50"
+                                x-text="file"></span>
+                        </template>
+                    </template>
 
-    <!-- MODAL PREVIEW FILE -->
-    <div x-show="openPreview" x-cloak
-        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-
-        <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
-
-            <button
-                @click="openPreview = false"
-                class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">
-                ✕
-            </button>
-
-            <p class="text-sm font-semibold mb-3" x-text="previewFile"></p>
-
-            <template x-if="isImage(previewFile)">
-                <img :src="'/storage/' + previewFile"
-                    class="max-h-[70vh] mx-auto rounded">
-            </template>
-
-            <template x-if="isPDF(previewFile)">
-                <iframe :src="'/storage/' + previewFile"
-                        class="w-full h-[70vh] rounded"></iframe>
-            </template>
-
-            <template x-if="!isImage(previewFile) && !isPDF(previewFile)">
-                <div class="text-center text-gray-500 py-10">
-                    Preview tidak tersedia
+                    <template x-if="!selectedWO.lampiran || !selectedWO.lampiran.length">
+                        <span class="text-xs text-gray-400">Tidak ada lampiran</span>
+                    </template>
                 </div>
-            </template>
+            </div>
 
         </div>
     </div>
@@ -1094,6 +1019,7 @@
                     Tutup
                 </button>
             </div>
+
         </div>
     </div>
 
@@ -1268,7 +1194,7 @@ function detailKeluhanApp() {
         keputusan: {
             judul: '',
             status: 'on_progress',
-            deskripsi: '',
+            catatan: '',
             lampiran: []
         },
 
@@ -1278,7 +1204,7 @@ function detailKeluhanApp() {
         },
 
         
-        
+
         /* ================= INIT ================= */
         init() {
             const data = window.detailKeluhan;
@@ -1291,7 +1217,7 @@ function detailKeluhanApp() {
                 lantai: data.lantai ?? '-',
                 nama: data.penghuni,
                 telepon: data.telepon,
-                waktu: data.waktu,
+                tanggal: data.tanggal,
                 judul: data.pengajuan.judul,
                 deskripsi: data.pengajuan.deskripsi,
                 lampiranKeluhan: data.pengajuan.lampiran || [],
@@ -1301,20 +1227,43 @@ function detailKeluhanApp() {
             
             this.keputusan.status = this.normalizeStatus(data.status);
 
-            this.riwayat = data.riwayat_penanganan || [];
+            this.riwayat = data.keputusan.map(item => ({
+                tipe: 'tr',
+                judul: 'Update Penanganan',
+                ket: item.isi,
+                waktu: item.tanggal
+            }));
 
             this.workOrders = data.work_orders || [];
         },
 
         /* ================= STATUS ================= */
-
-
-        isImage(file){
-            return /\.(jpg|jpeg|png|gif)$/i.test(file);
+        normalizeStatus(status){
+            return (status || '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_');
         },
 
-        isPDF(file){
-            return /\.pdf$/i.test(file);
+        formatStatus(status){
+            const s = this.normalizeStatus(status);
+
+            if(s === 'open') return 'Open';
+            if(s === 'on_progress') return 'On Progress';
+            if(s === 'close') return 'Close';
+
+            return status;
+        },
+
+        statusClass(status){
+            const s = this.normalizeStatus(status);
+
+            return {
+                'bg-blue-100 text-blue-700': s === 'open',
+                'bg-yellow-100 text-yellow-700': s === 'on_progress',
+                'bg-green-100 text-green-700': s === 'close',
+                'bg-gray-100 text-gray-700': !['open','on_progress','close'].includes(s)
+            }
         },
 
         /* ================= COMPUTED ================= */
@@ -1325,13 +1274,8 @@ function detailKeluhanApp() {
         /* ================= UPDATE STATUS ================= */
         simpanKeputusan(){
 
-            if (!this.keputusan.judul.trim()) {
-                Swal.fire('Oops!', 'Judul wajib diisi', 'warning');
-                return;
-            }
-
-            if (!this.keputusan.deskripsi.trim()) {
-                Swal.fire('Oops!', 'Deskripsi wajib diisi', 'warning');
+            if (!this.keputusan.catatan.trim()) {
+                Swal.fire('Oops!', 'Catatan wajib diisi', 'warning');
                 return;
             }
 
@@ -1367,25 +1311,16 @@ function detailKeluhanApp() {
                 },
                 body: JSON.stringify({
                     status: this.normalizeStatus(this.keputusan.status),
-                    deskripsi: null
+                    catatan: null
                 })
             })
             .then(res => res.json())
             .then(res => {
 
-                const newStatus = this.normalizeStatus(res.status);
+                // 🔥 update UI
+                this.keluhan.status = this.normalizeStatus(res.status);
 
-                this.keluhan.status = newStatus;
-
-                // 🔥 TAMBAH KE RIWAYAT
-                this.riwayat.push({
-                    judul: 'Update Status',
-                    deskripsi: 'Status diubah menjadi ' + this.formatStatus(newStatus),
-                    waktu: this.now(),
-                    status: newStatus,
-                    lampiran: []
-                });
-
+                // 🔥 optional notif kecil
                 Swal.fire({
                     icon: 'success',
                     title: 'Status diperbarui',
@@ -1393,40 +1328,9 @@ function detailKeluhanApp() {
                     showConfirmButton: false
                 });
 
-                })
+            })
             .catch(() => {
                 Swal.fire('Error!', 'Gagal update status', 'error');
-            });
-            },
-        
-        confirmUpdateStatus(){
-
-            // simpan status lama
-            const oldStatus = this.keluhan.status;
-
-            const newStatus = this.normalizeStatus(this.keputusan.status);
-
-            // kalau sama → tidak perlu apa-apa
-            if(oldStatus === newStatus){
-                return;
-            }
-
-            Swal.fire({
-                title: 'Ubah Status?',
-                text: 'Status akan diubah menjadi ' + this.formatStatus(newStatus),
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, ubah',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-
-                if(result.isConfirmed){
-                    this.updateStatusLangsung();
-                } else {
-                    // 🔥 BALIKIN KE STATUS LAMA
-                    this.keputusan.status = oldStatus;
-                }
-
             });
             },
 
@@ -1461,13 +1365,7 @@ function detailKeluhanApp() {
             .then(res => {
                 Swal.fire('Berhasil!', res.message, 'success');
 
-                this.riwayat.push({
-                judul: this.keputusanAkhir.judul,
-                deskripsi: this.keputusanAkhir.solusi,
-                waktu: this.now(),
-                status: 'close',
-                lampiran: []
-            });
+                this.keluhan.status = 'Close';
 
                 this.keputusanAkhir = {
                     judul: '',
@@ -1483,55 +1381,57 @@ function detailKeluhanApp() {
 
         prosesSimpan(){
 
-            let formData = new FormData();
-            formData.append('judul', this.keputusan.judul);
-            formData.append('deskripsi', this.keputusan.deskripsi);
-
-            this.keputusan.lampiran.forEach(file => {
-                formData.append('lampiran[]', file);
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
             });
 
-            fetch(`/keluhan/${this.keluhan.id}/penanganan`, {
+            fetch(`/keluhan/${this.keluhan.id}/status`, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: formData
+                body: JSON.stringify({
+                    status: this.normalizeStatus(this.keputusan.status),
+                    catatan: this.keputusan.catatan
+                })
             })
-            .then(async res => {
-                const data = await res.json();
-                if(!res.ok) throw data;
-                return data;
-            })
+            .then(res => res.json())
             .then(res => {
 
-                Swal.fire('Berhasil!', res.message, 'success');
-
-                this.riwayat.push({
-                    judul: res.data.judul,
-                    deskripsi: res.data.deskripsi,
-                    waktu: res.data.waktu,
-                    status: res.data.status,
-                    lampiran: res.data.lampiran
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
                 });
 
+                // 🔥 UPDATE UI DARI BACKEND (INI YANG BENAR)
+                this.keluhan.status = this.normalizeStatus(res.status);
+
+                // 🔥 TAMBAH RIWAYAT
+                this.riwayat.push({
+                    tipe: 'tr',
+                    judul: this.keputusan.judul || 'Update Penanganan',
+                    ket: this.keputusan.catatan,
+                    waktu: this.now()
+                });
+
+                // reset
                 this.keputusan = {
                     judul: '',
                     status: 'on_progress',
-                    deskripsi: '',
+                    catatan: '',
                     lampiran: []
                 };
-                })
-                .catch(async (err) => {
-                    console.log(err);
-
-                    Swal.fire(
-                        'Error!',
-                        err?.error || err?.message || 'Terjadi kesalahan',
-                        'error'
-                    );
-                });
-            },
+            })
+            .catch(() => {
+                Swal.fire('Error!', 'Gagal menyimpan', 'error');
+            });
+        },
 
         /* ================= LAMPIRAN ================= */
         handleUploadKeputusan(e){
@@ -1599,25 +1499,9 @@ function detailKeluhanApp() {
             },
 
         bukaLaporanWO(wo){
-
-            const laporan = (wo.laporan || []).map(item => {
-
-                return {
-                    judul: item.judul || 'Update Penanganan',
-                    deskripsi: item.deskripsi || '',
-                    waktu: item.waktu,
-                    status: item.status,
-                    lampiran: item.lampiran || []
-                };
-            });
-
-            this.selectedWO = {
-                ...wo,
-                laporan: laporan
-            };
-
+            this.selectedWO = wo;
             this.openLaporan = true;
-            },
+        },
             
         get sudahAdaWO(){
             return this.workOrders.length > 0;
@@ -1632,49 +1516,6 @@ function detailKeluhanApp() {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-        },
-
-        // ================= HELPER =================
-        normalizeStatus(status){
-            return (status || '')
-                .toLowerCase()
-                .trim()
-                .replace(/\s+/g, '_');
-        },
-
-        formatStatus(status){
-            const s = this.normalizeStatus(status);
-
-            if(s === 'unassigned') return 'Unassigned';
-            if(s === 'open') return 'Open';
-            if(s === 'on_progress') return 'On Progress';
-            if(s === 'waiting') return 'Waiting';
-            if(s === 'close') return 'Close';
-
-            return status;
-        },
-
-        statusClass(status){
-            const s = this.normalizeStatus(status);
-
-            return {
-                'bg-blue-100 text-blue-700': s === 'open',
-                'bg-yellow-100 text-yellow-700': s === 'on_progress',
-                'bg-orange-100 text-orange-700': s === 'waiting',
-                'bg-green-100 text-green-700': s === 'close',
-                'bg-gray-100 text-gray-700': !['open','on_progress','waiting','close'].includes(s)
-            }
-        },
-
-        statusClassRiwayat(status){
-            const s = this.normalizeStatus(status);
-
-            return {
-                'border-l-4 border-blue-500 bg-blue-50/30': s === 'open',
-                'border-l-4 border-yellow-500 bg-yellow-50/30': s === 'on_progress',
-                'border-l-4 border-orange-500 bg-orange-50/30': s === 'waiting',
-                'border-l-4 border-green-500 bg-green-50/30': s === 'close'
-            }
         }
     }
 }
