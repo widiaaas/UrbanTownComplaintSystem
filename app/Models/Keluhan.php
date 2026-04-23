@@ -84,4 +84,10 @@ class Keluhan extends Model
         return optional($this->penghuni)->telepon ?? '-';
     }
 
+    public function riwayatPenanganan()
+    {
+        return $this->hasMany(RiwayatPenangananKeluhan::class, 'keluhan_id')
+                    ->latest('waktu');
+    }
+
 }

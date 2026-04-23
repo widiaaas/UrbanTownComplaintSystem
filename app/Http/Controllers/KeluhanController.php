@@ -290,6 +290,7 @@ class KeluhanController extends Controller
                 'tanggal' => optional($keluhan->created_at)->format('d-m-Y H:i'),
                 'lampiran' => $keluhan->lampiran ?? [],
             ],
+            'riwayat_penanganan' => $keluhan->riwayatPenanganan,
         
             // 🔥 RIWAYAT
             'keputusan' => $keluhan->riwayat

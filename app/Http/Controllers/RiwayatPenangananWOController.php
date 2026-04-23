@@ -11,63 +11,58 @@ class RiwayatPenangananWOController extends Controller
 {
     public function simpanPenanganan(Request $request, $id)
     {
-        try {
-            // 🔥 VALIDASI
+        try { 
             $validator = Validator::make($request->all(), [
                 'judul' => 'required|string',
-                'deskripsi' => 'required|string',
+                'catatan' => 'required|string',
             ]);
-
+            
             if ($validator->fails()) {
                 return response()->json([
                     'message' => $validator->errors()->first()
                 ], 422);
             }
 
-            // 🔥 AUTH
             $user = auth()->user();
+
+            // 🔥 FIX WAJIB
             if (!$user) {
                 return response()->json([
                     'message' => 'User tidak login'
                 ], 401);
             }
 
-            // 🔥 AMBIL WO
-            $WO = WO::findOrFail($id);
+            $wo = WorkOrder::findOrFail($id);
+
+            $status = $wo->status;
 
             $lampiran = [];
 
             if ($request->hasFile('lampiran')) {
                 foreach ($request->file('lampiran') as $file) {
-                    if ($file->isValid()) {
-                        $lampiran[] = $file->store('WO_lampiran', 'public');
-                    }
+                    $lampiran[] = $file->store('wo_lampiran', 'public');
                 }
             }
 
-            // 🔥 SIMPAN RIWAYAT (SAMA KAYAK WO)
-            $riwayat = RiwayatPenangananWO::create([
-                'WO_id' => $WO->id,
-                'status' => $WO->status, // 🔥 ambil dari WO
-                'judul' => $request->judul,
-                'deskripsi' => $request->deskripsi,
+            RiwayatPenangananWorkOrder::create([
+                'work_order_id' => $wo->id,
+                'status' => $status,
+                'keterangan' => $request->judul . ' - ' . $request->catatan,
                 'lampiran' => $lampiran,
                 'penanggung_jawab_id' => $user->id,
                 'waktu' => now()
             ]);
 
+            $updateData = ['status' => $status];
+
+            if ($status === 'close') {
+                $updateData['tanggal_selesai'] = now();
+            }
+
+            $wo->update($updateData);
+
             return response()->json([
-                'success' => true,
-                'message' => 'Penanganan berhasil disimpan',
-                'data' => [
-                    'id' => $riwayat->id,
-                    'judul' => $riwayat->judul,
-                    'deskripsi' => $riwayat->deskripsi,
-                    'status' => $riwayat->status,
-                    'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
-                    'lampiran' => $riwayat->lampiran,
-                    'penanggung_jawab' => $user->nama ?? null
-                ]
+                'message' => 'Penanganan berhasil disimpan'
             ]);
 
         } catch (\Throwable $e) {
@@ -76,5 +71,5 @@ class RiwayatPenangananWOController extends Controller
                 'line' => $e->getLine()
             ], 500);
         }
-    }
+        }
 }

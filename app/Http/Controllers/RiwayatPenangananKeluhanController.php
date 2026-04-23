@@ -67,7 +67,8 @@ class RiwayatPenangananKeluhanController extends Controller
                     'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
                     'lampiran' => $riwayat->lampiran,
                     'penanggung_jawab' => $user->nama ?? null
-                ]
+                ],
+                
             ]);
 
         } catch (\Throwable $e) {

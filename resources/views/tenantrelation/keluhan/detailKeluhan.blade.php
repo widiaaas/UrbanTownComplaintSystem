@@ -3,7 +3,7 @@
 @section('title', 'Detail Penanganan Keluhan')
 
 @section('content')
-<div x-data="detailKeluhanApp()" class="p-6 max-w-5xl mx-auto space-y-6">
+<div x-data="detailKeluhanApp()" x-init="init()" class="p-6 max-w-5xl mx-auto space-y-6">
 
     {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-start">
@@ -202,14 +202,14 @@
     </div>
 
     <!-- ================= MODAL PREVIEW FILE ================= -->
-    <div x-show="previewOpen" x-cloak
+    <div x-show="openPreview" x-cloak
         class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
 
         <div class="bg-white w-full max-w-3xl rounded-lg p-4 relative">
 
             <!-- CLOSE -->
             <button 
-                @click="previewOpen=false"
+                @click="openPreview=false"
                 class="absolute top-2 right-2 text-xl">
                 ✕
             </button>

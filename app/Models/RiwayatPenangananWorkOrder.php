@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class RiwayatPenangananWorkOrder extends Model
 {
@@ -15,8 +16,8 @@ class RiwayatPenangananWorkOrder extends Model
         'work_order_id', 
         'status',
         'judul',
-        'judul',
         'deskripsi',
+        'lampiran',
         'penanggung_jawab_id',
         'waktu',
     ];
@@ -34,5 +35,10 @@ class RiwayatPenangananWorkOrder extends Model
     public function penanggungJawab()
     {
         return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
+    }
+
+    public function getWaktuAttribute($value)
+    {
+        return Carbon::parse($value)->format('d-m-Y H:i');
     }
 }
