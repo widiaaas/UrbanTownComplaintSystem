@@ -16,19 +16,33 @@ class UnitController extends Controller
 {
     public function index(Request $request)
     {
-        
         $query = Unit::with('penghuniAktif');
 
-        
-        $units = $query->get();
-        if ($request->header('X-Requested-With') === 'XMLHttpRequest') {
+        // ================= SEARCH =================
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+
+            $query->where(function ($q) use ($search) {
+                $q->where('no_unit', 'like', "%$search%")
+                ->orWhere('gedung', 'like', "%$search%");
+            });
+        }
+
+        // ================= FILTER LANTAI =================
+        if ($request->filled('lantai')) {
+            $query->where('lantai', $request->lantai);
+        }
+
+        // ================= DATA =================
+        $units = $query->latest()->get();
+
+        // ================= AJAX RESPONSE =================
+        if ($request->ajax()) {
             return response()->json($units);
         }
-        // dd($units);
 
         return view('admin.units.index', compact('units'));
     }
-
     /**
      * FIX: relasi sekarang bukan units(), tapi unit()
      */

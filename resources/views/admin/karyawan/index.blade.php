@@ -10,55 +10,71 @@
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-900">Kelola Karyawan</h1>
         <button 
-            @click="
-                openCreate = true;
-
-                // reset state
-                passwordGenerated = false;
-                generatedPassword = '';
-
-                newEmployee = {
-                    id_pegawai:'',
-                    nama:'',
-                    telp:'',
-                    email:'',
-                    departemen:'',
-                    role:'',
-                    gender:'',
-                    status:'Aktif'
-                };
-
-                $nextTick(() => $refs.nama.focus());
-            "
+            @click="openCreateModal"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             + Tambah Karyawan
         </button>
     </div>
 
     {{-- ================= FILTER ================= --}}
-    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
-        <div class="flex-1">
-            <label class="text-sm font-medium text-gray-700">Cari Nama</label>
-            <input type="text" 
-                class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-        </div>
+    <form method="GET" action="{{ route('admin.karyawan.index') }}">
+        <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
+            
+            {{-- Cari Nama --}}
+            <div class="flex-1">
+                <label for="nama" class="text-sm font-medium text-gray-700">Cari Nama</label>
+                <input 
+                    id="nama"
+                    type="text"
+                    name="nama"
+                    value="{{ request('nama') }}"
+                    placeholder="Masukkan nama karyawan..."
+                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+            </div>
 
-        <div>
-            <label class="text-sm font-medium text-gray-700">Departemen</label>
-            <select class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-                <option value="">Pilih Departemen</option>
-                            @foreach($departemens as $dept)
-                                <option value="{{ $dept }}">{{ $dept }}</option>
-                            @endforeach
-            </select>
-        </div>
+            {{-- Kategori --}}
+            <div>
+                <label for="kategori" class="text-sm font-medium text-gray-700">Kategori Karyawan</label>
+                <select 
+                    id="kategori"
+                    name="kategori"
+                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
 
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Filter</button>
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-100">Reset</button>
-        </div>
-    </div>
+                    <option value="">Semua</option>
 
+                    <optgroup label="Tenant Relation">
+                        <option value="tenant_relation"
+                            {{ request('kategori') == 'tenant_relation' ? 'selected' : '' }}>
+                            Tenant Relation
+                        </option>
+                    </optgroup>
+
+                    <optgroup label="Departemen">
+                        @foreach($departemens as $dept)
+                            <option value="dept:{{ $dept }}"
+                                {{ request('kategori') == 'dept:'.$dept ? 'selected' : '' }}>
+                                {{ $dept }}
+                            </option>
+                        @endforeach
+                    </optgroup>
+                </select>
+            </div>
+            
+            {{-- Button --}}
+            <div class="flex gap-2">
+                <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Filter
+                </button>
+
+                <a href="{{ route('admin.karyawan.index') }}"
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-100 text-center">
+                    Reset
+                </a>
+            </div>
+
+        </div>
+    </form>
     {{-- ================= TABLE ================= --}}
     <div class="overflow-x-auto">
         <table class="min-w-full border border-gray-200 text-sm">
@@ -548,6 +564,27 @@ function karyawanManager(){
                     this.$nextTick(() => this.$refs.nama.focus());
                 }, 50);
 
+            });
+        },
+        openCreateModal(){
+            this.openCreate = true;
+
+            this.passwordGenerated = false;
+            this.generatedPassword = '';
+
+            this.newEmployee = {
+                id_pegawai:'',
+                nama:'',
+                telp:'',
+                email:'',
+                departemen:'',
+                role:'',
+                gender:'',
+                status:'Aktif'
+            };
+
+            this.$nextTick(() => {
+                this.$refs.nama?.focus();
             });
         },
         

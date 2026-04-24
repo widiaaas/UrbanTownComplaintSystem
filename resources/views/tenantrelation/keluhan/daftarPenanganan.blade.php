@@ -13,6 +13,41 @@
         </p>
     </div>
 
+    {{-- ================= FILTER ================= --}}
+    <div class="bg-white rounded-xl shadow p-4 flex flex-col md:flex-row gap-4">
+
+        {{-- Search --}}
+        <div class="flex-1">
+            <label class="text-sm font-medium text-gray-700">Cari</label>
+            <input 
+                type="text"
+                x-model="search"
+                placeholder="Cari tiket / unit / penghuni..."
+                class="w-full mt-1 border rounded-lg px-3 py-2">
+        </div>
+
+        {{-- Status --}}
+        <div>
+            <label class="text-sm font-medium text-gray-700">Status</label>
+            <select x-model="statusFilter" class="w-full mt-1 border rounded-lg px-3 py-2">
+                <option value="">Semua</option>
+                <option value="open">Open</option>
+                <option value="on progress">On Progress</option>
+                <option value="close">Close</option>
+            </select>
+        </div>
+
+        {{-- Reset --}}
+        <div class="flex items-end">
+            <button 
+                @click="resetFilter"
+                class="px-4 py-2 border rounded-lg hover:bg-gray-100">
+                Reset
+            </button>
+        </div>
+
+    </div>
+
     {{-- TABLE --}}
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="max-h-[420px] overflow-y-auto">
@@ -29,33 +64,40 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="(k, index) in keluhan" :key="k.id">
+                    {{-- DATA --}}
+                    <template x-for="(k, index) in filteredKeluhan" :key="k.id">
                         <tr class="border-t hover:bg-gray-50">
                             <td class="px-5 py-3 text-center" x-text="index + 1"></td>
                             <td class="px-5 py-3 text-center font-medium" x-text="k.ticket"></td>
                             <td class="px-5 py-3 text-center" x-text="k.unit"></td>
-                            <td class="px-5 py-3 text-center" x-text="k.tanggal"></td>
+                            <td class="px-5 py-3 text-center" x-text="k.waktu"></td>
                             <td class="px-5 py-3 text-center" x-text="k.penghuni"></td>
-                            
+
                             <td class="px-5 py-3 text-center">
-                                <span class="px-3 py-1 rounded-full text-xs "
+                                <span class="px-3 py-1 rounded-full text-xs"
                                     :class="statusClass(k.status)"
                                     x-text="k.status">
                                 </span>
                             </td>
+
                             <td class="px-5 py-3 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    {{-- Tombol Detail --}}
-                                    <a
-                                        :href="'/keluhan/' + k.id"
-                                        class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700">
-                                        Detail
-                                    </a>
-                                    
-                                </div>
+                                <a :href="'/keluhan/' + k.id"
+                                class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700">
+                                    Detail
+                                </a>
                             </td>
                         </tr>
                     </template>
+
+                    {{-- 🔥 EMPTY STATE (SAMA PERSIS KAYAK WO) --}}
+                    <template x-if="filteredKeluhan.length === 0">
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-gray-500 italic">
+                                Data keluhan tidak ditemukan
+                            </td>
+                        </tr>
+                    </template>
+
                 </tbody>
             </table>
         </div>
@@ -75,6 +117,34 @@ function penangananApp() {
         selectedKeluhan: {},
         newStatus: '',
         statusCatatan: '',
+        search: '',
+        statusFilter: '',
+
+
+        // ================= COMPUTED =================
+        get filteredKeluhan() {
+            return this.keluhan.filter(k => {
+
+                const search = this.search.toLowerCase();
+
+                const matchSearch =
+                    k.ticket.toLowerCase().includes(search) ||
+                    k.unit.toLowerCase().includes(search) ||
+                    k.penghuni.toLowerCase().includes(search);
+
+                const matchStatus =
+                    !this.statusFilter ||
+                    k.status.toLowerCase() === this.statusFilter;
+
+                return matchSearch && matchStatus;
+            });
+        },
+
+    // ================= RESET =================
+    resetFilter() {
+        this.search = '';
+        this.statusFilter = '';
+    },
 
         // ================= OPEN MODAL =================
         openStatusModal(keluhan) {

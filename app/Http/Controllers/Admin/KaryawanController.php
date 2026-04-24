@@ -17,16 +17,39 @@ class KaryawanController extends Controller
     /**
      * ================== INDEX ==================
      */
-    public function index()
+    public function index(Request $request)
     {
-        $karyawans = Karyawan::with('user')->get();
+        $query = Karyawan::with('user');
 
+        // ================= FILTER NAMA =================
+        if ($request->filled('nama')) {
+            $query->where('nama', 'LIKE', '%' . trim($request->nama) . '%');
+        }
+
+        // ================= FILTER KATEGORI =================
+        if ($request->filled('kategori')) {
+            $kategori = $request->kategori;
+
+            if ($kategori === 'tenant_relation') {
+                $query->where('role', 'tenant_relation');
+            } elseif (str_starts_with($kategori, 'dept:')) {
+                $dept = str_replace('dept:', '', $kategori);
+
+                $query->where('role', 'departemen')
+                    ->where('departemen', $dept);
+            }
+        }
+
+        // ================= DATA =================
+        $karyawans = $query->latest()->get();
+
+        // ================= LIST DEPARTEMEN =================
         $departemens = Karyawan::whereNotNull('departemen')
             ->distinct()
             ->pluck('departemen')
             ->values();
 
-        return view('admin.karyawan.index', compact('karyawans','departemens'));
+        return view('admin.karyawan.index', compact('karyawans', 'departemens'));
     }
 
     /**

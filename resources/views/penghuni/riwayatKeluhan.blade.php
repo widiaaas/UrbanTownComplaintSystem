@@ -11,39 +11,40 @@
     <h1 class="text-2xl font-bold text-gray-900">Riwayat Keluhan</h1>
 
     {{-- FILTER --}}
-    <div class="bg-white rounded-lg shadow p-4">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <div class="bg-white rounded-xl shadow p-4 flex flex-col md:flex-row gap-4">
 
-            <div class="md:col-span-6">
-                <label class="text-sm font-medium">Cari Keluhan</label>
-                <input type="text"
-                    x-model="search"
-                    placeholder="Ticket / Judul"
-                    class="w-full border rounded-lg px-3 py-2">
-            </div>
-
-            <div class="md:col-span-3">
-                <label class="text-sm font-medium">Status</label>
-                <select x-model="filterStatus"
-                    class="w-full border rounded-lg px-3 py-2">
-                    <option value="">Semua</option>
-                    <option value="diproses">Diproses</option>
-                    <option value="selesai">Selesai</option>
-                </select>
-            </div>
-
-            <div class="md:col-span-3 flex gap-2">
-                <button @click="applyFilter()"
-                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded">
-                    Filter
-                </button>
-                <button @click="resetFilter()"
-                    class="flex-1 border px-4 py-2 rounded">
-                    Reset
-                </button>
-            </div>
-
+        {{-- SEARCH --}}
+        <div class="flex-1">
+            <label class="text-sm font-medium text-gray-700">Cari Keluhan</label>
+            <input 
+                type="text"
+                x-model="search"
+                placeholder="Ticket / Judul"
+                class="w-full mt-1 border rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
         </div>
+
+        {{-- STATUS --}}
+        <div class="w-full md:w-48">
+            <label class="text-sm font-medium text-gray-700">Status</label>
+            <select x-model="filterStatus"
+                class="w-full mt-1 border rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
+                <option value="">Semua</option>
+                <option value="unassigned">Unassigned</option>
+                <option value="open">Open</option>
+                <option value="on_progress">On Progress</option>
+                <option value="close">Close</option>
+            </select>
+        </div>
+
+        {{-- RESET --}}
+        <div class="flex items-end">
+            <button 
+                @click="resetFilter()"
+                class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                Reset
+            </button>
+        </div>
+
     </div>
 
     {{-- LIST --}}
@@ -137,7 +138,7 @@
                     <div class="border-l-4 border-green-500 pl-3 space-y-1">
                         <p class="text-sm" x-text="selected.keputusan"></p>
                         <p class="text-xs text-gray-400"
-                        x-text="selected.tanggal_keputusan ?? '-'"></p>
+                        x-text="selected.tanggal_keputusan_format ?? '-'"></p>
                     </div>
                 </template>
 
@@ -207,20 +208,28 @@ function keluhanApp() {
 
         init() {
             this.filteredKeluhan = this.keluhan;
+            this.$watch('search', () => this.applyFilter());
+    this.$watch('filterStatus', () => this.applyFilter());
         },
 
         applyFilter() {
-            const allowedStatus = ['open', 'on progress', 'close'];
+            const search = this.search.toLowerCase();
 
-            this.filteredKeluhan = this.keluhan.filter(k =>
-                allowedStatus.includes((k.status || '').toLowerCase()) &&
+            this.filteredKeluhan = this.keluhan.filter(k => {
 
-                (this.search === '' ||
-                    k.ticket.toLowerCase().includes(this.search.toLowerCase()) ||
-                    k.judul.toLowerCase().includes(this.search.toLowerCase())
-                ) &&
-                (this.filterStatus === '' || k.status === this.filterStatus)
-            );
+                const status = (k.status || '').toLowerCase();
+
+                const matchSearch =
+                    !search ||
+                    k.ticket.toLowerCase().includes(search) ||
+                    k.judul.toLowerCase().includes(search);
+
+                const matchStatus =
+                    !this.filterStatus ||
+                    status === this.filterStatus;
+
+                return matchSearch && matchStatus;
+            });
         },
 
         resetFilter() {

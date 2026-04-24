@@ -6,33 +6,64 @@
 
 <div x-data="penghuniManager()" x-init='init(@json($penghunis))' class="p-6 space-y-6">
 
-    {{-- HEADER --}}
+    {{-- ================= HEADER ================= --}}
     <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Kelola Penghuni</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Kelola Penghuni</h1>
 
         <button 
             @click="
                 openCreate = true;
                 newPenghuni = {nama:'',email:'',telepon:'',status:'Aktif'};
             "
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             + Tambah Penghuni
         </button>
     </div>
 
     {{-- ================= FILTER ================= --}}
-    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
-        <div class="flex-1">
-            <label class="text-sm font-medium text-gray-700">Cari Nama</label>
-            <input type="text" 
-                class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-        </div>
+    <form method="GET" action="{{ route('admin.penghuni.index') }}">
+        <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
+            
+            {{-- Cari Nama / Unit --}}
+            <div class="flex-1">
+                <label for="nama" class="text-sm font-medium text-gray-700">Cari Nama / Unit</label>
+                <input 
+                    id="nama"
+                    type="text"
+                    name="nama"
+                    value="{{ request('nama') }}"
+                    placeholder="Masukkan nama atau nomor unit..."
+                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+            </div>
 
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Filter</button>
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-100">Reset</button>
+            {{-- Status --}}
+            <div>
+                <label for="status" class="text-sm font-medium text-gray-700">Status</label>
+                <select 
+                    id="status"
+                    name="status"
+                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+
+                    <option value="">Semua</option>
+                    <option value="Aktif" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                    <option value="Nonaktif" {{ request('status') == 'Nonaktif' ? 'selected' : '' }}>Nonaktif</option>
+                </select>
+            </div>
+            
+            {{-- Button --}}
+            <div class="flex gap-2">
+                <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Filter
+                </button>
+
+                <a href="{{ route('admin.penghuni.index') }}"
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-100 text-center">
+                    Reset
+                </a>
+            </div>
         </div>
-    </div>
+    </form>
 
     {{-- TABLE --}}
     <div class="bg-white rounded-lg shadow overflow-x-auto">

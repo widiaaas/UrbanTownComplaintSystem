@@ -120,7 +120,7 @@ class KeluhanController extends Controller
             abort(404, 'Unit tidak ditemukan');
         }
 
-        $keluhan = Keluhan::with(['riwayat', 'penghuni'])
+        $keluhan = Keluhan::with(['riwayatPenanganan', 'penghuni'])
             ->where('unit_id', $unit->id)
             ->whereIn('status', ['unassigned','open', 'on_progress', 'close'])
             ->latest()
@@ -378,10 +378,11 @@ class KeluhanController extends Controller
         // ================= SIMPAN KE KELUHAN =================
         $keluhan->update([
             'keputusan' => $request->judul . "\n\n" . $request->solusi,
-            'waktu_keputusan' => now(),
+            'tanggal_keputusan' => now(),
             'lampiran' => $filesPath, // 🔥 overwrite atau bisa merge kalau mau
             'status' => 'close'
         ]);
+        $keluhan->refresh(); 
 
         return response()->json([
             'message' => 'Keputusan berhasil disimpan & keluhan ditutup'

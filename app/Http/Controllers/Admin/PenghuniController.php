@@ -16,25 +16,29 @@ class PenghuniController extends Controller
     public function index(Request $request)
     {
         $query = Penghuni::with('unit');
-
-        // SEARCH
-        if ($request->search) {
-            $query->where('nama', 'like', '%' . $request->search . '%')
-                ->orWhereHas('unit', function ($q) use ($request) {
-                    $q->where('no_unit', 'like', '%' . $request->search . '%');
-                });
+    
+        // ================= FILTER NAMA + UNIT =================
+        if ($request->filled('nama')) {
+            $nama = trim($request->nama);
+    
+            $query->where(function ($q) use ($nama) {
+                $q->where('nama', 'like', "%$nama%")
+                  ->orWhereHas('unit', function ($q2) use ($nama) {
+                      $q2->where('no_unit', 'like', "%$nama%");
+                  });
+            });
         }
-
-        // FILTER STATUS
-        if ($request->status) {
+    
+        // ================= FILTER STATUS =================
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
+    
+        // ================= DATA =================
         $penghunis = $query->latest()->get();
-
-        // 🔥 TAMBAHKAN INI
+    
         $jenisKelamin = ['Laki-laki', 'Perempuan'];
-
+    
         return view('admin.penghuni.index', compact('penghunis', 'jenisKelamin'));
     }
 

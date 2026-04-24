@@ -36,7 +36,8 @@ class Keluhan extends Model
     protected $appends = [
         'tanggal',
         'status_label',
-        'telepon'
+        'telepon',
+        'tanggal_keputusan_format'
     ];
 
     public function unit()
@@ -72,6 +73,11 @@ class Keluhan extends Model
     public function getStatusLabelAttribute()
     {
         return strtolower(str_replace('_', ' ', $this->status ?? 'open'));
+    }
+
+    public function getTanggalKeputusanFormatAttribute()
+    {
+        return optional($this->tanggal_keputusan)->format('d-m-Y H:i');
     }
     
     public function getTeleponAttribute()

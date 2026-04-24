@@ -17,25 +17,53 @@
     </div>
 
     {{-- ================= FILTER ================= --}}
-    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4">
-        <div class="flex-1">
-            <label class="text-sm font-medium">Cari Unit / Gedung</label>
-            <input type="text" x-model="search" class="w-full mt-1 border rounded-lg px-3 py-2">
+    <form method="GET" action="{{ route('admin.units.index') }}">
+        <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4">
+            
+            {{-- Cari Unit / Gedung --}}
+            <div class="flex-1">
+                <label for="search" class="text-sm font-medium">Cari Unit / Gedung</label>
+                <input 
+                    id="search"
+                    type="text"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Masukkan nomor unit atau nama gedung..."
+                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+            </div>
+
+            {{-- Lantai --}}
+            <div>
+                <label for="lantai" class="text-sm font-medium">Lantai</label>
+                <select 
+                    id="lantai"
+                    name="lantai"
+                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+
+                    <option value="">Semua</option>
+                    @foreach($units->pluck('lantai')->unique() as $floor)
+                        <option value="{{ $floor }}"
+                            {{ request('lantai') == $floor ? 'selected' : '' }}>
+                            {{ $floor }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Button --}}
+            <div class="flex gap-2 items-end">
+                <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Filter
+                </button>
+
+                <a href="{{ route('admin.units.index') }}"
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-100 text-center">
+                    Reset
+                </a>
+            </div>
         </div>
-        <div>
-            <label class="text-sm font-medium">Lantai</label>
-            <select x-model="floorFilter" class="w-full mt-1 border rounded-lg px-3 py-2">
-                <option value="">Semua</option>
-                @foreach($units->pluck('lantai')->unique() as $floor)
-                    <option value="{{ $floor }}">{{ $floor }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="flex gap-2 items-end">
-            <button @click="applyFilter()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Filter</button>
-            <button @click="resetFilter()" class="px-4 py-2 border rounded-lg">Reset</button>
-        </div>
-    </div>
+    </form>
 
     {{-- ================= TABLE ================= --}}
     <div class="bg-white rounded-lg shadow overflow-x-auto overflow-y-visible">
