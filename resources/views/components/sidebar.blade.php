@@ -129,7 +129,7 @@
                 <span>Penanganan Saya</span>
             </a>
 
-            <a href="/knowledgeBase"
+            <a href="/knowledge-base"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('knowledgeBase', $currentPath) }}">
                 @include('components.icons.bookOpen')
                 <span>Knowledge Base</span>

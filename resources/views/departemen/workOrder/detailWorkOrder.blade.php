@@ -251,6 +251,13 @@
 
             {{-- ACTION --}}
             <div class="flex gap-3 pt-2">
+
+                <button
+                @click="openKnowledgeBase = true"
+                    class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                    Lihat Knowledge Base
+                </button>
+
                 <button
                     @click="simpanPenanganan"
                     class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
@@ -260,9 +267,144 @@
         </div>
     </template>
 
+    {{-- ================= MODAL KNOWLEDGE BASE ================= --}}
+    <div x-show="openKnowledgeBase" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+
+        <div class="bg-white w-full max-w-5xl rounded-xl shadow-lg overflow-hidden">
+
+            <!-- HEADER -->
+            <div class="flex justify-between items-center px-5 py-3 border-b">
+                <div>
+                    <h3 class="text-base font-semibold">Knowledge Base</h3>
+                    <p class="text-xs text-gray-500">Pencarian solusi</p>
+                </div>
+                <button @click="openKnowledgeBase = false" class="text-lg">✕</button>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="p-4 grid grid-cols-12 gap-3 h-[75vh]">
+
+                <!-- LEFT -->
+                <div class="col-span-4 border rounded-lg p-3 space-y-3 overflow-y-auto">
+
+                    <!-- kategori -->
+                    <select x-model="selectedKategori"
+                        class="w-full border rounded px-2 py-2 text-sm">
+                        <option value="">Pilih kategori</option>
+                        <template x-for="kat in kategoriList">
+                            <option :value="kat" x-text="kat"></option>
+                        </template>
+                    </select>
+
+                    <!-- search -->
+                    <input type="text"
+                        x-model="searchKB"
+                        @input.debounce.400ms="searchKBFromServer"
+                        placeholder="Cari masalah..."
+                        class="w-full border px-2 py-2 rounded text-sm"
+                        >
+
+
+                    <!-- list -->
+                    <div class="space-y-2">
+                        <template x-for="item in filteredKnowledgeBase" :key="item.id">
+                            <button @click="selectKB(item)"
+                                class="w-full text-left p-2 rounded-lg border text-sm transition"
+                                :class="selectedKB?.id === item.id
+                                    ? 'bg-green-50 border-green-400'
+                                    : 'bg-white hover:bg-green-50'">
+
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-medium" x-text="item.judul"></p>
+                                        <p class="text-[11px] text-gray-400" x-text="item.kategori"></p>
+                                    </div>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- MIDDLE -->
+                <div class="col-span-3 border rounded-lg p-3 overflow-y-auto">
+
+                    <template x-if="selectedKB">
+                        <div class="space-y-2">
+
+                            <input type="text"
+                                x-model="searchDiagnosis"
+                                placeholder="Cari penyebab..."
+                                class="w-full border px-2 py-2 rounded text-sm">
+
+                            <template x-for="diag in filteredDiagnosis" :key="diag.id">
+                                <button @click="selectDiagnosis(diag)"
+                                    class="w-full text-left p-2 rounded border text-sm transition"
+                                    :class="selectedDiagnosis?.id === diag.id
+                                        ? 'bg-green-100 border-green-500'
+                                        : 'hover:bg-green-50'">
+
+                                    <p x-html="highlightText(diag.penyebab)"></p>
+                                </button>
+                            </template>
+
+                        </div>
+                    </template>
+
+                    <template x-if="!selectedKB">
+                        <p class="text-xs text-gray-400 text-center mt-10">
+                            Pilih knowledge dulu
+                        </p>
+                    </template>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="col-span-5 bg-gray-50 rounded-lg p-4 overflow-y-auto">
+
+                    <template x-if="selectedDiagnosis">
+                        <div class="bg-white p-3 rounded-lg border space-y-3 text-sm">
+
+                            <h3 class="font-semibold">Detail Solusi</h3>
+
+                            <div>
+                                <p class="text-xs text-gray-500">Penyebab</p>
+                                <p x-text="selectedDiagnosis.penyebab"></p>
+                            </div>
+
+                            <div x-show="selectedDiagnosis.deskripsi">
+                                <p class="text-xs text-gray-500">Deskripsi</p>
+                                <p class="text-gray-600"
+                                    x-text="selectedDiagnosis.deskripsi"></p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-gray-500">Langkah</p>
+                                <p class="whitespace-pre-line"
+                                    x-text="selectedDiagnosis.langkah_penyelesaian"></p>
+                            </div>
+
+                            <p class="text-xs text-gray-400 mt-3">
+                                Gunakan sebagai referensi dalam menentukan keputusan
+                            </p>
+
+                        </div>
+                    </template>
+
+                    <template x-if="!selectedDiagnosis">
+                        <p class="text-gray-400 text-center mt-10 text-sm">
+                            Pilih penyebab untuk melihat detail
+                        </p>
+                    </template>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+     window.knowledgeBase = @json($knowledgeBase);
 function detailWOApp() {
     return {
         wo: @json($wo),
@@ -272,6 +414,18 @@ function detailWOApp() {
             deskripsi: '',
             lampiran: []
         },
+        openKnowledgeBase: false,
+
+        knowledgeBase: [],
+        kategoriList: [],
+
+        selectedKategori: '',
+        searchKB: '',
+        selectedKB: null,
+
+        searchDiagnosis: '',
+        selectedDiagnosis: null,
+        kategoriSearch: '',
 
         openPreview: false,
         previewFile: null,
@@ -298,6 +452,8 @@ function detailWOApp() {
         init() {
             this.wo.status = this.normalizeStatus(this.wo.status);
             this.newStatus = this.formatStatus(this.wo.status);
+            this.knowledgeBase = window.knowledgeBase || [];
+            this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori))];
         },
 
         // ================= UPLOAD =================
@@ -406,6 +562,78 @@ function detailWOApp() {
             }
         },
 
+        async loadKB() {
+            try {
+                const res = await fetch('/knowledge-base', {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const data = await res.json();
+
+                this.knowledgeBase = data;
+
+                // ambil kategori unik
+                this.kategoriList = [...new Set(data.map(k => k.kategori))];
+
+            } catch (e) {
+                console.error('Gagal load KB', e);
+            }
+        },
+
+        selectKB(item) {
+            this.selectedKB = item;
+
+            // auto pilih solusi utama
+            if (item.diagnosis) {
+                let utama = item.diagnosis.find(d => d.tipe === 'utama');
+                this.selectedDiagnosis = utama || item.diagnosis[0];
+            }
+        },
+
+        selectDiagnosis(diag) {
+            this.selectedDiagnosis = diag;
+        },
+
+        get filteredKategori() {
+            if (!this.kategoriSearch) return this.kategoriList;
+            return this.kategoriList.filter(k =>
+                k.toLowerCase().includes(this.kategoriSearch.toLowerCase())
+            );
+        },
+
+        get filteredKnowledgeBase() {
+
+            let data = this.knowledgeBase;
+
+            // filter kategori tetap dipakai
+            if (this.selectedKategori) {
+                data = data.filter(item =>
+                    item.kategori === this.selectedKategori
+                );
+            }
+
+            return data;
+            },
+
+        get filteredDiagnosis() {
+            if (!this.selectedKB || !this.selectedKB.diagnosis) return [];
+            if (!this.searchDiagnosis) return this.selectedKB.diagnosis;
+            let keyword = this.searchDiagnosis.toLowerCase();
+            return this.selectedKB.diagnosis.filter(d =>
+                d.penyebab && d.penyebab.toLowerCase().includes(keyword)
+            );
+        },
+
+        highlightText(text) {
+            if (!this.searchDiagnosis || !text) return text;
+
+            let keyword = this.searchDiagnosis.toLowerCase();
+
+            return text.replace(new RegExp(keyword, 'gi'),
+                match => `<span class="bg-yellow-200">${match}</span>`
+            );
+        },
+
         // ================= STATUS =================
         async ubahStatus() {
 
@@ -468,6 +696,21 @@ function detailWOApp() {
                 });
             }
         },
+
+        async searchKBFromServer() {
+
+            try {
+                let url = `/knowledge-base/search?q=${this.searchKB || ''}&kategori=${this.selectedKategori || ''}`;
+
+                let res = await fetch(url);
+                let data = await res.json();
+
+                this.knowledgeBase = data;
+
+            } catch (e) {
+                console.error('Search KB error:', e);
+            }
+            },
 
         // ================= HELPER =================
         normalizeStatus(status){

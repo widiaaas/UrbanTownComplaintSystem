@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Keluhan;
 use App\Models\WorkOrder;
+use App\Models\KnowledgeBase;
 use App\Models\RiwayatPenangananWO;
 use App\Models\RiwayatPenangananKeluhan;
 
@@ -274,6 +275,10 @@ class KeluhanController extends Controller
             'Developer'
         ];
 
+        $knowledgeBase = KnowledgeBase::with(['diagnosis' => function ($q) {
+            $q->orderBy('urutan');
+        }])->get();
+
         $data = [
             'id' => $keluhan->id,
             'ticket' => $keluhan->ticket,
@@ -291,7 +296,7 @@ class KeluhanController extends Controller
                 'lampiran' => $keluhan->lampiran ?? [],
             ],
             'riwayat_penanganan' => $keluhan->riwayatPenanganan->values(),
-        
+            
             // 🔥 RIWAYAT
             'keputusan' => $keluhan->riwayatPenanganan
                 ->sortBy('waktu')
@@ -339,7 +344,7 @@ class KeluhanController extends Controller
         ];
 
 
-        return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen'));
+        return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen','knowledgeBase'));
     }
 
     public function keputusanAkhir(Request $request, $id)

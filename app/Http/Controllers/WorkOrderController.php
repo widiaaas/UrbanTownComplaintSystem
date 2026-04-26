@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Keluhan;
 use App\Models\WorkOrder;
+use App\Models\KnowledgeBase;
 use App\Models\RiwayatPenangananWorkOrder;
 use Illuminate\Support\Facades\Validator;
 
@@ -203,6 +204,10 @@ class WorkOrderController extends Controller
         
         $pj = $wo->penanggungJawab;
         $tr = $wo->keluhan->penanggungJawab;
+        
+        $knowledgeBase = KnowledgeBase::with(['diagnosis' => function ($q) {
+            $q->orderBy('urutan');
+        }])->get();
 
         $data = [
             'id' => $wo->id,
@@ -240,7 +245,8 @@ class WorkOrderController extends Controller
         ];
 
         return view('departemen.workOrder.detailWorkOrder', [
-            'wo' => $data
+            'wo' => $data,
+            'knowledgeBase' => $knowledgeBase
         ]);
     }
 

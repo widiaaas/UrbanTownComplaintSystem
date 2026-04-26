@@ -14,10 +14,13 @@ class Diagnosis extends Model
 
     protected $fillable = [
         'knowledge_base_id',
-        'keluhan_id',
         'penyebab',
         'deskripsi',
         'langkah_penyelesaian',
+        'tipe',
+        'urutan',
+        'usage_count',
+        'keluhan_id'
     ];
 
     public function knowledgeBase()

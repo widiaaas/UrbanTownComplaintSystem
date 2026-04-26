@@ -14,6 +14,7 @@ use App\Http\Controllers\KeluhanController;
 use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\RiwayatPenangananWOController;
 use App\Http\Controllers\RiwayatPenangananKeluhanController;
+use App\Http\Controllers\KnowledgeBaseController;
 
 
 
@@ -139,7 +140,9 @@ use App\Http\Controllers\RiwayatPenangananKeluhanController;
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
+Route::get('/tesKB', function () {
+    return view('tesKB');
+});
 // ==================== AUTHENTICATED ROUTES ====================
 Route::middleware(['auth'])->group(function () {
 
@@ -216,9 +219,22 @@ Route::middleware(['auth'])->group(function () {
         // 🔥 LAPORAN
         Route::get('/rekap-penanganan', [KeluhanController::class, 'rekap'])->name('tr.rekap');
 
-        // 🔥 KNOWLEDGE BASE
-        Route::get('/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('tr.knowledge');
-        Route::get('/knowledgeBase', fn() => view('tenantrelation.knowledgeBase.index'));
+       // 🔥 KNOWLEDGE BASE - halaman view
+        Route::get('/knowledge-base', [KnowledgeBaseController::class, 'page']);
+        
+        // 🔥 KNOWLEDGE BASE - API (untuk JS fetch)
+        Route::get('/knowledge-base/list', [KnowledgeBaseController::class, 'index']);
+        Route::post('/knowledge-base', [KnowledgeBaseController::class, 'store']);
+        Route::get('/knowledge-base/search', [KnowledgeBaseController::class, 'search']);
+        
+        // 🔥 CRUD Diagnosis
+        Route::post('/knowledge-base/{kb}/diagnosis', [KnowledgeBaseController::class, 'storeDiagnosis']);
+        Route::post('/knowledge-base/{kb}/diagnosis/{diagnosis}', [KnowledgeBaseController::class, 'updateDiagnosis']);
+        Route::delete('/knowledge-base/{kb}/diagnosis/{diagnosis}', [KnowledgeBaseController::class, 'destroyDiagnosis']);
+        
+        // 🔥 KB CRUD
+        Route::put('/knowledge-base/{id}', [KnowledgeBaseController::class, 'update']);
+        Route::delete('/knowledge-base/{id}', [KnowledgeBaseController::class, 'destroy']);
     });
 
     // ================= DEPARTEMEN =================
@@ -231,6 +247,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/work-order/{id}/status', [WorkOrderController::class, 'updateStatus']);
 
         Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);
+
+        
     });
 
 
@@ -240,4 +258,5 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/keluhan', [KeluhanController::class, 'store']);
         Route::get('/riwayatKeluhan', [KeluhanController::class, 'riwayat']);
     });
+
 });
