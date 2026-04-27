@@ -8,10 +8,20 @@ use App\Models\Diagnosis;
 use App\Models\Sinonim;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use voku\helper\StopWords;
+use Sastrawi\Stemmer\StemmerFactory;
 
 class KnowledgeBaseController extends Controller
 {   
+    private $stemmer;
 
+    // 🔥 TAMBAHKAN DI SINI
+    public function __construct()
+    {
+        $factory = new StemmerFactory();
+        $this->stemmer = $factory->createStemmer();
+    }
+    
     // Tampilkan halaman view
     public function page()
     {
@@ -25,7 +35,7 @@ class KnowledgeBaseController extends Controller
         return view('tenantrelation.knowledgeBase.index', compact('knowledgeBase', 'kategoriList'));
     }
     /**
-     * 🔥 GET KB
+     * 🔥 GET KB = fetch data kb dalam bentuk JSON (API)
      */
     public function index()
     {
@@ -35,7 +45,59 @@ class KnowledgeBaseController extends Controller
     }
 
     /**
-     * 🔥 STORE KB
+     * 🔥 NORMALISASI TEKS DENGAN SINONIM
+     */
+    private function normalizeText($text, $kategori = null)
+    {
+        $text = strtolower($text);
+
+        // 🔥 stemming dulu
+        $text = $this->stemmer->stem($text);
+
+        // 🔥 sinonim (punya kamu)
+        $sinonims = Sinonim::where(function ($q) use ($kategori) {
+            $q->whereNull('konteks');
+
+            if ($kategori) {
+                $q->orWhere('konteks', $kategori);
+            }
+        })->get();
+
+        foreach ($sinonims as $s) {
+            $text = str_replace(
+                strtolower($s->kata_asli),
+                strtolower($s->kata_normal),
+                $text
+            );
+        }
+
+        return $text;
+    }
+
+    /**
+     * 🔥 EXTRACT KEYWORDS = mengambul kata penting dari teks
+     */
+    private function extractKeywords($text)
+    {
+        // hapus simbol
+        $text = preg_replace('/[^a-z0-9\s]/', '');
+
+        // pecah kata
+        $words = explode(' ', $text);
+
+        // 🔥 pakai library stopword
+        $stopWords = new StopWords();
+        $stopwords = $stopWords->getStopWordsFromLanguage('id'); // bahasa Indonesia
+
+        // filter stopword
+        $filtered = array_diff($words, $stopwords);
+
+        // hapus kosong
+        return array_values(array_filter($filtered));
+    }
+
+    /**
+     * 🔥 STORE KB = menyimpan 
      */
     public function store(Request $request)
     {   
@@ -111,51 +173,7 @@ class KnowledgeBaseController extends Controller
         ]);
     }
 
-    /**
-     * 🔥 NORMALISASI TEKS DENGAN SINONIM
-     */
-    private function normalizeText($text, $kategori = null)
-    {
-        $text = strtolower($text);
-
-        $sinonims = Sinonim::where(function ($q) use ($kategori) {
-            $q->whereNull('konteks');
-
-            if ($kategori) {
-                $q->orWhere('konteks', $kategori);
-            }
-        })->get();
-
-        foreach ($sinonims as $s) {
-            $text = str_replace(
-                strtolower($s->kata_asli),
-                strtolower($s->kata_normal),
-                $text
-            );
-        }
-
-        return $text;
-    }
-
-    /**
-     * 🔥 EXTRACT KEYWORDS
-     */
-    private function extractKeywords($text)
-    {
-        // hapus simbol
-        $text = preg_replace('/[^a-z0-9\s]/', '', $text);
-
-        // pecah kata
-        $words = explode(' ', $text);
-
-        // stopword sederhana
-        $stopwords = ['dan','di','ke','yang','untuk','dengan'];
-
-        return array_values(array_filter(
-            array_diff($words, $stopwords)
-        ));
-    }
-
+    // Search kb 
     public function search(Request $request)
     {
         $query = $request->q;

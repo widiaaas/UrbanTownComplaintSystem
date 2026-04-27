@@ -303,8 +303,14 @@
                         @input.debounce.400ms="searchKBFromServer"
                         placeholder="Cari masalah..."
                         class="w-full border px-2 py-2 rounded text-sm"
-                        >
+                        :disabled="!selectedKategori">
 
+                    <!-- empty -->
+                    <template x-if="!selectedKategori">
+                        <p class="text-xs text-gray-400 text-center">
+                            Pilih kategori dulu
+                        </p>
+                    </template>
 
                     <!-- list -->
                     <div class="space-y-2">
@@ -415,6 +421,7 @@ function detailWOApp() {
             lampiran: []
         },
         openKnowledgeBase: false,
+        openKategori: false,
 
         knowledgeBase: [],
         kategoriList: [],
@@ -561,38 +568,7 @@ function detailWOApp() {
                 });
             }
         },
-
-        async loadKB() {
-            try {
-                const res = await fetch('/knowledge-base', {
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                const data = await res.json();
-
-                this.knowledgeBase = data;
-
-                // ambil kategori unik
-                this.kategoriList = [...new Set(data.map(k => k.kategori))];
-
-            } catch (e) {
-                console.error('Gagal load KB', e);
-            }
-        },
-
-        selectKB(item) {
-            this.selectedKB = item;
-
-            // auto pilih solusi utama
-            if (item.diagnosis) {
-                let utama = item.diagnosis.find(d => d.tipe === 'utama');
-                this.selectedDiagnosis = utama || item.diagnosis[0];
-            }
-        },
-
-        selectDiagnosis(diag) {
-            this.selectedDiagnosis = diag;
-        },
+        
 
         get filteredKategori() {
             if (!this.kategoriSearch) return this.kategoriList;
@@ -624,6 +600,21 @@ function detailWOApp() {
             );
         },
 
+        selectKB(item) {
+            this.selectedKB = item;
+
+            // auto pilih solusi utama
+            if (item.diagnosis) {
+                let utama = item.diagnosis.find(d => d.tipe === 'utama');
+                this.selectedDiagnosis = utama || item.diagnosis[0];
+            }
+        },
+
+        selectDiagnosis(diag) {
+            this.selectedDiagnosis = diag;
+        },
+
+
         highlightText(text) {
             if (!this.searchDiagnosis || !text) return text;
 
@@ -632,6 +623,11 @@ function detailWOApp() {
             return text.replace(new RegExp(keyword, 'gi'),
                 match => `<span class="bg-yellow-200">${match}</span>`
             );
+        },
+
+        selectKategori(item) {
+            this.kbForm.kategori = item;
+            this.openKategori = false;
         },
 
         // ================= STATUS =================
@@ -699,10 +695,14 @@ function detailWOApp() {
 
         async searchKBFromServer() {
 
-            try {
-                let url = `/knowledge-base/search?q=${this.searchKB || ''}&kategori=${this.selectedKategori || ''}`;
+            // 🔥 penting (samakan dengan keluhan)
+            if (!this.searchKB) {
+                this.knowledgeBase = [];
+                return;
+            }
 
-                let res = await fetch(url);
+            try {
+                let res = await fetch(`/knowledge-base/search?q=${this.searchKB}&kategori=${this.selectedKategori}`);
                 let data = await res.json();
 
                 this.knowledgeBase = data;
