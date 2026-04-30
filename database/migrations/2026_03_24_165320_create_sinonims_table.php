@@ -28,6 +28,8 @@ return new class extends Migration
             // index untuk performa search
             $table->index('kata_asli');
             $table->index('kata_normal');
+            // tambahkan ini setelah index
+            $table->unique(['kata_asli', 'konteks']);
         });
     }
 

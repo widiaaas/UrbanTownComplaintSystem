@@ -190,10 +190,24 @@
                     <input type="file" multiple @change="handleUploadKeputusan($event)" class="text-sm">
                     <div class="flex flex-wrap gap-2 mt-2">
                         <template x-for="(file, index) in keputusan.lampiran" :key="index">
-                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50">
+                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
+
                                 <span x-text="file.name"></span>
-                                <button @click="hapusLampiranKeputusan(index)"
-                                    class="ml-2 text-red-500 hover:text-red-700">✕</button>
+
+                                <!-- 🔥 PREVIEW BUTTON -->
+                                <button 
+                                    @click="openPreviewFile(file)"
+                                    class="text-blue-600 hover:underline">
+                                    Preview
+                                </button>
+
+                                <!-- DELETE -->
+                                <button 
+                                    @click="hapusLampiranKeputusan(index)"
+                                    class="text-red-500 hover:text-red-700">
+                                    ✕
+                                </button>
+
                             </div>
                         </template>
                     </div>

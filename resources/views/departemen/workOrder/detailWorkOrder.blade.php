@@ -9,180 +9,123 @@
     <div class="flex justify-between items-start">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Detail Work Order</h1>
-            <p class="text-sm text-gray-500">
-                No WO: <span x-text="wo.no"></span>
-            </p>
+            <p class="text-sm text-gray-500">No WO: <span x-text="wo.no"></span></p>
         </div>
-
-        <a href="/daftar-work-order" class="text-sm text-blue-600 hover:underline">
-            ← Kembali
-        </a>
+        <a href="/daftar-work-order" class="text-sm text-blue-600 hover:underline">← Kembali</a>
     </div>
 
     {{-- ================= INFO UTAMA WO ================= --}}
     <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
-        <!-- <p><b>Nomor Tiket</b><br><span x-text="wo.tiket"></span></p> -->
         <p><b>Departemen</b><br><span x-text="wo.dept"></span></p>
         <p><b>TR Penanggung Jawab</b><br><span x-text="wo.tr"></span></p>
         <p><b>Tanggal WO</b><br><span x-text="wo.tanggal"></span></p>
         <p><b>Status WO</b><br>
-        <span 
-            class="inline-block text-xs px-2 py-1 rounded"
-            :class="statusClass(wo.status)"
-            x-text="formatStatus(wo.status)">
-        </span>
+            <span class="inline-block text-xs px-2 py-1 rounded"
+                :class="statusClass(wo.status)"
+                x-text="formatStatus(wo.status)">
+            </span>
         </p>
     </div>
 
     {{-- ================= INSTRUKSI PEKERJAAN ================= --}}
     <div class="bg-white p-6 rounded-xl shadow space-y-5">
-
-        <!-- HEADER -->
         <h3 class="font-semibold">Instruksi Pekerjaan</h3>
-
-        <!-- INSTRUKSI -->
         <div>
             <p class="text-sm font-medium mb-1">Instruksi</p>
-            <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700"
-                x-text="wo.instruksi || '-'">
-            </div>
+            <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700" x-text="wo.instruksi || '-'"></div>
         </div>
-
-        <!-- LOKASI -->
         <div>
             <p class="text-sm font-medium mb-1">Lokasi</p>
-            <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700"
-                x-text="wo.lokasi || '-'">
-            </div>
+            <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700" x-text="wo.lokasi || '-'"></div>
         </div>
-
     </div>
 
     {{-- ================= RIWAYAT PENANGANAN ================= --}}
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
-
-        <!-- HEADER -->
         <div class="flex items-center justify-between">
             <h3 class="font-semibold">Riwayat Penanganan</h3>
         </div>
-
-        <!-- DATA ADA -->
         <template x-if="wo.laporan && wo.laporan.length">
             <div class="relative">
-
-                <!-- SCROLL AREA -->
                 <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-
                     <template x-for="(lapor, index) in wo.laporan" :key="index">
                         <div class="relative pl-6 py-3 rounded-md border-l-2"
                             :class="statusClassRiwayat(lapor.status)">
-
-                            <!-- DOT -->
                             <span class="absolute -left-2 top-4 w-3 h-3 rounded-full"
                                 :class="{
                                     'bg-blue-500': normalizeStatus(lapor.status) === 'open',
                                     'bg-yellow-500': normalizeStatus(lapor.status) === 'on_progress',
                                     'bg-orange-500': normalizeStatus(lapor.status) === 'waiting',
                                     'bg-green-500': normalizeStatus(lapor.status) === 'close'
-                                }">
-                            </span>
-
-                            <!-- JUDUL -->
+                                }"></span>
                             <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
-
-                            <!-- deskripsi -->
                             <p class="text-gray-600 mt-1" x-text="lapor.deskripsi"></p>
-
-                            <!-- LAMPIRAN -->
-                            <div class="flex flex-wrap gap-2 mt-2"
-                                x-show="lapor.lampiran && lapor.lampiran.length">
-
+                            <div class="flex flex-wrap gap-2 mt-2" x-show="lapor.lampiran && lapor.lampiran.length">
                                 <template x-for="(file, i) in lapor.lampiran" :key="i">
-                                    <button
-                                        @click="openPreviewFile(file)"
+                                    <button @click="openPreviewFile(file)"
                                         class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
-
                                         <span x-text="file.split('/').pop()"></span>
                                     </button>
                                 </template>
-
                             </div>
-
-                            <!-- WAKTU -->
                             <p class="text-xs text-gray-400 mt-2" x-text="lapor.waktu"></p>
-
                         </div>
                     </template>
-
                 </div>
-
-                <!-- FADE EFFECT (OPSIONAL BIAR KEREN) -->
                 <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-
             </div>
         </template>
-
-        <!-- DATA KOSONG -->
         <template x-if="!wo.laporan || !wo.laporan.length">
             <p class="text-sm text-gray-400 italic text-center py-4">
                 Belum ada laporan pekerjaan dari departemen.
             </p>
         </template>
-
     </div>
 
-    <!-- MODAL PREVIEW FILE -->
+    {{-- ================= MODAL PREVIEW FILE ================= --}}
     <div x-show="openPreview" x-cloak
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
 
         <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
 
-            <!-- CLOSE -->
-            <button
-                @click="openPreview = false"
-                class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">
-                ✕
-            </button>
+            <button @click="openPreview = false"
+                class="absolute top-3 right-3 text-xl">✕</button>
 
-            <!-- TITLE -->
-            <p class="text-sm font-semibold mb-3" x-text="previewFile"></p>
+            <p class="text-sm font-semibold mb-3"
+            x-text="typeof previewFile === 'object' ? previewFile.name : previewFile">
+            </p>
 
-            <!-- IMAGE -->
-            <template x-if="isImage(previewFile)">
-                <img
-                    :src="'/storage/' + previewFile"
+            <!-- 🔥 IMAGE -->
+            <template x-if="(typeof previewFile === 'object' && previewFile.type.startsWith('image/')) || isImage(previewFile)">
+                <img 
+                    :src="typeof previewFile === 'object' ? URL.createObjectURL(previewFile) : '/storage/' + previewFile"
                     class="max-h-[70vh] mx-auto rounded">
             </template>
 
-            <!-- PDF -->
-            <template x-if="isPDF(previewFile)">
-                <iframe
-                    :src="'/storage/' + previewFile"
+            <!-- 🔥 PDF -->
+            <template x-if="(typeof previewFile === 'object' && previewFile.type === 'application/pdf') || isPDF(previewFile)">
+                <iframe 
+                    :src="typeof previewFile === 'object' ? URL.createObjectURL(previewFile) : '/storage/' + previewFile"
                     class="w-full h-[70vh] rounded">
                 </iframe>
             </template>
 
-            <!-- OTHER -->
-            <template x-if="!isImage(previewFile) && !isPDF(previewFile)">
-                <div class="text-center text-gray-500 py-10">
+            <!-- 🔥 OTHER -->
+            <template x-if="true">
+                <div x-show="!( (typeof previewFile === 'object' && (previewFile.type.startsWith('image/') || previewFile.type === 'application/pdf')) || isImage(previewFile) || isPDF(previewFile) )"
+                    class="text-center text-gray-500 py-10">
                     Preview tidak tersedia
                 </div>
             </template>
 
         </div>
-    </div>
-
-
-    {{-- STATUS workOrder --}}
+</div>
+    {{-- ================= STATUS WO ================= --}}
     <div class="bg-white p-4 rounded-xl border space-y-2">
         <h3 class="font-semibold text-sm">Status Work Order</h3>
-
-        <select 
-            x-model="newStatus"
-            @change="ubahStatus"
+        <select x-model="newStatus" @change="ubahStatus"
             :disabled="normalizeStatus(wo.status) === 'close'"
             class="w-full border rounded-lg px-3 py-2">
-            
             <option value="Open">Open</option>
             <option value="On Progress">On Progress</option>
             <option value="Waiting">Waiting</option>
@@ -190,78 +133,57 @@
         </select>
     </div>
 
-    {{-- ================= FORM Penanganan ================= --}}
+    {{-- ================= FORM PENANGANAN ================= --}}
     <template x-if="normalizeStatus(wo.status) !== 'close'">
         <div class="bg-white p-6 rounded-xl shadow space-y-4">
-
             <h3 class="font-semibold">Form Penanganan WO</h3>
-
-            {{-- JUDUL Penanganan --}}
             <div>
-                <label class="text-sm font-medium mb-1 block">
-                    Judul Penanganan
-                </label>
-                <input
-                    type="text"
-                    x-model="penanganan.judul"
+                <label class="text-sm font-medium mb-1 block">Judul Penanganan</label>
+                <input type="text" x-model="penanganan.judul"
                     class="w-full border rounded-lg px-3 py-2 text-sm"
-                    placeholder="Masukkan judul penanganan"
-                >
+                    placeholder="Masukkan judul penanganan">
             </div>
-
-            {{-- deskripsi Penanganan --}}
             <div>
-                <label class="text-sm font-medium mb-1 block">
-                    deskripsi Penanganan
-                </label>
-                <textarea
-                    x-model="penanganan.deskripsi"
+                <label class="text-sm font-medium mb-1 block">Deskripsi Penanganan</label>
+                <textarea x-model="penanganan.deskripsi"
                     class="w-full border rounded-lg px-3 py-2 text-sm"
-                    rows="3"
-                    placeholder="Masukkan deskripsi penanganan"
-                ></textarea>
+                    rows="3" placeholder="Masukkan deskripsi penanganan"></textarea>
             </div>
-
-            {{-- LAMPIRAN Penanganan --}}
             <div>
-                <label class="text-sm font-medium mb-1 block">
-                    Lampiran Dokumentasi
-                </label>
-
-                <input
-                    type="file"
-                    multiple
-                    @change="handleUploadPenanganan($event)"
-                    class="text-sm"
-                >
-
+                <label class="text-sm font-medium mb-1 block">Lampiran Dokumentasi</label>
+                <input type="file" multiple @change="handleUploadPenanganan($event)" class="text-sm">
                 <div class="flex flex-wrap gap-2 mt-2">
-                    <template x-for="(file, index) in penanganan.lampiran" :key="index">
-                        <div class="relative border rounded px-3 py-1 text-xs bg-gray-50">
-                            <span x-text="file.name"></span>
-                            <button
-                                @click="hapusLampiranPenanganan(index)"
-                                class="ml-2 text-red-500 hover:text-red-700">
-                                ✕
-                            </button>
-                        </div>
-                    </template>
+                <template x-for="(file, index) in penanganan.lampiran" :key="index">
+                    <div class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
+
+                        <span x-text="file.name"></span>
+
+                        <!-- 🔥 PREVIEW -->
+                        <button 
+                            @click="openPreviewFile(file)"
+                            class="text-blue-600 hover:underline">
+                            Preview
+                        </button>
+
+                        <!-- DELETE -->
+                        <button 
+                            @click="hapusLampiranPenanganan(index)"
+                            class="text-red-500 hover:text-red-700">
+                            ✕
+                        </button>
+
+                    </div>
+                </template>
                 </div>
             </div>
-
-            {{-- ACTION --}}
             <div class="flex gap-3 pt-2">
-
-                <button
-                @click="openKnowledgeBase = true"
+                <button @click="openKnowledgeBase = true"
                     class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                     Lihat Knowledge Base
                 </button>
-
-                <button
-                    @click="simpanPenanganan"
+                <button @click="simpanPenanganan"
                     class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                    Simpan Penanganan 
+                    Simpan Penanganan
                 </button>
             </div>
         </div>
@@ -270,10 +192,8 @@
     {{-- ================= MODAL KNOWLEDGE BASE ================= --}}
     <div x-show="openKnowledgeBase" x-cloak
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-
         <div class="bg-white w-full max-w-5xl rounded-xl shadow-lg overflow-hidden">
 
-            <!-- HEADER -->
             <div class="flex justify-between items-center px-5 py-3 border-b">
                 <div>
                     <h3 class="text-base font-semibold">Knowledge Base</h3>
@@ -282,22 +202,20 @@
                 <button @click="openKnowledgeBase = false" class="text-lg">✕</button>
             </div>
 
-            <!-- CONTENT -->
             <div class="p-4 grid grid-cols-12 gap-3 h-[75vh]">
 
                 <!-- LEFT -->
                 <div class="col-span-4 border rounded-lg p-3 space-y-3 overflow-y-auto">
 
-                    <!-- kategori -->
                     <select x-model="selectedKategori"
+                        @change="onKategoriChange"
                         class="w-full border rounded px-2 py-2 text-sm">
                         <option value="">Pilih kategori</option>
-                        <template x-for="kat in kategoriList">
+                        <template x-for="kat in kategoriList" :key="kat">
                             <option :value="kat" x-text="kat"></option>
                         </template>
                     </select>
 
-                    <!-- search -->
                     <input type="text"
                         x-model="searchKB"
                         @input.debounce.400ms="searchKBFromServer"
@@ -305,14 +223,14 @@
                         class="w-full border px-2 py-2 rounded text-sm"
                         :disabled="!selectedKategori">
 
-                    <!-- empty -->
                     <template x-if="!selectedKategori">
-                        <p class="text-xs text-gray-400 text-center">
-                            Pilih kategori dulu
-                        </p>
+                        <p class="text-xs text-gray-400 text-center">Pilih kategori dulu</p>
                     </template>
 
-                    <!-- list -->
+                    <template x-if="loadingKB">
+                        <p class="text-xs text-gray-400 text-center italic">Memuat...</p>
+                    </template>
+
                     <div class="space-y-2">
                         <template x-for="item in filteredKnowledgeBase" :key="item.id">
                             <button @click="selectKB(item)"
@@ -320,445 +238,305 @@
                                 :class="selectedKB?.id === item.id
                                     ? 'bg-green-50 border-green-400'
                                     : 'bg-white hover:bg-green-50'">
-
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-medium" x-text="item.judul"></p>
-                                        <p class="text-[11px] text-gray-400" x-text="item.kategori"></p>
-                                    </div>
-                                </div>
+                                <p class="font-medium" x-text="item.judul"></p>
+                                <p class="text-[11px] text-gray-400" x-text="item.kategori"></p>
                             </button>
+                        </template>
+                        <template x-if="selectedKategori && filteredKnowledgeBase.length === 0 && !loadingKB">
+                            <p class="text-xs text-gray-400 text-center italic py-4">Tidak ada data KB</p>
                         </template>
                     </div>
                 </div>
 
                 <!-- MIDDLE -->
                 <div class="col-span-3 border rounded-lg p-3 overflow-y-auto">
-
                     <template x-if="selectedKB">
                         <div class="space-y-2">
-
-                            <input type="text"
-                                x-model="searchDiagnosis"
+                            <input type="text" x-model="searchDiagnosis"
                                 placeholder="Cari penyebab..."
                                 class="w-full border px-2 py-2 rounded text-sm">
-
                             <template x-for="diag in filteredDiagnosis" :key="diag.id">
                                 <button @click="selectDiagnosis(diag)"
                                     class="w-full text-left p-2 rounded border text-sm transition"
                                     :class="selectedDiagnosis?.id === diag.id
                                         ? 'bg-green-100 border-green-500'
                                         : 'hover:bg-green-50'">
-
                                     <p x-html="highlightText(diag.penyebab)"></p>
                                 </button>
                             </template>
-
+                            <template x-if="filteredDiagnosis.length === 0">
+                                <p class="text-xs text-gray-400 text-center italic py-4">Tidak ada penyebab</p>
+                            </template>
                         </div>
                     </template>
-
                     <template x-if="!selectedKB">
-                        <p class="text-xs text-gray-400 text-center mt-10">
-                            Pilih knowledge dulu
-                        </p>
+                        <p class="text-xs text-gray-400 text-center mt-10">Pilih knowledge dulu</p>
                     </template>
                 </div>
 
                 <!-- RIGHT -->
                 <div class="col-span-5 bg-gray-50 rounded-lg p-4 overflow-y-auto">
-
                     <template x-if="selectedDiagnosis">
                         <div class="bg-white p-3 rounded-lg border space-y-3 text-sm">
-
                             <h3 class="font-semibold">Detail Solusi</h3>
-
                             <div>
                                 <p class="text-xs text-gray-500">Penyebab</p>
                                 <p x-text="selectedDiagnosis.penyebab"></p>
                             </div>
-
                             <div x-show="selectedDiagnosis.deskripsi">
                                 <p class="text-xs text-gray-500">Deskripsi</p>
-                                <p class="text-gray-600"
-                                    x-text="selectedDiagnosis.deskripsi"></p>
+                                <p class="text-gray-600" x-text="selectedDiagnosis.deskripsi"></p>
                             </div>
-
                             <div>
                                 <p class="text-xs text-gray-500">Langkah</p>
-                                <p class="whitespace-pre-line"
-                                    x-text="selectedDiagnosis.langkah_penyelesaian"></p>
+                                <p class="whitespace-pre-line" x-text="selectedDiagnosis.langkah_penyelesaian"></p>
                             </div>
-
                             <p class="text-xs text-gray-400 mt-3">
-                                Gunakan sebagai referensi dalam menentukan keputusan
+                                Gunakan sebagai referensi dalam menentukan penanganan
                             </p>
-
                         </div>
                     </template>
-
                     <template x-if="!selectedDiagnosis">
                         <p class="text-gray-400 text-center mt-10 text-sm">
                             Pilih penyebab untuk melihat detail
                         </p>
                     </template>
-
                 </div>
 
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
-     window.knowledgeBase = @json($knowledgeBase);
+window.knowledgeBase = @json($knowledgeBase);
+
 function detailWOApp() {
     return {
         wo: @json($wo),
 
-        penanganan: {
-            judul: '',
-            deskripsi: '',
-            lampiran: []
-        },
+        penanganan: { judul: '', deskripsi: '', lampiran: [] },
+
         openKnowledgeBase: false,
-        openKategori: false,
+        openPreview: false,
+        previewFile: null,
+        newStatus: '',
+        loadingKB: false,
 
         knowledgeBase: [],
         kategoriList: [],
-
         selectedKategori: '',
         searchKB: '',
         selectedKB: null,
-
         searchDiagnosis: '',
         selectedDiagnosis: null,
-        kategoriSearch: '',
 
-        openPreview: false,
-        previewFile: null,
-
-        openPreviewFile(file){
-            this.previewFile = file;
-            this.openPreview = true;
-        },
-
-        isImage(file){
-            return file && (
-                file.endsWith('.jpg') ||
-                file.endsWith('.jpeg') ||
-                file.endsWith('.png')
-            );
-        },
-
-        isPDF(file){
-            return file && file.endsWith('.pdf');
-        },
-
-        newStatus: '',
-
+        /* ===== INIT ===== */
         init() {
             this.wo.status = this.normalizeStatus(this.wo.status);
             this.newStatus = this.formatStatus(this.wo.status);
             this.knowledgeBase = window.knowledgeBase || [];
-            this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori))];
+            this.kategoriList  = [...new Set(this.knowledgeBase.map(k => k.kategori).filter(Boolean))];
         },
 
-        // ================= UPLOAD =================
-        handleUploadPenanganan(event) {
-            for (let i = 0; i < event.target.files.length; i++) {
-                this.penanganan.lampiran.push(event.target.files[i]);
-            }
-        },
+        /* ===== COMPUTED ===== */
 
-        hapusLampiranPenanganan(index) {
-            this.penanganan.lampiran.splice(index, 1);
-        },
-
-        // ================= SIMPAN =================
-        async simpanPenanganan() {
-
-            // VALIDASI
-            if (!this.penanganan.judul) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Oops...',
-                    text: 'Judul penanganan tidak boleh kosong'
-                });
-                return;
-            }
-
-            if (!this.penanganan.deskripsi) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Oops...',
-                    text: 'deskripsi penanganan tidak boleh kosong'
-                });
-                return;
-            }
-
-            // 🔥 FIX STATUS (IMPORTANT)
-            const status = this.newStatus || this.formatStatus(this.wo.status);
-
-            // CONFIRM
-            const confirm = await Swal.fire({
-                title: 'Simpan Penanganan?',
-                text: 'Data akan disimpan dan status akan diperbarui',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#2563eb',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Ya, simpan!',
-                cancelButtonText: 'Batal'
-            });
-
-            if (!confirm.isConfirmed) return;
-
-            try {
-                Swal.fire({
-                    title: 'Menyimpan...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                const formData = new FormData();
-                formData.append('judul', this.penanganan.judul);
-                formData.append('deskripsi', this.penanganan.deskripsi);
-
-
-                this.penanganan.lampiran.forEach(file => {
-                    formData.append('lampiran[]', file);
-                });
-                
-                const res = await fetch(`/work-order/${this.wo.id}/penanganan`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json' // 🔥 WAJIB
-                    },
-                    body: formData
-                });
-
-                const text = await res.text();
-
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Response bukan JSON:', text);
-                    throw new Error('Server error (bukan JSON)');
-                }
-
-                if (!res.ok) throw data;
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: data.message || 'Penanganan berhasil disimpan',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-                setTimeout(() => location.reload(), 1500);
-
-            } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: err.message || 'Terjadi kesalahan'
-                });
-            }
-        },
-        
-
-        get filteredKategori() {
-            if (!this.kategoriSearch) return this.kategoriList;
-            return this.kategoriList.filter(k =>
-                k.toLowerCase().includes(this.kategoriSearch.toLowerCase())
-            );
-        },
-
+        /*
+         * FIX: filteredKnowledgeBase hanya filter kategori secara lokal.
+         * TIDAK filter keyword secara lokal — keyword sudah diproses server
+         * (dengan sinonim + scoring). Jika this.knowledgeBase sudah diupdate
+         * oleh searchKBFromServer, hasilnya sudah benar dari server.
+         *
+         * Sebelumnya (SALAH): ada filter lokal `item.kategori === selectedKategori`
+         * yang dijalankan SETELAH hasil server masuk. Ini tidak masalah karena
+         * server juga mengirim field `kategori`. Bug utama justru ada di
+         * onKategoriChange yang mereset knowledgeBase SEBELUM search dijalankan,
+         * sehingga saat user ganti kategori lalu search, ini sudah benar.
+         *
+         * Namun untuk memastikan konsistensi dengan pola detailKeluhan:
+         * - filteredKnowledgeBase hanya filter kategori, TIDAK filter keyword
+         * - searchKBFromServer yang mengganti this.knowledgeBase
+         * - onKategoriChange mereset this.knowledgeBase ke window.knowledgeBase
+         */
         get filteredKnowledgeBase() {
-
-            let data = this.knowledgeBase;
-
-            // filter kategori tetap dipakai
-            if (this.selectedKategori) {
-                data = data.filter(item =>
-                    item.kategori === this.selectedKategori
-                );
-            }
-
-            return data;
-            },
+            if (!this.selectedKategori) return this.knowledgeBase;
+            return this.knowledgeBase.filter(item => item.kategori === this.selectedKategori);
+        },
 
         get filteredDiagnosis() {
             if (!this.selectedKB || !this.selectedKB.diagnosis) return [];
             if (!this.searchDiagnosis) return this.selectedKB.diagnosis;
-            let keyword = this.searchDiagnosis.toLowerCase();
+            const keyword = this.searchDiagnosis.toLowerCase();
             return this.selectedKB.diagnosis.filter(d =>
                 d.penyebab && d.penyebab.toLowerCase().includes(keyword)
             );
         },
 
-        selectKB(item) {
-            this.selectedKB = item;
+        /* ===== KB ACTIONS ===== */
 
-            // auto pilih solusi utama
-            if (item.diagnosis) {
-                let utama = item.diagnosis.find(d => d.tipe === 'utama');
-                this.selectedDiagnosis = utama || item.diagnosis[0];
+        /*
+         * FIX: onKategoriChange mereset knowledgeBase ke window.knowledgeBase
+         * DAN mereset searchKB. Ini penting agar saat user ganti kategori,
+         * hasil search lama tidak tertinggal. Sama persis dengan detailKeluhan.
+         */
+        onKategoriChange() {
+            this.searchKB          = '';
+            this.selectedKB        = null;
+            this.selectedDiagnosis = null;
+            this.knowledgeBase     = window.knowledgeBase || [];
+        },
+
+        /*
+         * FIX: searchKBFromServer mengganti this.knowledgeBase dengan hasil server.
+         * Server sudah handle sinonim + scoring, jadi "panas" akan menemukan
+         * "AC Tidak Dingin" karena server mengenal sinonimnya.
+         * filteredKnowledgeBase kemudian hanya filter kategori lokal — ini aman
+         * karena server juga mengembalikan field `kategori` yang benar.
+         */
+        async searchKBFromServer() {
+            if (!this.searchKB.trim()) {
+                // Kosongkan search → kembalikan ke data asli (filter kategori tetap jalan)
+                this.knowledgeBase = window.knowledgeBase || [];
+                return;
+            }
+            this.loadingKB = true;
+            try {
+                const res  = await fetch(
+                    `/knowledge-base/search?q=${encodeURIComponent(this.searchKB)}&kategori=${encodeURIComponent(this.selectedKategori)}`
+                );
+                const data = await res.json();
+                // Ganti this.knowledgeBase → filteredKnowledgeBase tinggal filter kategori
+                this.knowledgeBase = data;
+            } catch (e) {
+                console.error('Search KB error:', e);
+            } finally {
+                this.loadingKB = false;
             }
         },
 
-        selectDiagnosis(diag) {
-            this.selectedDiagnosis = diag;
+        selectKB(item) {
+            this.selectedKB        = item;
+            this.selectedDiagnosis = null;
+            this.searchDiagnosis   = '';
         },
 
+        selectDiagnosis(diag) { this.selectedDiagnosis = diag; },
 
         highlightText(text) {
             if (!this.searchDiagnosis || !text) return text;
-
-            let keyword = this.searchDiagnosis.toLowerCase();
-
+            const keyword = this.searchDiagnosis.toLowerCase();
             return text.replace(new RegExp(keyword, 'gi'),
                 match => `<span class="bg-yellow-200">${match}</span>`
             );
         },
 
-        selectKategori(item) {
-            this.kbForm.kategori = item;
-            this.openKategori = false;
-        },
-
-        // ================= STATUS =================
-        async ubahStatus() {
-
-            if (this.newStatus === this.formatStatus(this.wo.status)) return;
-
-            const confirm = await Swal.fire({
-                title: 'Ubah Status?',
-                text: `Status akan diubah menjadi ${this.newStatus}`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, ubah',
-                cancelButtonText: 'Batal'
-            });
-
-            if (!confirm.isConfirmed) {
-                this.newStatus = this.formatStatus(this.wo.status);
-                return;
+        /* ===== UPLOAD ===== */
+        handleUploadPenanganan(event) {
+            for (let i = 0; i < event.target.files.length; i++) {
+                this.penanganan.lampiran.push(event.target.files[i]);
             }
+        },
+        hapusLampiranPenanganan(index) { this.penanganan.lampiran.splice(index, 1); },
+
+        /* ===== SIMPAN PENANGANAN ===== */
+        async simpanPenanganan() {
+            if (!this.penanganan.judul) {
+                Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Judul penanganan tidak boleh kosong' }); return;
+            }
+            if (!this.penanganan.deskripsi) {
+                Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Deskripsi penanganan tidak boleh kosong' }); return;
+            }
+            const confirm = await Swal.fire({
+                title: 'Simpan Penanganan?', text: 'Data akan disimpan',
+                icon: 'question', showCancelButton: true,
+                confirmButtonColor: '#2563eb', cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, simpan!', cancelButtonText: 'Batal'
+            });
+            if (!confirm.isConfirmed) return;
 
             try {
-                Swal.fire({
-                    title: 'Memproses...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
+                Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const formData = new FormData();
+                formData.append('judul', this.penanganan.judul);
+                formData.append('deskripsi', this.penanganan.deskripsi);
+                this.penanganan.lampiran.forEach(file => formData.append('lampiran[]', file));
+                const res = await fetch(`/work-order/${this.wo.id}/penanganan`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                    body: formData
                 });
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch { throw new Error('Server error (bukan JSON)'); }
+                if (!res.ok) throw data;
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message || 'Penanganan berhasil disimpan', timer: 1500, showConfirmButton: false });
+                setTimeout(() => location.reload(), 1500);
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.message || 'Terjadi kesalahan' });
+            }
+        },
 
+        /* ===== STATUS ===== */
+        async ubahStatus() {
+            if (this.newStatus === this.formatStatus(this.wo.status)) return;
+            const confirm = await Swal.fire({
+                title: 'Ubah Status?', text: `Status akan diubah menjadi ${this.newStatus}`,
+                icon: 'question', showCancelButton: true,
+                confirmButtonText: 'Ya, ubah', cancelButtonText: 'Batal'
+            });
+            if (!confirm.isConfirmed) { this.newStatus = this.formatStatus(this.wo.status); return; }
+            try {
+                Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 const res = await fetch(`/work-order/${this.wo.id}/status`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        status: this.newStatus
-                    })
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                    body: JSON.stringify({ status: this.newStatus })
                 });
-
                 const data = await res.json();
                 if (!res.ok) throw data;
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: data.message,
-                    timer: 1200,
-                    showConfirmButton: false
-                });
-
-                // 🔥 UPDATE UI
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message, timer: 1200, showConfirmButton: false });
                 this.wo.status = this.normalizeStatus(this.newStatus);
-
             } catch (err) {
                 this.newStatus = this.formatStatus(this.wo.status);
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: err.message || 'Terjadi kesalahan'
-                });
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.message || 'Terjadi kesalahan' });
             }
         },
 
-        async searchKBFromServer() {
+        /* ===== PREVIEW FILE ===== */
+        openPreviewFile(file) { if (!file) return; this.previewFile = file; this.openPreview = true; },
+        isImage(file) { return file && /\.(jpg|jpeg|png|gif)$/i.test(file); },
+        isPDF(file)   { return file && /\.pdf$/i.test(file); },
 
-            // 🔥 penting (samakan dengan keluhan)
-            if (!this.searchKB) {
-                this.knowledgeBase = [];
-                return;
-            }
-
-            try {
-                let res = await fetch(`/knowledge-base/search?q=${this.searchKB}&kategori=${this.selectedKategori}`);
-                let data = await res.json();
-
-                this.knowledgeBase = data;
-
-            } catch (e) {
-                console.error('Search KB error:', e);
-            }
-            },
-
-        // ================= HELPER =================
-        normalizeStatus(status){
-            return (status || '')
-                .toLowerCase()
-                .trim()
-                .replace(/\s+/g, '_');
-        },
-
-        formatStatus(status){
+        /* ===== HELPERS ===== */
+        normalizeStatus(status) { return (status || '').toLowerCase().trim().replace(/\s+/g, '_'); },
+        formatStatus(status) {
             const s = this.normalizeStatus(status);
-
-            if(s === 'open') return 'Open';
-            if(s === 'on_progress') return 'On Progress';
-            if(s === 'waiting') return 'Waiting';
-            if(s === 'close') return 'Close';
-
+            if (s === 'open')        return 'Open';
+            if (s === 'on_progress') return 'On Progress';
+            if (s === 'waiting')     return 'Waiting';
+            if (s === 'close')       return 'Close';
             return status;
         },
-
-        statusClass(status){
+        statusClass(status) {
             const s = this.normalizeStatus(status);
-
             return {
-                'bg-blue-100 text-blue-700': s === 'open',
+                'bg-blue-100 text-blue-700':    s === 'open',
                 'bg-yellow-100 text-yellow-700': s === 'on_progress',
                 'bg-orange-100 text-orange-700': s === 'waiting',
-                'bg-green-100 text-green-700': s === 'close',
-                'bg-gray-100 text-gray-700': !['open','on_progress','waiting','close'].includes(s)
-            }
+                'bg-green-100 text-green-700':  s === 'close',
+                'bg-gray-100 text-gray-700':    !['open','on_progress','waiting','close'].includes(s)
+            };
         },
-
-        statusClassRiwayat(status){
+        statusClassRiwayat(status) {
             const s = this.normalizeStatus(status);
-
             return {
-                'border-l-4 border-blue-500 bg-blue-50/30': s === 'open',
+                'border-l-4 border-blue-500 bg-blue-50/30':    s === 'open',
                 'border-l-4 border-yellow-500 bg-yellow-50/30': s === 'on_progress',
                 'border-l-4 border-orange-500 bg-orange-50/30': s === 'waiting',
-                'border-l-4 border-green-500 bg-green-50/30': s === 'close'
-            }
-        },
-
-        openPreviewFile(file){
-            if(!file) return;
-            this.previewFile = file;
-            this.openPreview = true;
-        },
+                'border-l-4 border-green-500 bg-green-50/30':  s === 'close'
+            };
+        }
     }
 }
 </script>

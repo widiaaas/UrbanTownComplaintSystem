@@ -248,6 +248,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);
 
+
+        Route::get('/knowledge-base/list', [KnowledgeBaseController::class, 'index']);
+        Route::get('/knowledge-base/search', [KnowledgeBaseController::class, 'search']);
+        
         
     });
 

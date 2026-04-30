@@ -32,7 +32,10 @@ return new class extends Migration
                 ->nullOnDelete();
         
             // USER
-            $table->string('created_by');
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
         
             // VALIDASI (optional ringan)
             $table->enum('status', ['draft', 'approved'])->default('approved');

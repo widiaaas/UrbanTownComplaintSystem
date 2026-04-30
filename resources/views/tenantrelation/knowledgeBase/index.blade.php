@@ -25,8 +25,6 @@
 
         <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
 
-         
-         
             <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1">
 
                 {{-- JUDUL --}}
@@ -102,8 +100,6 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
 
         <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
-
-            
 
             <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1">
 
@@ -199,7 +195,6 @@ function kbPage() {
         },
 
         /* ===== FORM PENYEBAB ===== */
-        // field names sesuai konsep file 3 (detail keluhan)
         causeForm: {
             penyebab:             '',
             deskripsi:            '',
@@ -212,27 +207,55 @@ function kbPage() {
             this.knowledgeBase = window.knowledgeBase || [];
             this.kategoriList  = window.kategoriList  || [];
 
-            // fallback: ambil kategori dari data jika belum ada di server
             if (!this.kategoriList.length) {
                 this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori).filter(Boolean))];
             }
         },
 
         /* ===== COMPUTED ===== */
+
+        /*
+         * FIX: filteredKnowledgeBase TIDAK lagi memfilter keyword secara lokal.
+         *
+         * SEBELUMNYA (SALAH):
+         *   if (this.kbSearch) {
+         *     data = data.filter(item =>
+         *       item.judul.toLowerCase().includes(keyword)  // ← bypass sinonim server
+         *     );
+         *   }
+         *
+         * Masalahnya: filter lokal hanya mencocokkan string persis.
+         * Kata "panas" tidak akan cocok dengan judul "AC Tidak Dingin" secara lokal.
+         * Padahal server sudah tahu bahwa "panas" adalah sinonim dari "tidak dingin".
+         *
+         * PERBAIKAN:
+         * - Saat user mengetik keyword → searchKBFromServer dipanggil
+         * - Server memproses sinonim + scoring → mengembalikan hasil yang benar
+         * - this.knowledgeBase diganti dengan hasil server
+         * - filteredKnowledgeBase hanya filter kategori lokal (bukan keyword)
+         * - Hasilnya: "panas" → server tahu → "AC Tidak Dingin" muncul ✓
+         *
+         * Filter kategori lokal tetap diperlukan karena server mengembalikan
+         * semua kategori, sementara user mungkin hanya memilih kategori tertentu.
+         * Namun jika selectedKategori kosong, semua hasil server ditampilkan.
+         */
         get filteredKnowledgeBase() {
             let data = this.knowledgeBase;
 
+            // Filter kategori tetap dipakai secara lokal — ini aman karena
+            // server juga mengembalikan field `kategori` yang konsisten
             if (this.selectedKategori) {
                 data = data.filter(item => item.kategori === this.selectedKategori);
             }
 
-            if (this.kbSearch) {
-                const keyword = this.kbSearch.toLowerCase();
-                data = data.filter(item =>
-                    item.judul.toLowerCase().includes(keyword) ||
-                    (item.kategori && item.kategori.toLowerCase().includes(keyword))
-                );
-            }
+            // DIHAPUS: filter keyword lokal yang membypass sinonim server
+            // if (this.kbSearch) {
+            //     const keyword = this.kbSearch.toLowerCase();
+            //     data = data.filter(item =>
+            //         item.judul.toLowerCase().includes(keyword) ||
+            //         (item.kategori && item.kategori.toLowerCase().includes(keyword))
+            //     );
+            // }
 
             return data;
         },
@@ -259,14 +282,26 @@ function kbPage() {
         },
 
         /* ===== SEARCH SERVER ===== */
+        /*
+         * FIX: searchKBFromServer mengganti this.knowledgeBase dengan hasil server.
+         * Ini pola yang sama dengan detailKeluhan dan detailWO.
+         * Server menjalankan normalizeText (sinonim) + extractKeywords + scoring,
+         * sehingga "panas" bisa menemukan "AC Tidak Dingin".
+         *
+         * Saat search kosong → kembalikan ke window.knowledgeBase (data awal).
+         */
         async searchKBFromServer() {
-            if (!this.kbSearch) {
-                this.knowledgeBase = window.knowledgeBase;
+            if (!this.kbSearch.trim()) {
+                // Kosongkan search → kembalikan ke data asli
+                this.knowledgeBase = window.knowledgeBase || [];
                 return;
             }
             try {
-                const res  = await fetch(`/knowledge-base/search?q=${encodeURIComponent(this.kbSearch)}&kategori=${encodeURIComponent(this.selectedKategori)}`);
+                const res  = await fetch(
+                    `/knowledge-base/search?q=${encodeURIComponent(this.kbSearch)}&kategori=${encodeURIComponent(this.selectedKategori)}`
+                );
                 const data = await res.json();
+                // Ganti this.knowledgeBase → filteredKnowledgeBase hanya filter kategori
                 this.knowledgeBase = data;
             } catch (e) {
                 console.error('Search KB error:', e);
@@ -343,9 +378,12 @@ function kbPage() {
                         this.knowledgeBase[idx] = data.data;
                         if (this.selectedKB?.id === this.editingId) this.selectedKB = data.data;
                     }
+                    // Sync ke window.knowledgeBase agar reset search tidak kehilangan data terbaru
+                    const widx = window.knowledgeBase.findIndex(k => k.id === this.editingId);
+                    if (widx !== -1) window.knowledgeBase[widx] = data.data;
                 } else {
                     this.knowledgeBase.push(data.data);
-                    // tambah kategori baru jika belum ada
+                    window.knowledgeBase.push(data.data); // Sync ke window.knowledgeBase
                     if (!this.kategoriList.includes(data.data.kategori)) {
                         this.kategoriList.push(data.data.kategori);
                     }
@@ -383,8 +421,12 @@ function kbPage() {
 
                 if (!res.ok) { Swal.fire('Gagal!', 'Gagal menghapus', 'error'); return; }
 
+                // Hapus dari this.knowledgeBase dan window.knowledgeBase
                 const idx = this.knowledgeBase.findIndex(k => k.id === id);
                 if (idx !== -1) this.knowledgeBase.splice(idx, 1);
+
+                const widx = window.knowledgeBase.findIndex(k => k.id === id);
+                if (widx !== -1) window.knowledgeBase.splice(widx, 1);
 
                 if (this.selectedKB?.id === id) {
                     this.selectedKB        = null;
@@ -433,7 +475,6 @@ function kbPage() {
             this.causeForm.penyebab               = cause.penyebab;
             this.causeForm.deskripsi              = cause.deskripsi || '';
             this.causeForm.langkah_penyelesaian   = cause.langkah_penyelesaian || '';
-            // lampiran dari server berupa array nama file → ubah ke {name}
             this.causeForm.lampiran = (cause.lampiran || []).map(name => ({ name }));
             this.openCauseModal = true;
         },
@@ -448,24 +489,20 @@ function kbPage() {
             const url    = isEdit
                 ? `/knowledge-base/${this.selectedKB.id}/diagnosis/${this.editingCause.id}`
                 : `/knowledge-base/${this.selectedKB.id}/diagnosis`;
-            const method = isEdit ? 'PUT' : 'POST';
 
-            // kirim sebagai FormData agar lampiran bisa ikut
             const formData = new FormData();
             formData.append('penyebab',             this.causeForm.penyebab);
             formData.append('deskripsi',            this.causeForm.deskripsi);
             formData.append('langkah_penyelesaian', this.causeForm.langkah_penyelesaian);
             this.causeForm.lampiran.forEach(f => {
-                // hanya kirim File object (bukan {name} dari data lama)
                 if (f instanceof File) formData.append('lampiran[]', f);
             });
 
-            // untuk PUT, Laravel butuh _method spoofing
             if (isEdit) formData.append('_method', 'PUT');
 
             try {
                 const res  = await fetch(url, {
-                    method: isEdit ? 'POST' : 'POST', // pakai POST + _method untuk PUT
+                    method: 'POST',
                     headers: {
                         'Accept':       'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
@@ -486,7 +523,6 @@ function kbPage() {
                     Swal.fire('Gagal!', msg, 'error'); return;
                 }
 
-                // update data lokal
                 if (!this.selectedKB.diagnosis) this.selectedKB.diagnosis = [];
 
                 if (isEdit) {
@@ -497,8 +533,20 @@ function kbPage() {
                             this.selectedDiagnosis = data.data;
                         }
                     }
+                    // Sync ke window.knowledgeBase
+                    const wkb = window.knowledgeBase.find(k => k.id === this.selectedKB.id);
+                    if (wkb && wkb.diagnosis) {
+                        const didx = wkb.diagnosis.findIndex(d => d.id === this.editingCause.id);
+                        if (didx !== -1) wkb.diagnosis[didx] = data.data;
+                    }
                 } else {
                     this.selectedKB.diagnosis.push(data.data);
+                    // Sync ke window.knowledgeBase
+                    const wkb = window.knowledgeBase.find(k => k.id === this.selectedKB.id);
+                    if (wkb) {
+                        if (!wkb.diagnosis) wkb.diagnosis = [];
+                        wkb.diagnosis.push(data.data);
+                    }
                 }
 
                 Swal.fire('Berhasil!', data.message, 'success');
@@ -536,6 +584,13 @@ function kbPage() {
 
                 const idx = this.selectedKB.diagnosis.findIndex(d => d.id === causeId);
                 if (idx !== -1) this.selectedKB.diagnosis.splice(idx, 1);
+
+                // Sync ke window.knowledgeBase
+                const wkb = window.knowledgeBase.find(k => k.id === this.selectedKB.id);
+                if (wkb && wkb.diagnosis) {
+                    const widx = wkb.diagnosis.findIndex(d => d.id === causeId);
+                    if (widx !== -1) wkb.diagnosis.splice(widx, 1);
+                }
 
                 if (this.selectedDiagnosis?.id === causeId) this.selectedDiagnosis = null;
 
