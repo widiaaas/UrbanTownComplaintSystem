@@ -35,4 +35,9 @@ class RiwayatPenangananKeluhan extends Model
     {
         return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
     }
+
+    public function getWaktuAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('d M Y H:i');
+    }
 }

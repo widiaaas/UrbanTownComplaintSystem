@@ -135,7 +135,7 @@
                 <span>Knowledge Base</span>
             </a>
 
-            <a href="/rekapPenangananTR"
+            <a href="/rekap-penanganan"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('rekapPenangananTR', $currentPath) }}">
                 @include('components.icons.scrollText')
                 <span>Laporan</span>

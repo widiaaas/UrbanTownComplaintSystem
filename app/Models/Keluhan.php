@@ -91,4 +91,10 @@ class Keluhan extends Model
                     ->latest('waktu');
     }
 
+    public function latestWorkOrder()
+    {
+        return $this->hasOne(WorkOrder::class, 'keluhan_id')
+                    ->latestOfMany(); // 🔥 ambil yang paling terbaru
+    }
+
 }

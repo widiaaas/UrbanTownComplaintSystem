@@ -34,7 +34,7 @@ return new class extends Migration
             // USER
             $table->foreignId('created_by')
                 ->nullable()
-                ->constrained('users')
+                ->constrained('penggunas')
                 ->nullOnDelete();
         
             // VALIDASI (optional ringan)

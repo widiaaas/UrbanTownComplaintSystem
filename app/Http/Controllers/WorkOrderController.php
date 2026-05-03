@@ -63,45 +63,51 @@ class WorkOrderController extends Controller
 
     public function woMasuk()
     {   
+        $user = auth()->user();
+        $karyawan = $user->karyawan;
+
+        if (!$karyawan || !$karyawan->departemen) {
+            abort(403, 'Departemen tidak ditemukan');
+        }
         $wo = WorkOrder::with([
-                'keluhan.unit',
-                'keluhan.penghuni',
-                'keluhan.penanggungJawab.karyawan'
-            ])
-            ->whereNull('penanggung_jawab_id')
-            ->latest()
-            ->get()
-            ->map(function ($item, $index) {
+            'keluhan.unit',
+            'keluhan.penghuni',
+            'keluhan.penanggungJawab.karyawan'
+        ])
+        ->whereNull('penanggung_jawab_id')
+        ->latest()
+        ->get()
+        ->map(function ($item, $index) {
 
-                $keluhan = $item->keluhan;
-                $pj = $keluhan?->penanggungJawab;
-                $karyawanPJ = $pj?->karyawan;
-                $petugas = $item->penanggungJawab?->karyawan;
+            $keluhan = $item->keluhan;
+            $pj = $keluhan?->penanggungJawab;
+            $karyawanPJ = $pj?->karyawan;
+            $petugas = $item->penanggungJawab?->karyawan;
 
-                return [
-                    'no' => $index + 1,
-                    'id' => $item->nomor_wo,
+            return [
+                'no' => $index + 1,
+                'id' => $item->nomor_wo,
 
-                    'unit' => $keluhan?->unit?->no_unit ?? '-',
-                    'tanggal' => optional($item->created_at)->format('d-m-Y H:i'),
+                'unit' => $keluhan?->unit?->no_unit ?? '-',
+                'tanggal' => optional($item->created_at)->format('d-m-Y H:i'),
 
-                    'penghuni' => $keluhan?->penghuni?->nama ?? '-',
-                    'telepon' => $keluhan?->penghuni?->telepon ?? '-',
+                'penghuni' => $keluhan?->penghuni?->nama ?? '-',
+                'telepon' => $keluhan?->penghuni?->telepon ?? '-',
 
-                    'instruksi' => $item->instruksi,
-                    'lampiran' => $item->lampiran ?? [],
+                'instruksi' => $item->instruksi,
+                'lampiran' => $item->lampiran ?? [],
 
-                    // 🔥 TR (dari keluhan)
-                    'tr' => $karyawanPJ?->nama ?? $pj?->username ?? '-',
+                // 🔥 TR (dari keluhan)
+                'tr' => $karyawanPJ?->nama ?? $pj?->username ?? '-',
 
-                    // 🔥 Petugas WO
-                    'petugas' => $item->penanggungJawab
-                                ? ($item->penanggungJawab->karyawan->nama 
-                                    ?? $item->penanggungJawab->username)
-                                : '-',
-                ];
-            })
-            ->values(); // biar index rapi
+                // 🔥 Petugas WO
+                'petugas' => $item->penanggungJawab
+                            ? ($item->penanggungJawab->karyawan->nama 
+                                ?? $item->penanggungJawab->username)
+                            : '-',
+            ];
+        })
+        ->values(); // biar index rapi
 
         return view('departemen.workOrder.workOrderMasuk', compact('wo'));
     }
@@ -227,8 +233,9 @@ class WorkOrderController extends Controller
             'lokasi' => $wo->lokasi,
 
             // 🔥 RIWAYAT
-            'laporan' => $wo->riwayat
-                ->sortBy('waktu')
+            'laporan' => $wo->riwayat()
+                ->orderBy('waktu','asc')
+                ->get()
                 ->map(function ($r) {
                     return [
                         'status' => $r->status,
@@ -278,5 +285,52 @@ class WorkOrderController extends Controller
         return response()->json([
             'message' => 'Status berhasil diperbarui'
         ]);
+    }
+
+    public function daftarWOByTR(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = WorkOrder::with([
+            'keluhan.unit',
+            'keluhan.penghuni',
+            'keluhan.penanggungJawab.karyawan'
+        ])
+        ->whereHas('keluhan', function ($q) use ($user) {
+            $q->where('penanggung_jawab_id', $user->id);
+        });
+
+        // 🔥 FILTER STATUS DARI DASHBOARD
+        if ($request->filled('status')) {
+
+            $statuses = explode(',', $request->status);
+
+            $statuses = array_map(function ($s) {
+                return strtolower(str_replace(' ', '_', $s));
+            }, $statuses);
+
+            $query->whereIn('status', $statuses);
+        }
+
+        $wo = $query->latest()->get()
+            ->map(function ($item) {
+
+                $keluhan = $item->keluhan;
+                $pj = $keluhan?->penanggungJawab;
+
+                return [
+                    'id' => $item->id,
+                    'no' => $item->nomor_wo,
+                    'unit' => $keluhan?->unit?->no_unit ?? '-',
+                    'tanggal' => optional($item->created_at)->format('d M Y H:i'),
+                    'penghuni' => $keluhan?->penghuni?->nama ?? '-',
+                    'telepon' => $keluhan?->penghuni?->telepon ?? '-',
+                    'status' => ucfirst(str_replace('_', ' ', $item->status)),
+                    'instruksi' => $item->instruksi,
+                    'tr' => $pj?->karyawan?->nama ?? $pj?->username ?? '-',
+                ];
+            });
+
+        return view('tenantrelation.workorder.daftarWO', compact('wo'));
     }
 }

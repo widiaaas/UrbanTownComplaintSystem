@@ -42,11 +42,13 @@ class DashboardController extends Controller
             // ================= TENANT RELATION =================
             case 'tenant_relation':
 
-                $userId = $karyawan->id;
+                $userId = $user->id;
             
                 // 🔹 FILTER BERDASARKAN PENANGGUNG JAWAB
                 $keluhanQuery = Keluhan::where('penanggung_jawab_id', $userId);
-                $woQuery = WorkOrder::where('penanggung_jawab_id', $userId);
+                $woQuery = WorkOrder::whereHas('keluhan', function ($q) use ($user) {
+                    $q->where('penanggung_jawab_id', $user->id);
+                });
             
                 // ================= STATISTIK KELUHAN =================
                 $statsKeluhan = [
@@ -83,7 +85,7 @@ class DashboardController extends Controller
                 // ================= KELUHAN TERBARU =================
                 $recentKeluhan = (clone $keluhanQuery)
                     ->latest()
-                    ->take(5)
+                    ->take(3)
                     ->get();
             
                 return view('tenantrelation.dashboard', compact(

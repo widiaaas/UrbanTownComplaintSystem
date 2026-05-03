@@ -15,6 +15,7 @@ use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\RiwayatPenangananWOController;
 use App\Http\Controllers\RiwayatPenangananKeluhanController;
 use App\Http\Controllers\KnowledgeBaseController;
+use App\Http\Controllers\LaporanController;
 
 
 
@@ -217,8 +218,12 @@ Route::middleware(['auth'])->group(function () {
         
 
         // 🔥 LAPORAN
-        Route::get('/rekap-penanganan', [KeluhanController::class, 'rekap'])->name('tr.rekap');
-
+        Route::get('/rekap-penanganan', [LaporanController::class, 'index']);
+        Route::get('/rekap-penanganan/departemen', [LaporanController::class, 'getDepartemen']);
+        Route::get('/rekap-penanganan/status', [LaporanController::class, 'getStatus']);
+        Route::get('/rekap-penanganan/data', [LaporanController::class, 'rekapData']);
+        Route::get('/rekap-penanganan/pdf', [LaporanController::class, 'exportPdf']);
+        
        // 🔥 KNOWLEDGE BASE - halaman view
         Route::get('/knowledge-base', [KnowledgeBaseController::class, 'page']);
         

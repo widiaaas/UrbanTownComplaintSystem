@@ -47,6 +47,11 @@ class Pengguna extends Authenticatable
         return $this->password;
     }
 
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
+    }
+
     // Relationships
     public function karyawan()
     {

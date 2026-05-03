@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Keluhan Masuk')
+@section('title', 'Daftar Keluhan Belum Ditangani')
 
 @section('content')
 <div x-data="keluhanApp()" class="p-6">

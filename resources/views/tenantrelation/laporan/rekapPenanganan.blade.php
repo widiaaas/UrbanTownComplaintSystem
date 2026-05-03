@@ -17,41 +17,55 @@
     <div class="bg-white p-5 rounded-xl shadow">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
+            {{-- TANGGAL AWAL --}}
             <div>
                 <label class="text-sm font-medium">Tanggal Awal</label>
-                <input type="date" x-model="filter.tglAwal"
+                <input type="date"
+                    x-model="filter.tglAwal"
+                    :max="today"
                     class="w-full mt-1 border rounded-lg px-3 py-2 text-sm">
             </div>
 
+            {{-- TANGGAL AKHIR --}}
             <div>
                 <label class="text-sm font-medium">Tanggal Akhir</label>
-                <input type="date" x-model="filter.tglAkhir"
+                <input type="date"
+                    x-model="filter.tglAkhir"
+                    :max="today"
+                    :min="filter.tglAwal"
                     class="w-full mt-1 border rounded-lg px-3 py-2 text-sm">
             </div>
 
+            {{-- DEPARTEMEN --}}
             <div>
                 <label class="text-sm font-medium">Departemen</label>
                 <select x-model="filter.departemen"
                     class="w-full mt-1 border rounded-lg px-3 py-2 text-sm">
+
                     <option value="Semua">Semua</option>
-                    <option value="IT">IT</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Umum">Umum</option>
+
+                    <template x-for="dept in departemenList" :key="dept">
+                        <option :value="dept" x-text="dept"></option>
+                    </template>
                 </select>
             </div>
 
+            {{-- STATUS --}}
             <div>
                 <label class="text-sm font-medium">Status</label>
-                <select x-model="filter.status"
-                    class="w-full mt-1 border rounded-lg px-3 py-2 text-sm">
-                    <option value="Semua">Semua</option>
-                    <option value="Open">Open</option>
-                    <option value="On Progress">On Progress</option>
-                    <option value="Close">Close</option>
-                </select>
+                    <select x-model="filter.status"
+                        class="w-full mt-1 border rounded-lg px-3 py-2 text-sm">
+
+                        <option value="Semua">Semua</option>
+
+                        <template x-for="s in statusList" :key="s">
+                            <option :value="s" x-text="s"></option>
+                        </template>
+                    </select>
             </div>
         </div>
 
+        {{-- ACTION --}}
         <div class="flex justify-end mt-4 gap-2">
             <button
                 @click="preview = true"
@@ -84,7 +98,10 @@
                         <template x-for="k in dataRekap" :key="k.id">
                             <tr class="border-t hover:bg-gray-50">
                                 <td class="px-5 py-3 font-medium" x-text="k.tiket"></td>
-                                <td class="px-5 py-3" x-text="k.tanggal"></td>
+
+                                {{-- FORMAT TANGGAL DI SINI --}}
+                                <td class="px-5 py-3" x-text="formatTanggal(k.tanggal)"></td>
+
                                 <td class="px-5 py-3" x-text="k.nama"></td>
                                 <td class="px-5 py-3" x-text="k.departemen"></td>
                                 <td class="px-5 py-3">
@@ -115,35 +132,43 @@ function rekapPenangananApp() {
             status: 'Semua'
         },
 
-        dataRekap: [
-            {
-                id: 1,
-                tiket: 'TCK-001',
-                tanggal: '12 Feb 2026',
-                nama: 'Budi Santoso',
-                departemen: 'Maintenance',
-                status: 'Open'
-            },
-            {
-                id: 2,
-                tiket: 'TCK-002',
-                tanggal: '13 Feb 2026',
-                nama: 'Siti Aminah',
-                departemen: 'Umum',
-                status: 'On Progress'
-            },
-            {
-                id: 3,
-                tiket: 'TCK-003',
-                tanggal: '14 Feb 2026',
-                nama: 'Ahmad Rizki',
-                departemen: 'IT',
-                status: 'Close'
-            }
-        ],
+        // 🔥 BLOCK TANGGAL > HARI INI
+        today: new Date().toLocaleDateString('en-CA'),
+
+        departemenList: [],
+        statusList: [],
+
+        init() {
+            this.loadDepartemen();
+            this.loadStatus();
+        },
+
+        async loadDepartemen() {
+            const res = await fetch('/rekap-penanganan/departemen');
+            this.departemenList = await res.json();
+        },
+
+        async loadStatus() {
+            const res = await fetch('/rekap-penanganan/status');
+            this.statusList = await res.json();
+        },
 
         cetak() {
-            window.print();
+            const params = new URLSearchParams(this.filter).toString();
+            window.open(`/rekap-penanganan/pdf?${params}`, '_blank');
+        },
+
+        // 🔥 FORMAT DD/MM/YY
+        formatTanggal(date) {
+            if (!date) return '';
+
+            const d = new Date(date);
+
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(-2);
+
+            return `${day}/${month}/${year}`;
         },
 
         statusClass(status) {

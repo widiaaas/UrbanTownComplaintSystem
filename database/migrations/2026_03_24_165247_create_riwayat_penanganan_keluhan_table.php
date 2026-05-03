@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('riwayat_penanganan_keluhans', function (Blueprint $table) {
             $table->id();
-            $table->enum('status', ['open', 'on_progress', 'waiting', 'close']);
+            $table->enum('status', ['open', 'on_progress', 'close']);
             $table->string('judul', 50);
             $table->text('deskripsi');
             $table->json('lampiran')->nullable();

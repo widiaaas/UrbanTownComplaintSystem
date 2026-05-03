@@ -43,7 +43,7 @@
 
         {{-- TOTAL Masuk --}}
         <div class="bg-white p-5 rounded-lg shadow border">
-            <p class="text-sm text-gray-500">Total WO Masuk</p>
+            <p class="text-sm text-gray-500">Total WO Belum Ditangani</p>
             <p class="text-2xl font-bold text-blue-600 mt-2">
                 {{ $totalWOMasuk }}
             </p>
@@ -120,16 +120,22 @@
         <div class="space-y-3">
 
             @forelse($recentWO as $wo)
-                <div class="flex justify-between items-center border-b pb-2">
+            <a href="/detailWorkOrder/{{ $wo->id }}"
+                class="flex justify-between items-center border-b pb-2 hover:bg-gray-50 rounded px-2 transition">
 
-                    <div>
-                        <p class="font-medium text-gray-800">
-                            {{ $wo->judul ?? 'WO #' . $wo->id }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            {{ $wo->created_at->diffForHumans() }}
-                        </p>
-                    </div>
+                <div>
+                    <p class="font-semibold text-gray-900">
+                        {{ $wo->nomor_wo ?? 'WO-' . $wo->id }}
+                    </p>
+
+                    <!-- <p class="text-sm text-gray-700">
+                        {{ $wo->instruksi ?? '-' }}
+                    </p> -->
+
+                    <p class="text-xs text-gray-500">
+                        {{ $wo->created_at->diffForHumans() }}
+                    </p>
+                </div>
 
                     {{-- STATUS BADGE --}}
                     <span class="px-2 py-1 text-xs rounded
@@ -142,7 +148,7 @@
                         {{ ucfirst(str_replace('_',' ', $wo->status)) }}
                     </span>
 
-                </div>
+            </a>
             @empty
                 <p class="text-gray-500 text-sm">Belum ada work order</p>
             @endforelse

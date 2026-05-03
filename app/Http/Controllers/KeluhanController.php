@@ -171,24 +171,36 @@ class KeluhanController extends Controller
 
          // 🔥 pakai query builder
         $query = $user->keluhanDiambil()
-        ->with(['unit', 'penghuni']);
+        ->with(['unit', 'penghuni','workOrders']);
 
-        // 🔥 FILTER STATUS DARI URL
+         // 🔹 FILTER STATUS KELUHAN
         if ($request->filled('status')) {
             $statuses = explode(',', $request->status);
-        
-            // 🔥 normalisasi (biar aman)
+
             $statuses = array_map(function ($s) {
                 return strtolower(str_replace(' ', '_', $s));
             }, $statuses);
-        
+
             $query->whereIn('status', $statuses);
+        }
+
+        // 🔥 🔥 INI TAMBAHAN UNTUK WO 🔥 🔥
+        if ($request->filled('wo_status')) {
+
+            $woStatuses = explode(',', $request->wo_status);
+
+            $woStatuses = array_map(function ($s) {
+                return strtolower(str_replace(' ', '_', $s));
+            }, $woStatuses);
+
+            $query->whereHas('workOrders', function ($q) use ($woStatuses) {
+                $q->whereIn('status', $woStatuses);
+            });
         }
         // dd($statuses);
 
 
-        $keluhan = $user->keluhanDiambil()
-            ->with(['unit', 'penghuni'])
+        $keluhan = $query
             ->latest()
             ->get()
             ->map(function ($k) {
@@ -317,7 +329,7 @@ class KeluhanController extends Controller
                     'no' => $wo->nomor_wo,
                     'dept' => $wo->departemen_tujuan,
                     'status' => $wo->status,
-                    'waktu' => optional($wo->created_at)->format('d M Y H:i'),
+                    'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
                     'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
                     'petugas' => $pj 
@@ -430,7 +442,7 @@ class KeluhanController extends Controller
                 'dept' => $wo->departemen_tujuan,
                 'instruksi' => $wo->instruksi,
                 'status' => $wo->status,
-                'waktu' => $wo->created_at->format('d-m-Y H:i'),
+                'tanggal' => $wo->created_at->format('d-m-Y H:i'),
                 'lokasi' => $request->lokasi
             ]
         ]);
@@ -441,4 +453,5 @@ class KeluhanController extends Controller
             ], 400);
         }
     }
+
 }

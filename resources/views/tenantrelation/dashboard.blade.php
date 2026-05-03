@@ -40,10 +40,10 @@
     {{-- ========================= --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {{-- TOTAL KELUHAN MASUK--}}
+        {{-- TOTAL KELUHAN BELUM DITANGANI--}}
         <a href="/keluhan-masuk?filter=unassigned" class="block h-full">
             <div class="bg-white p-5 rounded-lg shadow border h-full">
-                <p class="text-sm text-gray-500">Total Keluhan Masuk</p>
+                <p class="text-sm text-gray-500">Keluhan Keluhan Belum Ditangani</p>
                 <p class="text-2xl font-bold text-blue-600 mt-2">
                     {{ $totalKeluhanMasuk }}
                 </p>
@@ -114,25 +114,25 @@
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-                <a href="/daftarWorkOrder?status=open"
+                <a href="/daftar-penanganan?wo_status=open"
                    class="p-4 bg-blue-100 rounded-lg hover:shadow transition block">
                     <p class="text-sm">Open</p>
                     <p class="text-2xl font-bold">{{ $statsWO['open'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=on_progress"
+                <a href="/daftar-penanganan?wo_status=on_progress"
                    class="p-4 bg-yellow-50 rounded-lg hover:shadow transition block">
                     <p class="text-sm">On Progress</p>
                     <p class="text-2xl font-bold">{{ $statsWO['on_progress'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=waiting"
+                <a href="/daftar-penanganan?wo_status=waiting"
                    class="p-4 bg-orange-50 rounded-lg hover:shadow transition block">
                     <p class="text-sm">Waiting</p>
                     <p class="text-2xl font-bold">{{ $statsWO['waiting'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=close"
+                <a href="/daftar-penanganan?wo_status=close"
                    class="p-4 bg-green-50 rounded-lg hover:shadow transition block">
                     <p class="text-sm">Close</p>
                     <p class="text-2xl font-bold">{{ $statsWO['close'] }}</p>
@@ -153,16 +153,19 @@
         <div class="space-y-3">
 
             @forelse($recentKeluhan as $keluhan)
-                <div class="flex justify-between items-center border-b pb-2">
-
-                    <div>
-                        <p class="font-medium text-gray-800">
-                            {{ $keluhan->judul ?? 'Keluhan #' . $keluhan->id }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            {{ $keluhan->created_at->diffForHumans() }}
-                        </p>
-                    </div>
+            <a href="/keluhan/{{ $keluhan->id }}"
+                class="flex justify-between items-center border-b pb-2 hover:bg-gray-50 rounded px-2 transition">
+                <div>
+                    <p class="font-semibold text-gray-900">
+                        {{ $keluhan->ticket ?? 'KEL-' . $keluhan->id }}
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        {{ $keluhan->judul ?? '-' }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        {{ $keluhan->created_at->diffForHumans() }}
+                    </p>
+                </div>
 
                     <span class="px-2 py-1 text-xs rounded
                         @if($keluhan->status == 'open') bg-blue-100 text-blue-600
@@ -173,7 +176,7 @@
                         {{ ucfirst(str_replace('_',' ', $keluhan->status)) }}
                     </span>
 
-                </div>
+            </a>
             @empty
                 <p class="text-gray-500 text-sm">Belum ada keluhan</p>
             @endforelse
