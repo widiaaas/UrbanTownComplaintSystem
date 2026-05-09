@@ -10,10 +10,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
 class KaryawanController extends Controller
 {
+    private array $departemenList = [
+        'Operational',
+        'Engineering',
+        'Finance',
+        'Legal',
+        'Developer'
+    ];
     /**
      * ================== INDEX ==================
      */
@@ -44,10 +52,7 @@ class KaryawanController extends Controller
         $karyawans = $query->latest()->get();
 
         // ================= LIST DEPARTEMEN =================
-        $departemens = Karyawan::whereNotNull('departemen')
-            ->distinct()
-            ->pluck('departemen')
-            ->values();
+        $departemens = $this->departemenList;
 
         return view('admin.karyawan.index', compact('karyawans', 'departemens'));
     }
@@ -56,7 +61,9 @@ class KaryawanController extends Controller
      * ================== STORE ==================
      */
     public function store(Request $request)
-    {
+    {   
+        $departemenList = $this->departemenList;
+
         $validator = Validator::make($request->all(), [
             'nip' => 'required|string|max:20|unique:karyawans,nip|unique:penggunas,username',
             'telp' => ['required','regex:/^08[0-9]{8,11}$/'],
@@ -67,7 +74,10 @@ class KaryawanController extends Controller
             'role' => 'required|in:tenant_relation,departemen',
 
             // 🔥 DEPARTEMEN (tidak selalu wajib)
-            'departemen' => 'nullable|in:Operational,Engineering,Finance,Legal,Developer',
+            'departemen' => [
+                'nullable',
+                Rule::in($departemenList)
+            ],
 
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
         ], [
@@ -101,12 +111,13 @@ class KaryawanController extends Controller
 
             // 🔑 Generate username & password
             $username = $validated['nip'];
-            $passwordPlain = 'Tmp-' . strtoupper(Str::random(5));
+            $password = Str::random(8);
+           
 
             // ================= CREATE USER =================
             $user = Pengguna::create([
                 'username' => $username,
-                'password' => Hash::make($passwordPlain),
+                'password' => Hash::make($password),
                 'role' => 'karyawan',
                 'is_active' => true,
                 'must_change_password' => true,
@@ -138,7 +149,7 @@ class KaryawanController extends Controller
                 'data' => $karyawan,
                 'akun' => [
                     'username' => $username,
-                    'password' => $passwordPlain
+                    'password' => $password
                 ]
             ]);
 
@@ -161,14 +172,54 @@ class KaryawanController extends Controller
 
         try {
             $validated = $request->validate([
-                'nama' => 'required|string|max:100',
-                'telp' => 'required|string|max:20',
-                'email' => 'required|email|unique:karyawans,email,' . $karyawan->id,
-                'departemen' => 'required|string|max:50',
+
+                'nip' => [
+                    'required',
+                    'string',
+                    'max:20',
+                    Rule::unique('karyawans', 'nip')->ignore($karyawan->id),
+                    Rule::unique('penggunas', 'username')->ignore($karyawan->user_id),
+                ],
+            
+                'nama' => [
+                    'required',
+                    'string',
+                    'max:100',
+                    'regex:/^[A-Za-z\s]+$/'
+                ],
+            
+                'telp' => [
+                    'required',
+                    'regex:/^08[0-9]{8,11}$/'
+                ],
+            
+                'email' => [
+                    'required',
+                    'email',
+                    'max:100',
+                    Rule::unique('karyawans', 'email')->ignore($karyawan->id),
+                ],
+            
+                'role' => 'required|in:tenant_relation,departemen',
+            
+                'departemen' => [
+                    'nullable',
+                    Rule::in($this->departemenList)
+                ],
+            
                 'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+            
                 'status' => 'required|in:Aktif,Nonaktif'
+            
+            ], [
+                'nama.regex' => 'Nama hanya boleh huruf dan spasi.',
+                'telp.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
             ]);
 
+            $karyawan->user->update([
+                'username' => $validated['nip']
+            ]);
+            
             $karyawan->update($validated);
 
             DB::commit();

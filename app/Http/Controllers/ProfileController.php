@@ -22,7 +22,7 @@ class ProfileController extends Controller
         return view('profile', compact('user', 'profile'));
     }
     // ================= GET PROFILE =================
-    public function me()
+    public function show()
     {
         $user = auth()->user();
 

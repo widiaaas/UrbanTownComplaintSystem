@@ -13,7 +13,7 @@
         {{-- TAB --}}
         <div class="flex border-b">
             <button @click="tab='profil'" :class="tab==='profil' ? activeTab : normalTab">Profil</button>
-            <button @click="tab='password'" :class="tab==='password' ? activeTab : normalTab">Ubah Password</button>
+            <button @click="tab='password'" :class="tab==='password' ? activeTab : normalTab">Ubah Kata Sandi</button>
         </div>
 
         {{-- ================= PROFIL ================= --}}
@@ -49,7 +49,7 @@
                 {{-- DEPARTEMEN (HANYA KARYAWAN) --}}
                 <template x-if="user.role === 'karyawan'">
                     <div class="flex justify-between">
-                        <span class="font-semibold">Departemen</span>
+                        <span class="font-semibold">Jabatan</span>
                         <span x-text="form.departemen"></span>
                     </div>
                 </template>
@@ -118,7 +118,7 @@
 
             <!-- PASSWORD LAMA -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Password Lama</label>
+                <label class="block text-sm font-semibold mb-1">Kata Sandi Lama</label>
 
                 <div class="relative">
                     <input 
@@ -145,7 +145,7 @@
 
             <!-- PASSWORD BARU -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Password Baru</label>
+                <label class="block text-sm font-semibold mb-1">Kata Sandi Baru</label>
 
                 <div class="relative">
                     <input 
@@ -172,7 +172,7 @@
 
             <!-- KONFIRMASI PASSWORD -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Konfirmasi Password</label>
+                <label class="block text-sm font-semibold mb-1">Konfirmasi Kata Sandi</label>
 
                 <div class="relative">
                     <input 
@@ -199,7 +199,7 @@
 
             <div class="text-right">
                 <button @click="updatePassword()" class="btn btn-primary">
-                    Simpan Password
+                    Simpan Kata Sandi
                 </button>
             </div>
 
@@ -250,7 +250,7 @@ function profileData(){
         // ================= INIT (FETCH DATA) =================
         async init(){
             try{
-                const res = await fetch('/profile/me', {
+                const res = await fetch('/profile/show', {
                     headers:{
                         'Accept':'application/json'
                     }

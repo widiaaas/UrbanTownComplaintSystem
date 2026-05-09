@@ -84,7 +84,7 @@
                     <th class="px-4 py-2 border">No</th>
                     <th class="px-4 py-2 border">ID Pegawai</th>
                     <th class="px-4 py-2 border">Nama</th>
-                    <th class="px-4 py-2 border">Departemen</th>
+                    <th class="px-4 py-2 border">Jabatan</th>
                     <th class="px-4 py-2 border">Status</th>
                     <th class="px-4 py-2 border">Aksi</th>
                 </tr>
@@ -101,7 +101,14 @@
 
                     <td class="px-4 py-2" x-text="emp.nama"></td>
 
-                    <td class="px-4 py-2" x-text="emp.departemen"></td>
+                    <td class="px-4 py-2" x-text="
+                        emp.role === 'admin'
+                            ? 'Admin'
+                            : emp.role === 'tenant_relation'
+                                ? 'Tenant Relation'
+                                : emp.departemen
+                    ">
+                </td>
 
                     <!-- STATUS -->
                     <td class="px-4 py-2">
@@ -296,28 +303,6 @@
 
             </div>
 
-            <template x-if="passwordGenerated">
-                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
-                    <p class="font-semibold text-yellow-800">
-                        Akun Karyawan Berhasil Dibuat
-                    </p>
-
-                    <p>
-                        <strong>Username:</strong>
-                        <span x-text="newEmployee.id_pegawai"></span>
-                    </p>
-
-                    <p>Password Sementara</p>
-
-                    <div class="bg-white border rounded px-3 py-2 font-mono text-center">
-                        <span x-text="generatedPassword"></span>
-                    </div>
-
-                    <p class="text-xs text-gray-600">
-                        Berikan password ini kepada karyawan untuk login pertama.
-                    </p>
-                </div>
-            </template>
             
             <div class="flex justify-end gap-2 pt-4 border-t">
                 
@@ -342,8 +327,7 @@
     <div x-show="openEdit" x-cloak
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
 
-        <div @click.outside="openEdit=false"
-            class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4">
 
             <h2 class="text-lg font-semibold">
                 Edit Karyawan (<span x-text="selectedEmployee.nama"></span>)
@@ -360,8 +344,7 @@
                     <label class="text-sm">ID Pegawai</label>
                     <input type="text"
                         x-model="selectedEmployee.id_pegawai"
-                        readonly
-                        class="w-full border rounded-lg px-3 py-2 bg-gray-100">
+                        class="w-full border rounded-lg px-3 py-2">
                 </div>   
 
                 <div>
@@ -448,7 +431,18 @@
             <p><strong>ID Pegawai:</strong> <span x-text="selectedEmployee.id_pegawai"></span></p>
             <p><strong>No. Telp:</strong> <span x-text="selectedEmployee.telp"></span></p>
             <p><strong>Email:</strong> <span x-text="selectedEmployee.email"></span></p>
-            <p><strong>Departemen:</strong> <span x-text="selectedEmployee.departemen"></span></p>
+            <p><strong>Jabatan:</strong>
+
+            <span
+                x-text="
+                    selectedEmployee.role === 'admin'
+                        ? 'Admin'
+                        : selectedEmployee.role === 'tenant_relation'
+                            ? 'Tenant Relation'
+                            : selectedEmployee.departemen
+                ">
+            </span>
+        </p>
             <p><strong>Jenis Kelamin:</strong> <span x-text="selectedEmployee.gender"></span></p>
             <p><strong>Status:</strong> <span x-text="selectedEmployee.status"></span></p>
 
@@ -481,20 +475,6 @@
                 <p><strong>ID Pegawai:</strong> <span x-text="selectedEmployee.id_pegawai"></span></p>
             </div>
 
-            <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
-                <p class="font-semibold text-yellow-800">
-                    Password Baru
-                </p>
-
-                <div class="bg-white border rounded px-3 py-2 font-mono text-center">
-                    <span x-text="generatedPassword"></span>
-                </div>
-
-                <p class="text-xs text-gray-600">
-                    Berikan password ini kepada karyawan untuk login kembali.
-                </p>
-            </div>
-
             <div class="flex justify-end gap-2 pt-4 border-t">
 
                 <button 
@@ -524,6 +504,16 @@ function karyawanManager(){
         openEdit:false,
         openDetail:false,
         openResetPassword:false,
+
+        openCredential:false,
+
+        credentialData:{
+            username:'',
+            password:''
+        },
+
+        credentialTitle:'',
+        credentialDescription:'',
 
         passwordGenerated:false,
         generatedPassword:'',
@@ -724,6 +714,7 @@ function karyawanManager(){
 
         // ================= UPDATE =================
         update(){
+
             fetch(`/karyawan/${this.selectedEmployee.id}`,{
                 method:'PUT',
                 credentials:'same-origin',
@@ -732,27 +723,74 @@ function karyawanManager(){
                     'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
                 },
                 body:JSON.stringify({
+                    nip: this.selectedEmployee.id_pegawai,
                     nama: this.selectedEmployee.nama,
                     telp: this.selectedEmployee.telp,
                     email: this.selectedEmployee.email,
                     departemen: this.selectedEmployee.departemen,
+                    role: this.selectedEmployee.role,
                     jenis_kelamin: this.selectedEmployee.gender,
                     status: this.selectedEmployee.status
                 })
             })
-            .then(res=>res.json())
-            .then(res=>{
-                if(res.success){
-                    Swal.fire('Berhasil','Data diperbarui','success')
-                    .then(()=> location.reload());
-                } else {
-                    Swal.fire('Error','Gagal update','error');
+            .then(async res => {
+
+                const data = await res.json();
+
+                if(!res.ok){
+                    throw data;
                 }
+
+                return data;
             })
-            .catch(()=>{
-                Swal.fire('Error','Terjadi kesalahan server','error');
+            .then(res => {
+
+                Swal.fire({
+                    icon:'success',
+                    title:'Berhasil',
+                    text:'Data berhasil diperbarui'
+                }).then(() => {
+                    location.reload();
+                });
+
+            })
+            .catch(err => {
+
+                console.error(err);
+
+                let fieldNames = {
+                    nip: 'ID Pegawai',
+                    nama: 'Nama',
+                    telp: 'No. Telepon',
+                    email: 'Email',
+                    departemen: 'Departemen',
+                    jenis_kelamin: 'Jenis Kelamin'
+                };
+
+                let message = 'Gagal update';
+
+                if(err.errors){
+                    message = Object.entries(err.errors)
+                        .map(([field, msgs]) => {
+                            let label = fieldNames[field] || field;
+                            return `${label}: ${msgs.join(', ')}`;
+                        })
+                        .join('\n');
+                }
+                else if(err.message){
+                    message = err.message;
+                }
+
+                // 🔥 modal tetap terbuka
+                this.openEdit = true;
+
+                Swal.fire({
+                    icon:'error',
+                    title:'Error',
+                    text:message
+                });
             });
-        },
+            },
 
         // ================= DELETE =================
         hapus(emp){

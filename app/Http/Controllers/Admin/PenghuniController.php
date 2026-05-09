@@ -7,6 +7,7 @@ use App\Models\Penghuni;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 
 
@@ -57,8 +58,13 @@ class PenghuniController extends Controller
             'email' => [
                 'required',
                 'max:100',
-                'unique:penghunis,email',
-                'regex:/^[^@\s]+@[^@\s]+\.[^@\s]+$/'],
+            
+                Rule::unique('penghunis', 'email')
+                    ->ignore($penghuni->id)
+                    ->whereNull('deleted_at'),
+            
+                'regex:/^[^@\s]+@[^@\s]+\.[^@\s]+$/'
+            ],
             'status' => 'required|in:Aktif,Nonaktif',
 
             
@@ -127,7 +133,6 @@ class PenghuniController extends Controller
     // ================= UPDATE =================
     public function update(Request $request, Penghuni $penghuni)
     {
-
         $validator = Validator::make($request->all(), [
 
             'nama' => ['required','string','max:100','regex:/^[A-Za-z\s]+$/'],
@@ -161,7 +166,18 @@ class PenghuniController extends Controller
         DB::beginTransaction();
 
         try {
-            $penghuni->update($validator->validated());
+
+            // 🔥 ambil validated data dulu
+            $data = $validator->validated();
+
+            // 🔥 kalau dinonaktifkan
+            if ($data['status'] === 'Nonaktif') {
+
+                $data['unit_id'] = null;
+                $data['tanggal_keluar'] = now();
+            }
+
+            $penghuni->update($data);
 
             DB::commit();
 
@@ -172,6 +188,7 @@ class PenghuniController extends Controller
             ]);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
 
             return response()->json([
@@ -180,7 +197,6 @@ class PenghuniController extends Controller
             ], 500);
         }
     }
-
     // ================= DELETE =================
     public function destroy(Request $request, Penghuni $penghuni)
     {

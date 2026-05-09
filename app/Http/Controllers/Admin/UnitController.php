@@ -62,8 +62,13 @@ class UnitController extends Controller
     {
         try {
             $validated = $request->validate([
-                'no_unit' => 'required|string|unique:units,no_unit',
-    
+                'no_unit' => [
+                    'required',
+                    'string',
+                    Rule::unique('units', 'no_unit')
+                        ->whereNull('deleted_at')
+                ],
+
                 'gedung' => [
                     'required',
                     'string',
@@ -202,14 +207,41 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
-        $unit->penghunis()->update([
-            'unit_id' => null,
-            'status' => 'Nonaktif'
+        // 🔥 hanya boleh hapus jika unit nonaktif
+        if ($unit->status !== 'Nonaktif') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unit harus dinonaktifkan terlebih dahulu.'
+            ], 422);
+        }
+
+        // 🔥 cek masih ada penghuni aktif atau tidak
+        $masihAdaPenghuni = $unit->penghunis()
+            ->where('status', 'Aktif')
+            ->exists();
+
+        if ($masihAdaPenghuni) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unit masih memiliki penghuni aktif.'
+            ], 422);
+        }
+
+        DB::transaction(function () use ($unit) {
+
+            // 🔥 hapus akun login
+            if ($unit->user) {
+                $unit->user->delete();
+            }
+
+            // 🔥 soft delete unit
+            $unit->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit berhasil dihapus'
         ]);
-    
-        $unit->delete();
-    
-        return response()->json(['success' => true]);
     }
 
     public function resetPassword(Unit $unit)
@@ -266,9 +298,22 @@ class UnitController extends Controller
                 'tanggal_masuk' => now(),
             ]);
 
+            $passwordBaru = Str::random(8);
+
+            $unit->user->update([
+                'password' => Hash::make($passwordBaru),
+                'must_change_password' => true
+            ]);
+
+            $penghuniBaru->update([
+                'unit_id' => $unit->id,
+                'status' => 'Aktif',
+                'tanggal_masuk' => now(),
+            ]);
+
             $unit->update(['status' => 'Aktif']);
 
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true,'password' => $passwordBaru]);
         });
     }
 

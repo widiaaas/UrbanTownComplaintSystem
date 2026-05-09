@@ -10,7 +10,8 @@
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-900">Kelola Unit</h1>
         <button
-            @click="openCreateUnit = true"
+        @click=" createdUnit = null;
+                openCreateUnit = true"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             + Tambah Unit
         </button>
@@ -32,21 +33,27 @@
                     class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
             </div>
 
-            {{-- Lantai --}}
+            {{-- Status --}}
             <div>
-                <label for="lantai" class="text-sm font-medium">Lantai</label>
+                <label for="status" class="text-sm font-medium">Status</label>
+
                 <select 
-                    id="lantai"
-                    name="lantai"
+                    id="status"
+                    name="status"
                     class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
 
                     <option value="">Semua</option>
-                    @foreach($units->pluck('lantai')->unique() as $floor)
-                        <option value="{{ $floor }}"
-                            {{ request('lantai') == $floor ? 'selected' : '' }}>
-                            {{ $floor }}
-                        </option>
-                    @endforeach
+
+                    <option value="Aktif"
+                        {{ request('status') == 'Aktif' ? 'selected' : '' }}>
+                        Aktif
+                    </option>
+
+                    <option value="Nonaktif"
+                        {{ request('status') == 'Nonaktif' ? 'selected' : '' }}>
+                        Nonaktif
+                    </option>
+
                 </select>
             </div>
 
@@ -439,6 +446,54 @@
             </div>
         </div>
     </div>
+
+
+    {{-- ================= MODAL CREDENTIAL ================= --}}
+    <div x-show="openCredential"
+        x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div @click.outside="openCredential = false"
+            class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
+
+            <h2 class="text-lg font-semibold text-gray-800"
+                x-text="credentialTitle">
+            </h2>
+
+            <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-3">
+
+                <template x-if="credentialData.username">
+                    <div>
+                        <p class="text-gray-500">Username</p>
+
+                        <div class="bg-white border rounded px-3 py-2 font-mono text-center"
+                            x-text="credentialData.username">
+                        </div>
+                    </div>
+                </template>
+
+                <div>
+                    <p class="text-gray-500">Password Sementara</p>
+
+                    <div class="bg-white border rounded px-3 py-2 font-mono text-center"
+                        x-text="credentialData.password">
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-600"
+                x-text="credentialDescription">
+                </p>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button
+                    @click="openCredential = false"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -450,7 +505,7 @@ function unitManager() {
         openDelete: false,
         openToggle: false,
         openReset: false,
-        
+        openCredential: false,
 
         selectedUnit: { id: null, no_unit: '', gedung: '', lantai: '', currentPenghuni: '' },
 
@@ -460,6 +515,12 @@ function unitManager() {
         editForm: { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
 
         createdUnit: null,
+        credentialData: {
+            username: '',
+            password: ''
+        },
+        credentialTitle: '',
+        credentialDescription: '',
         search: '',
         floorFilter: '',
 
@@ -564,27 +625,63 @@ function unitManager() {
                 body: JSON.stringify(this.newUnit)
             })
             .then(async res => {
+
                 const data = await res.json();
+
                 if (!res.ok) throw data;
+
                 return data;
             })
             .then(data => {
-                this.createdUnit = { ...data.unit, password: data.password };
 
+                // update table
                 this.unitsData.push(data.unit);
 
-                // 🔥 FIX FILTER
                 this.applyFilter();
 
+                // reset form
+                this.newUnit = {
+                    no_unit: '',
+                    gedung: '',
+                    lantai: '',
+                    nomor_kamar: ''
+                };
+
+                // tutup modal tambah unit
                 this.openCreateUnit = false;
 
-                Swal.fire('Berhasil', 'Unit berhasil ditambahkan', 'success');
-            })
+                // 🔥 credential modal
+                this.credentialTitle = 'Akun Unit Berhasil Dibuat';
+
+                this.credentialDescription =
+                    'Berikan password ini kepada penghuni unit untuk login pertama.';
+
+                this.credentialData = {
+                    username: data.unit.no_unit,
+                    password: data.password
+                };
+
+                this.openCredential = true;
+                })
             .catch(err => {
-                Swal.fire('Error', 'Gagal menambahkan unit', 'error');
+
+                console.error(err);
+
+                let message = 'Gagal menambahkan unit';
+
+                if (err.errors) {
+                    message = Object.values(err.errors)
+                        .flat()
+                        .join('\n');
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message
+                });
             });
         },
-
         // ================= EDIT =================
         editUnit(id, gedung, lantai, nomor_kamar) {
             this.selectedUnit.id = id;
@@ -609,21 +706,55 @@ function unitManager() {
                 body: JSON.stringify(this.editForm)
             })
             .then(async res => {
+
                 const data = await res.json();
+
                 if (!res.ok) throw data;
+
                 return data;
             })
             .then(data => {
+
                 this.unitsData = this.unitsData.map(u =>
-                    u.id === this.selectedUnit.id ? { ...u, ...this.editForm } : u
+                    u.id === this.selectedUnit.id
+                        ? { ...u, ...this.editForm }
+                        : u
                 );
 
                 this.applyFilter();
+
                 this.openEdit = false;
 
-                Swal.fire('Berhasil', 'Unit berhasil diupdate', 'success');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Unit berhasil diperbarui'
+                });
             })
-            .catch(() => Swal.fire('Error', 'Gagal update', 'error'));
+            .catch(err => {
+
+                console.error(err);
+
+                let message = 'Gagal update';
+
+                // 🔥 VALIDATION ERROR
+                if (err.errors) {
+                    message = Object.values(err.errors)
+                        .flat()
+                        .join('\n');
+                }
+
+                // 🔥 GENERAL ERROR
+                else if (err.message) {
+                    message = err.message;
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message
+                });
+            });
         },
 
         // ================= DELETE =================
@@ -634,13 +765,39 @@ function unitManager() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             })
-            .then(res => res.json())
-            .then(() => {
-                this.unitsData = this.unitsData.filter(u => u.id !== this.selectedUnit.id);
+            .then(async res => {
+
+                const data = await res.json();
+
+                if (!res.ok) throw data;
+
+                return data;
+            })
+            .then(data => {
+
+                this.unitsData = this.unitsData.filter(
+                    u => u.id !== this.selectedUnit.id
+                );
+
                 this.applyFilter();
+
                 this.openDelete = false;
 
-                Swal.fire('Berhasil', 'Unit dihapus', 'success');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: data.message
+                });
+            })
+            .catch(err => {
+
+                console.error(err);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.message || 'Gagal menghapus unit'
+                });
             });
         },
 
@@ -686,20 +843,49 @@ function unitManager() {
 
         // ================= RESET PASSWORD =================
         submitResetPassword() {
+
             fetch(`/units/${this.selectedUnit.id}/reset-password`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                this.resetPasswordGenerated = true;
+            .then(async res => {
 
-                // 🔥 FIX
-                this.newPassword = data.new_password;
+                const data = await res.json();
+
+                if (!res.ok) throw data;
+
+                return data;
+            })
+            .then(data => {
+
+                this.openReset = false;
+
+                // 🔥 credential modal
+                this.credentialTitle = 'Password Berhasil Direset';
+
+                this.credentialDescription =
+                    'Berikan password ini kepada penghuni unit untuk login kembali.';
+
+                this.credentialData = {
+                    username: '',
+                    password: data.new_password
+                };
+
+                this.openCredential = true;
+            })
+            .catch(err => {
+
+                console.error(err);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.message || 'Gagal reset password'
+                });
             });
-        },
+            },
 
         // ================= GANTI PENGHUNI =================
         submitGantiPenghuni() {
@@ -715,36 +901,54 @@ function unitManager() {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({ penghuni_id: this.selectedPenghuniId })
+                body: JSON.stringify({
+                    penghuni_id: this.selectedPenghuniId
+                })
             })
             .then(async res => {
+
                 const data = await res.json();
 
-                if (!res.ok) throw data; // 🔥 WAJIB
+                if (!res.ok) throw data;
 
                 return data;
             })
             .then(data => {
 
-                // 🔥 update UI
+                // update UI
                 this.unitsData = this.unitsData.map(u =>
                     u.id === this.selectedUnit.id
-                        ? { ...u, currentPenghuni: this.penghuniList.find(p => p.id == this.selectedPenghuniId)?.nama || '-' }
+                        ? {
+                            ...u,
+                            currentPenghuni:
+                                this.penghuniList.find(
+                                    p => p.id == this.selectedPenghuniId
+                                )?.nama || '-'
+                        }
                         : u
                 );
 
                 this.applyFilter();
 
                 // reset state
-                this.passwordGenerated = false;
                 this.selectedPenghuniId = '';
                 this.selectedPenghuniDetail = null;
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Penghuni berhasil diganti'
-                });
+                // tutup modal ganti penghuni
+                this.openEditPenghuni = false;
+
+                // 🔥 credential modal
+                this.credentialTitle = 'Penghuni Berhasil Diganti';
+
+                this.credentialDescription =
+                    'Berikan password ini kepada penghuni baru untuk login pertama.';
+
+                this.credentialData = {
+                    username: '',
+                    password: data.password
+                };
+
+                this.openCredential = true;
             })
             .catch(err => {
 

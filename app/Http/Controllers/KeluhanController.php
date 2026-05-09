@@ -161,7 +161,8 @@ class KeluhanController extends Controller
         $keluhan->save();
 
         return response()->json([
-            'message' => 'Keluhan berhasil diambil'
+            'message' => 'Keluhan berhasil diambil',
+            'data' => $keluhan->fresh('penanggungJawab')
         ]);
     }
 
@@ -407,51 +408,51 @@ class KeluhanController extends Controller
     }
 
 
-    ////  BUAT WORK ORDER
-    public function storeWO(Request $request, $id)
-    {
-        $keluhan = Keluhan::findOrFail($id);
+    // ////  BUAT WORK ORDER
+    // public function storeWO(Request $request, $id)
+    // {
+    //     $keluhan = Keluhan::findOrFail($id);
 
-        // VALIDASI
-        $request->validate([
-            'departemen' => 'required',
-            'instruksi' => 'required|string',
-            'lokasi' => 'required|string'
-        ]);
+    //     // VALIDASI
+    //     $request->validate([
+    //         'departemen' => 'required',
+    //         'instruksi' => 'required|string',
+    //         'lokasi' => 'required|string'
+    //     ]);
 
-        // GENERATE NOMOR WO
-        $last = WorkOrder::latest()->first();
-        $no = $last ? ((int) substr($last->nomor_wo, -3)) + 1 : 1;
+    //     // GENERATE NOMOR WO
+    //     $last = WorkOrder::latest()->first();
+    //     $no = $last ? ((int) substr($last->nomor_wo, -3)) + 1 : 1;
 
-        $nomorWO = 'WO-' . date('Y') . '-' . str_pad($no, 3, '0', STR_PAD_LEFT);
+    //     $nomorWO = 'WO-' . date('Y') . '-' . str_pad($no, 3, '0', STR_PAD_LEFT);
 
-        // SIMPAN
-        $wo = WorkOrder::create([
-            'nomor_wo' => $nomorWO,
-            'keluhan_id' => $keluhan->id,
-            'departemen_tujuan' => $request->departemen,
-            'instruksi' => $request->instruksi,
-            'status' => 'open'
-        ]);
+    //     // SIMPAN
+    //     $wo = WorkOrder::create([
+    //         'nomor_wo' => $nomorWO,
+    //         'keluhan_id' => $keluhan->id,
+    //         'departemen_tujuan' => $request->departemen,
+    //         'instruksi' => $request->instruksi,
+    //         'status' => 'open'
+    //     ]);
 
-        return response()->json([
-            'message' => 'Work Order berhasil dibuat',
-            'data' => [
-                'id' => $wo->id,
-                'no' => $wo->nomor_wo,
-                'dept' => $wo->departemen_tujuan,
-                'instruksi' => $wo->instruksi,
-                'status' => $wo->status,
-                'tanggal' => $wo->created_at->format('d-m-Y H:i'),
-                'lokasi' => $request->lokasi
-            ]
-        ]);
+    //     return response()->json([
+    //         'message' => 'Work Order berhasil dibuat',
+    //         'data' => [
+    //             'id' => $wo->id,
+    //             'no' => $wo->nomor_wo,
+    //             'dept' => $wo->departemen_tujuan,
+    //             'instruksi' => $wo->instruksi,
+    //             'status' => $wo->status,
+    //             'tanggal' => $wo->created_at->format('d-m-Y H:i'),
+    //             'lokasi' => $request->lokasi
+    //         ]
+    //     ]);
 
-        if ($keluhan->workOrders()->exists()) {
-            return response()->json([
-                'message' => 'Work Order sudah ada untuk keluhan ini'
-            ], 400);
-        }
-    }
+    //     if ($keluhan->workOrders()->exists()) {
+    //         return response()->json([
+    //             'message' => 'Work Order sudah ada untuk keluhan ini'
+    //         ], 400);
+    //     }
+    // }
 
 }

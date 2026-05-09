@@ -287,50 +287,50 @@ class WorkOrderController extends Controller
         ]);
     }
 
-    public function daftarWOByTR(Request $request)
-    {
-        $user = auth()->user();
+    // public function daftarWOByTR(Request $request)
+    // {
+    //     $user = auth()->user();
 
-        $query = WorkOrder::with([
-            'keluhan.unit',
-            'keluhan.penghuni',
-            'keluhan.penanggungJawab.karyawan'
-        ])
-        ->whereHas('keluhan', function ($q) use ($user) {
-            $q->where('penanggung_jawab_id', $user->id);
-        });
+    //     $query = WorkOrder::with([
+    //         'keluhan.unit',
+    //         'keluhan.penghuni',
+    //         'keluhan.penanggungJawab.karyawan'
+    //     ])
+    //     ->whereHas('keluhan', function ($q) use ($user) {
+    //         $q->where('penanggung_jawab_id', $user->id);
+    //     });
 
-        // 🔥 FILTER STATUS DARI DASHBOARD
-        if ($request->filled('status')) {
+    //     // 🔥 FILTER STATUS DARI DASHBOARD
+    //     if ($request->filled('status')) {
 
-            $statuses = explode(',', $request->status);
+    //         $statuses = explode(',', $request->status);
 
-            $statuses = array_map(function ($s) {
-                return strtolower(str_replace(' ', '_', $s));
-            }, $statuses);
+    //         $statuses = array_map(function ($s) {
+    //             return strtolower(str_replace(' ', '_', $s));
+    //         }, $statuses);
 
-            $query->whereIn('status', $statuses);
-        }
+    //         $query->whereIn('status', $statuses);
+    //     }
 
-        $wo = $query->latest()->get()
-            ->map(function ($item) {
+    //     $wo = $query->latest()->get()
+    //         ->map(function ($item) {
 
-                $keluhan = $item->keluhan;
-                $pj = $keluhan?->penanggungJawab;
+    //             $keluhan = $item->keluhan;
+    //             $pj = $keluhan?->penanggungJawab;
 
-                return [
-                    'id' => $item->id,
-                    'no' => $item->nomor_wo,
-                    'unit' => $keluhan?->unit?->no_unit ?? '-',
-                    'tanggal' => optional($item->created_at)->format('d M Y H:i'),
-                    'penghuni' => $keluhan?->penghuni?->nama ?? '-',
-                    'telepon' => $keluhan?->penghuni?->telepon ?? '-',
-                    'status' => ucfirst(str_replace('_', ' ', $item->status)),
-                    'instruksi' => $item->instruksi,
-                    'tr' => $pj?->karyawan?->nama ?? $pj?->username ?? '-',
-                ];
-            });
+    //             return [
+    //                 'id' => $item->id,
+    //                 'no' => $item->nomor_wo,
+    //                 'unit' => $keluhan?->unit?->no_unit ?? '-',
+    //                 'tanggal' => optional($item->created_at)->format('d M Y H:i'),
+    //                 'penghuni' => $keluhan?->penghuni?->nama ?? '-',
+    //                 'telepon' => $keluhan?->penghuni?->telepon ?? '-',
+    //                 'status' => ucfirst(str_replace('_', ' ', $item->status)),
+    //                 'instruksi' => $item->instruksi,
+    //                 'tr' => $pj?->karyawan?->nama ?? $pj?->username ?? '-',
+    //             ];
+    //         });
 
-        return view('tenantrelation.workorder.daftarWO', compact('wo'));
-    }
+    //     return view('tenantrelation.workorder.daftarWO', compact('wo'));
+    // }
 }

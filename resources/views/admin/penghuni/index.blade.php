@@ -247,6 +247,25 @@ function penghuniManager(){
             });
         },
 
+        showEditError(msg, errors = {}){
+
+            this.errors = errors;
+
+            this.openEdit = true;
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: msg
+            }).then(() => {
+
+                setTimeout(() => {
+                    this.openEdit = true;
+                }, 50);
+
+            });
+            },
+
         // ================= STORE =================
         store(){
 
@@ -395,7 +414,7 @@ function penghuniManager(){
                         .join('\n');
                 }
 
-                this.showError(message, err.errors || {});
+                this.showEditError(message, err.errors || {});
             });
         },
 

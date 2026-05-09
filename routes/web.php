@@ -153,7 +153,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ================= PROFILE UNIVERSAL =================
     Route::get('/profile', [ProfileController::class, 'index']); // view
-    Route::get('/profile/me', [ProfileController::class, 'me']); // JSON API
+    Route::get('/profile/show', [ProfileController::class, 'show']); // JSON API
     Route::put('/profile/update', [ProfileController::class, 'update']);
     Route::put('/profile/update-password', [ProfileController::class, 'updatePassword']);
 
