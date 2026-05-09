@@ -107,11 +107,11 @@
                     <p class="text-xs text-gray-400" x-text="selected.tanggal"></p>
 
                     {{-- 🔥 LAMPIRAN PENGHUNI --}}
-                    <template x-if="selected.lampiran && selected.lampiran.length">
+                    <template x-if="selected.lampiran_pengajuan && selected.lampiran_pengajuan.length">
                         <div class="mt-2">
 
                             <div class="flex flex-wrap gap-2">
-                                <template x-for="(file, i) in selected.lampiran" :key="i">
+                                <template x-for="(file, i) in selected.lampiran_pengajuan" :key="i">
                                     <button 
                                         @click="previewFile = '/storage/' + file; previewOpen = true"
                                         class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
@@ -123,7 +123,7 @@
                         </div>
                     </template>
 
-                    <template x-if="!selected.lampiran || selected.lampiran.length === 0">
+                    <template x-if="!selected.lampiran_pengajuan || selected.lampiran.length === 0">
                         <p class="text-xs text-gray-400 italic">Tidak ada lampiran</p>
                     </template>
                 </div>
@@ -139,6 +139,23 @@
                         <p class="text-sm" x-text="selected.keputusan"></p>
                         <p class="text-xs text-gray-400"
                         x-text="selected.tanggal_keputusan_format ?? '-'"></p>
+                    </div>
+                </template>
+
+                {{-- 🔥 LAMPIRAN KEPUTUSAN --}}
+                <template x-if="selected.lampiran_keputusan && selected.lampiran_keputusan.length">
+                    <div class="mt-2 flex flex-wrap gap-2">
+
+                        <template x-for="(file, i) in selected.lampiran_keputusan" :key="i">
+                            <button
+                                @click="previewFile = '/storage/' + file; previewOpen = true"
+                                class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:underline">
+
+                                <span x-text="'📎 Lampiran Keputusan ' + (i + 1)"></span>
+
+                            </button>
+                        </template>
+
                     </div>
                 </template>
 

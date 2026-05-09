@@ -21,7 +21,8 @@ class KeluhanSeeder extends Seeder
             'taken_at' => null,
             'keputusan' => null,
             'tanggal_keputusan' => null,
-            'lampiran' => null,
+            'lampiran_pengajuan' => null,
+            'lampiran_keputusan' => null,
             'created_at' => Carbon::now()->subDays(2),
         ]);
 
@@ -36,7 +37,8 @@ class KeluhanSeeder extends Seeder
             'taken_at' => Carbon::now()->subDays(1),
             'keputusan' => null,
             'tanggal_keputusan' => null,
-            'lampiran' => null,
+            'lampiran_pengajuan' => null,
+            'lampiran_keputusan' => null,
             'created_at' => Carbon::now()->subDays(3),
         ]);
 
@@ -51,7 +53,8 @@ class KeluhanSeeder extends Seeder
             'taken_at' => Carbon::now()->subDays(2),
             'keputusan' => 'Akan dikerjakan oleh departemen Engineering.',
             'tanggal_keputusan' => Carbon::now()->subDays(2),
-            'lampiran' => null,
+            'lampiran_pengajuan' => null,
+            'lampiran_keputusan' => null,
             'created_at' => Carbon::now()->subDays(4),
         ]);
 
@@ -66,7 +69,8 @@ class KeluhanSeeder extends Seeder
             'taken_at' => Carbon::now()->subDays(5),
             'keputusan' => 'Kipas diganti dengan yang baru.',
             'tanggal_keputusan' => Carbon::now()->subDays(3),
-            'lampiran' => null,
+            'lampiran_pengajuan' => null,
+            'lampiran_keputusan' => null,
             'created_at' => Carbon::now()->subDays(7),
         ]);
     }

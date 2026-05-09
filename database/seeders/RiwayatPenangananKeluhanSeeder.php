@@ -50,15 +50,6 @@ class RiwayatPenangananKeluhanSeeder extends Seeder
             'waktu' => Carbon::now()->subDays(3)
         ]);
 
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 3,
-            'status' => 'waiting',
-            'judul' => 'Keputusan TR',
-            'deskripsi' => 'TR memutuskan membuat Work Order.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(2)
-        ]);
 
         RiwayatPenangananKeluhan::create([
             'keluhan_id' => 4,

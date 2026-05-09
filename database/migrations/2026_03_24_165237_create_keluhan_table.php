@@ -20,7 +20,8 @@ return new class extends Migration
             $table->timestamp('taken_at')->nullable();
             $table->text('keputusan')->nullable();
             $table->timestamp('tanggal_keputusan')->nullable();
-            $table->json('lampiran')->nullable();
+            $table->json('lampiran_pengajuan')->nullable();
+            $table->json('lampiran_keputusan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

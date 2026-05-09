@@ -229,16 +229,10 @@
         <template x-if="normalizeStatus(keluhan.status) !== 'close'">
             <div class="pl-4 space-y-4">
                 <div>
-                    <label class="text-sm font-medium mb-1 block">Judul Keputusan</label>
-                    <input type="text" x-model="keputusanAkhir.judul"
-                        class="w-full border rounded-lg px-3 py-2 text-sm"
-                        placeholder="Masukkan judul keputusan">
-                </div>
-                <div>
                     <label class="text-sm font-medium mb-1 block">Deskripsi Keputusan</label>
-                    <textarea x-model="keputusanAkhir.solusi"
+                    <textarea x-model="keputusanAkhir.keputusan"
                         class="w-full border rounded-lg px-3 py-2 text-sm"
-                        rows="3" placeholder="Masukkan deskripsi keputusan"></textarea>
+                        rows="3" placeholder="Masukkan keputusan"></textarea>
                 </div>
                 <div>
                     <label class="text-sm font-medium mb-1 block">Lampiran Dokumentasi</label>
@@ -755,8 +749,7 @@ function detailKeluhanApp() {
         },
 
         keputusanAkhir: {
-            judul: '',
-            solusi: ''
+            keputusan: ''
         },
 
         /* ================= INIT ================= */
@@ -1153,13 +1146,13 @@ function detailKeluhanApp() {
 
         /* ================= KEPUTUSAN AKHIR ================= */
         simpanKeputusanAkhir() {
-            if (!this.keputusanAkhir.judul || !this.keputusanAkhir.solusi) {
+            if (!this.keputusanAkhir.keputusan) {
                 Swal.fire('Oops!', 'Lengkapi data keputusan', 'warning');
                 return;
             }
             let formData = new FormData();
-            formData.append('judul', this.keputusanAkhir.judul);
-            formData.append('solusi', this.keputusanAkhir.solusi);
+
+            formData.append('keputusan', this.keputusanAkhir.keputusan);
             let files = this.$refs.fileKeputusan.files;
             for (let i = 0; i < files.length; i++) formData.append('lampiran[]', files[i]);
             fetch(`/keluhan/${this.keluhan.id}/keputusan-akhir`, {
@@ -1171,13 +1164,12 @@ function detailKeluhanApp() {
             .then(res => {
                 Swal.fire('Berhasil!', res.message, 'success');
                 this.riwayat.push({
-                    judul: this.keputusanAkhir.judul,
-                    deskripsi: this.keputusanAkhir.solusi,
+                    deskripsi: this.keputusanAkhir.keputusan,
                     waktu: this.now(),
                     status: 'close',
                     lampiran: []
                 });
-                this.keputusanAkhir = { judul: '', solusi: '' };
+                this.keputusanAkhir = {keputusan: '' };
                 this.$refs.fileKeputusan.value = null;
             })
             .catch(err => {

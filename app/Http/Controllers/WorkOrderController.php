@@ -75,6 +75,7 @@ class WorkOrderController extends Controller
             'keluhan.penanggungJawab.karyawan'
         ])
         ->whereNull('penanggung_jawab_id')
+        ->where('departemen_tujuan', $karyawan->departemen)
         ->latest()
         ->get()
         ->map(function ($item, $index) {

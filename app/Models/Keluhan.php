@@ -23,14 +23,16 @@ class Keluhan extends Model
         'taken_at',
         'keputusan',
         'tanggal_keputusan',
-        'lampiran',
+        'lampiran_pengajuan',
+        'lampiran_keputusan',
     ];
 
     protected $casts = [
         'status' => 'string',
         'taken_at' => 'datetime',
         'tanggal_keputusan' => 'datetime',
-        'lampiran' => 'array',
+        'lampiran_pengajuan' => 'array',
+        'lampiran_keputusan' => 'array',
     ];
 
     protected $appends = [

@@ -101,7 +101,7 @@ class KeluhanController extends Controller
             'penghuni_id' => $penghuni->id,
             'judul' => trim($request->judul),
             'deskripsi' => trim($request->deskripsi),
-            'lampiran' => $filesPath,
+            'lampiran_pengajuan' => $filesPath,
             
         ]);
 
@@ -366,13 +366,18 @@ class KeluhanController extends Controller
 
         // ================= VALIDASI =================
         $validator = Validator::make($request->all(), [
-            'judul' => ['required', 'string', 'max:150'],
-            'solusi' => ['required', 'string', 'min:5'],
+            'keputusan' => ['required', 'string', 'min:5'],
             'lampiran' => ['nullable', 'array'],
-            'lampiran.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'lampiran.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:1024'],
         ], [
-            'judul.required' => 'Judul wajib diisi',
-            'solusi.required' => 'Solusi wajib diisi',
+            'keputusan.required' => 'keputusan wajib diisi',
+            'keputusan.min' => 'Deskripsi keputusan minimal 5 karakter',
+
+            'lampiran.*.mimes' =>
+            'Lampiran hanya boleh JPG, PNG, atau PDF',
+
+            'lampiran.*.max' =>
+            'Ukuran file maksimal 1MB',
         ]);
 
         if ($validator->fails()) {
@@ -395,9 +400,9 @@ class KeluhanController extends Controller
 
         // ================= SIMPAN KE KELUHAN =================
         $keluhan->update([
-            'keputusan' => $request->judul . "\n\n" . $request->solusi,
+            'keputusan' => trim($request->keputusan),
             'tanggal_keputusan' => now(),
-            'lampiran' => $filesPath, // 🔥 overwrite atau bisa merge kalau mau
+            'lampiran_keputusan' => $filesPath, // 🔥 overwrite atau bisa merge kalau mau
             'status' => 'close'
         ]);
         $keluhan->refresh(); 
