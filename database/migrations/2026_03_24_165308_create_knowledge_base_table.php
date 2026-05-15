@@ -6,47 +6,54 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('knowledge_bases', function (Blueprint $table) {
+
             $table->id();
-        
-            // IDENTITAS
-            $table->string('judul', 255);
-            $table->string('kategori', 100);
+
+            // IDENTITAS MASALAH
+            $table->string('judul');
+
+            // KATEGORI
+            $table->string('kategori');
+
+            // DEPARTEMEN
             $table->enum('departemen_terkait', [
-                'Operational', 'Engineering', 'Finance', 'Legal', 'Developer'
+                'Operational',
+                'Engineering',
+                'Finance',
+                'Legal',
+                'Developer'
             ]);
-        
-            // 🔥 KMS FEATURE
-            $table->text('keywords')->nullable(); // hasil ekstraksi keyword
-            $table->text('variasi')->nullable();  // dari input "variasi kata"
-        
-            // 🔥 TRACKING
+
+            // SEARCH ENGINE
+            $table->text('keywords')->nullable();
+            $table->text('variasi')->nullable();
+
+            // ANALYTICS
             $table->unsignedInteger('usage_count')->default(0);
-        
-            // 🔥 TRACE (dari keluhan mana)
-            $table->foreignId('keluhan_id')
-                ->nullable()
-                ->constrained('keluhans')
-                ->nullOnDelete();
-        
+
             // USER
             $table->foreignId('created_by')
                 ->nullable()
                 ->constrained('penggunas')
                 ->nullOnDelete();
-        
-            // VALIDASI (optional ringan)
-            $table->enum('status', ['draft', 'approved'])->default('approved');
-        
+
+            // STATUS
+            $table->enum('status', [
+                'draft',
+                'approved'
+            ])->default('approved');
+
             $table->timestamps();
             $table->softDeletes();
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('knowledge_bases');
     }
 };
+

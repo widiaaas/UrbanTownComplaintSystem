@@ -306,22 +306,31 @@ class KeluhanController extends Controller
                 'judul' => $keluhan->judul,
                 'deskripsi' => $keluhan->deskripsi,
                 'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
-                'lampiran' => $keluhan->lampiran ?? [],
+                'lampiran' => $keluhan->lampiran_pengajuan ?? [],
             ],
             'riwayat_penanganan' => $keluhan->riwayatPenanganan->values(),
             
             // 🔥 RIWAYAT
-            'keputusan' => $keluhan->riwayatPenanganan
+            'riwayat_penanganan' => $keluhan->riwayatPenanganan
                 ->sortBy('waktu')
                 ->map(function ($r) {
                     return [
                         'judul' => $r->judul,
                         'deskripsi' => $r->deskripsi,
+                        'status' => $r->status,
                         'waktu' => optional($r->waktu)->format('d-m-Y H:i'),
                         'lampiran' => $r->lampiran ?? []
                     ];
                 })->values(),
-        
+            
+            // Keputusan akhir 
+            'keputusan_akhir' => $keluhan->keputusan,
+
+            'tanggal_keputusan_format' => optional($keluhan->tanggal_keputusan)
+                                            ->format('d-m-Y H:i'),
+
+            'lampiran_keputusan' => $keluhan->lampiran_keputusan ?? [],
+
             // 🔥 INI YANG KURANG
             'work_orders' => $keluhan->workOrders->map(function ($wo) {
                 $pj = $wo->penanggungJawab; 

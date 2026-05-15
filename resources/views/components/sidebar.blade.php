@@ -129,18 +129,7 @@
                 <span>Penanganan Saya</span>
             </a>
 
-            <a href="/knowledge-base"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('knowledgeBase', $currentPath) }}">
-                @include('components.icons.bookOpen')
-                <span>Knowledge Base</span>
-            </a>
-
-            <a href="/rekap-penanganan"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('rekapPenangananTR', $currentPath) }}">
-                @include('components.icons.scrollText')
-                <span>Laporan</span>
-            </a>
-
+        
             {{-- PROFILE --}}
             <a href="/profile"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('profile', $currentPath) }}">
@@ -168,6 +157,18 @@
                 @include('components.icons.clipboardList')
                 <span>Penanganan WO</span>
             </a>
+            @if(optional($user->karyawan)->departemen === 'Engineering')
+
+                <a href="/knowledge-base"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('knowledge-base', $currentPath) }}">
+
+                    @include('components.icons.bookOpen')
+
+                    <span>Knowledge Base</span>
+
+                </a>
+
+            @endif
 
             {{-- PROFILE --}}
             <a href="/profile"

@@ -58,11 +58,7 @@ class PenghuniController extends Controller
             'email' => [
                 'required',
                 'max:100',
-            
-                Rule::unique('penghunis', 'email')
-                    ->ignore($penghuni->id)
-                    ->whereNull('deleted_at'),
-            
+                'unique:penghunis,email',
                 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]+$/'
             ],
             'status' => 'required|in:Aktif,Nonaktif',

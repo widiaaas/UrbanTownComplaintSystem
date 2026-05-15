@@ -15,7 +15,7 @@ return new class extends Migration
             $table->enum('role', ['karyawan', 'unit']);
             $table->boolean('is_active')->default(true);
             $table->boolean('must_change_password')->default(true);
-            $table->timestamp('last_login')->nullable();
+            // $table->timestamp('last_login')->nullable();
             $table->timestamps();
         });
     }

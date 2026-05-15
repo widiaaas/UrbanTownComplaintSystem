@@ -181,12 +181,43 @@
                     class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                     Lihat Knowledge Base
                 </button>
+
                 <button @click="simpanPenanganan"
                     class="bg-blue-600 text-white px-4 py-2 rounded text-sm">
                     Simpan Penanganan
                 </button>
             </div>
         </div>
+    </template>
+
+    <template x-if="normalizeStatus(wo.status) === 'close'">
+
+        <div class="bg-white p-6 rounded-xl shadow">
+
+            <div class="flex justify-between items-center">
+
+                <div>
+                    <h3 class="font-semibold text-gray-800">
+                        Knowledge Base
+                    </h3>
+
+                    <p class="text-sm text-gray-500">
+                        Simpan solusi final ke knowledge base
+                    </p>
+                </div>
+
+                <button
+                    @click="isiKnowledgeBase()"
+                    class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700">
+
+                    Simpan ke Knowledge Base
+
+                </button>
+
+            </div>
+
+        </div>
+
     </template>
 
     {{-- ================= MODAL KNOWLEDGE BASE ================= --}}
@@ -307,6 +338,235 @@
         </div>
     </div>
 
+    {{-- ================= MODAL SIMPAN KB ================= --}}
+    <div x-show="openSimpanKB" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg flex flex-col max-h-[90vh]">
+
+            {{-- HEADER --}}
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+                <h3 class="font-semibold text-lg">Simpan Knowledge</h3>
+                <button @click="openSimpanKB = false" class="text-xl">&times;</button>
+            </div>
+
+            {{-- CONTENT --}}
+            <div class="p-6 space-y-6 overflow-y-auto">
+
+                {{-- INFORMASI UMUM --}}
+                <div class="space-y-3">
+                    <h4 class="text-sm font-semibold text-gray-600">Informasi Umum</h4>
+
+                    <input x-model="kbForm.judul"
+                         @input.debounce.300ms="checkDuplicateKB()"
+                        placeholder="Judul masalah"
+                        class="w-full border px-3 py-2 rounded">
+                        <template x-if="kbDuplicates.length">
+
+                            <div class="border border-yellow-200 bg-yellow-50 rounded-lg p-3 space-y-2">
+
+                                <p class="text-xs font-medium text-yellow-700">
+                                    Knowledge serupa ditemukan
+                                </p>
+
+                                <template x-for="item in kbDuplicates" :key="item.id">
+
+                                    <div class="flex items-center justify-between bg-white border rounded px-3 py-2">
+
+                                        <div>
+                                            <p class="text-sm font-medium" x-text="item.judul"></p>
+
+                                            <p class="text-xs text-gray-500"
+                                                x-text="item.kategori">
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            @click="useExistingKB(item)"
+                                            class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+
+                                            Gunakan
+
+                                        </button>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                            </template>
+
+                    <input x-model="kbForm.variasi"
+                        placeholder="Variasi kata (opsional)"
+                        class="w-full border px-3 py-2 rounded">
+
+                        <div class="relative">
+
+                            <!-- INPUT -->
+                            <input
+                                type="text"
+                                x-model="kategoriFormSearch"
+                                @focus="openKategoriForm = true"
+                                placeholder="Cari / tambah kategori..."
+                                class="w-full border px-3 py-2 rounded">
+
+                            <!-- DROPDOWN -->
+                            <div x-show="openKategoriForm"
+                                @mousedown.away="openKategoriForm = false"
+                                class="absolute z-50 bg-white border rounded-lg shadow w-full mt-1 max-h-52 overflow-y-auto"
+                                @click.stop>
+
+                                <!-- LIST -->
+                                <template x-for="kat in filteredKategoriForm" :key="kat">
+
+                                    <button
+                                        type="button"
+                                        @click="
+                                            kbForm.kategori = kat;
+                                            kategoriFormSearch = kat;
+                                            openKategoriForm = false;
+                                        "
+                                        class="w-full text-left px-3 py-2 hover:bg-green-50 text-sm">
+
+                                        <span x-text="kat"></span>
+
+                                    </button>
+
+                                </template>
+
+                                <!-- TAMBAH BARU -->
+                                <template x-if="
+                                    kategoriFormSearch && !kategoriList.some(k => k.toLowerCase() === kategoriFormSearch.toLowerCase())">
+
+                                    <button
+                                        type="button"
+                                        @click="
+                                                kategoriList.push(kategoriFormSearch);
+
+                                                kbForm.kategori = kategoriFormSearch;
+
+                                                kategoriFormSearch = kategoriFormSearch;
+
+                                                openKategoriForm = false;
+                                            "
+                                        class="w-full text-left px-3 py-2 bg-green-50 text-green-700 border-t text-sm">
+
+                                        + Tambah kategori "<span x-text="kategoriFormSearch"></span>"
+
+                                    </button>
+
+                                </template>
+
+                            </div>
+
+                            <!-- SELECTED -->
+                            <template x-if="kbForm.kategori">
+
+                                <div class="flex items-center justify-between text-xs mt-1">
+
+                                    <p class="text-green-600">
+                                        Kategori dipilih:
+                                        <span class="font-medium" x-text="kbForm.kategori"></span>
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        @click="
+                                            kbForm.kategori = '';
+                                            kategoriFormSearch = '';
+                                        "
+                                        class="text-red-500 hover:underline">
+
+                                        Reset
+
+                                    </button>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+                </div>
+
+                {{-- DETAIL --}}
+                <div class="space-y-3">
+                    <h4 class="text-sm font-semibold text-gray-600">Detail Penanganan</h4>
+
+                    <textarea x-model="kbForm.penyebab"
+                        placeholder="Penyebab"
+                        @input.debounce.300ms="checkDuplicateDiagnosis()"
+                        class="w-full border px-3 py-2 rounded"></textarea>
+                        <template x-if="duplicateDiagnosis.length">
+
+                            <div class="border border-orange-200 bg-orange-50 rounded-lg p-3 space-y-3">
+
+                                <!-- HEADER -->
+                                <div>
+
+                                    <p class="text-xs font-semibold text-orange-700">
+                                        Penyebab serupa ditemukan
+                                    </p>
+
+                                    <p class="text-xs text-orange-600 mt-1">
+                                        Knowledge dengan penyebab yang mirip sudah tersedia.
+                                        Sebaiknya gunakan knowledge yang sudah ada agar data tidak duplikat.
+                                    </p>
+
+                                </div>
+
+                                <!-- LIST -->
+                                <template x-for="item in duplicateDiagnosis" :key="item.kb_id">
+
+                                    <div class="bg-white border rounded-lg p-3">
+
+                                        <p class="font-medium text-sm"
+                                            x-text="item.judul">
+                                        </p>
+
+                                        <p class="text-xs text-gray-500"
+                                            x-text="item.kategori">
+                                        </p>
+
+                                        <p class="text-sm mt-2"
+                                            x-text="item.diagnosis.penyebab">
+                                        </p>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                        </template>
+                        
+                    <textarea x-model="kbForm.deskripsi"
+                        placeholder="Deskripsi"
+                        class="w-full border px-3 py-2 rounded"></textarea>
+
+                    <textarea x-model="kbForm.langkah"
+                        placeholder="Penanganan"
+                        class="w-full border px-3 py-2 rounded"></textarea>
+                </div>
+
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="p-4 border-t flex justify-end gap-2 bg-gray-50">
+                <button @click="openSimpanKB = false"
+                    class="bg-gray-200 px-4 py-2 rounded">Batal</button>
+
+                <button @click="simpanKeKnowledgeBase"
+                    class="bg-green-600 text-white px-4 py-2 rounded">
+                    Simpan
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -323,6 +583,9 @@ function detailWOApp() {
         previewFile: null,
         newStatus: '',
         loadingKB: false,
+        openSimpanKB: false,
+        openKategoriForm: false,
+        kategoriFormSearch: '',
 
         knowledgeBase: [],
         kategoriList: [],
@@ -331,6 +594,15 @@ function detailWOApp() {
         selectedKB: null,
         searchDiagnosis: '',
         selectedDiagnosis: null,
+        duplicateDiagnosis: [],
+
+        kbForm: {
+            judul: '',
+            kategori: '',
+            penyebab: '',
+            deskripsi: '',
+            langkah: ''
+        },
 
         /* ===== INIT ===== */
         init() {
@@ -342,23 +614,6 @@ function detailWOApp() {
 
         /* ===== COMPUTED ===== */
 
-        /*
-         * FIX: filteredKnowledgeBase hanya filter kategori secara lokal.
-         * TIDAK filter keyword secara lokal — keyword sudah diproses server
-         * (dengan sinonim + scoring). Jika this.knowledgeBase sudah diupdate
-         * oleh searchKBFromServer, hasilnya sudah benar dari server.
-         *
-         * Sebelumnya (SALAH): ada filter lokal `item.kategori === selectedKategori`
-         * yang dijalankan SETELAH hasil server masuk. Ini tidak masalah karena
-         * server juga mengirim field `kategori`. Bug utama justru ada di
-         * onKategoriChange yang mereset knowledgeBase SEBELUM search dijalankan,
-         * sehingga saat user ganti kategori lalu search, ini sudah benar.
-         *
-         * Namun untuk memastikan konsistensi dengan pola detailKeluhan:
-         * - filteredKnowledgeBase hanya filter kategori, TIDAK filter keyword
-         * - searchKBFromServer yang mengganti this.knowledgeBase
-         * - onKategoriChange mereset this.knowledgeBase ke window.knowledgeBase
-         */
         get filteredKnowledgeBase() {
             if (!this.selectedKategori) return this.knowledgeBase;
             return this.knowledgeBase.filter(item => item.kategori === this.selectedKategori);
@@ -374,12 +629,21 @@ function detailWOApp() {
         },
 
         /* ===== KB ACTIONS ===== */
+        isiKnowledgeBase() {
 
-        /*
-         * FIX: onKategoriChange mereset knowledgeBase ke window.knowledgeBase
-         * DAN mereset searchKB. Ini penting agar saat user ganti kategori,
-         * hasil search lama tidak tertinggal. Sama persis dengan detailKeluhan.
-         */
+            this.kbForm = {
+                judul: this.penanganan.judul || '',
+                kategori: '',
+                penyebab: this.penanganan.judul || '',
+                deskripsi: this.penanganan.deskripsi || '',
+                langkah: this.penanganan.deskripsi || '',
+                variasi: ''
+            };
+
+            this.kategoriFormSearch = '';
+            this.openSimpanKB = true;
+        },
+
         onKategoriChange() {
             this.searchKB          = '';
             this.selectedKB        = null;
@@ -387,13 +651,7 @@ function detailWOApp() {
             this.knowledgeBase     = window.knowledgeBase || [];
         },
 
-        /*
-         * FIX: searchKBFromServer mengganti this.knowledgeBase dengan hasil server.
-         * Server sudah handle sinonim + scoring, jadi "panas" akan menemukan
-         * "AC Tidak Dingin" karena server mengenal sinonimnya.
-         * filteredKnowledgeBase kemudian hanya filter kategori lokal — ini aman
-         * karena server juga mengembalikan field `kategori` yang benar.
-         */
+         
         async searchKBFromServer() {
             if (!this.searchKB.trim()) {
                 // Kosongkan search → kembalikan ke data asli (filter kategori tetap jalan)
@@ -536,7 +794,196 @@ function detailWOApp() {
                 'border-l-4 border-orange-500 bg-orange-50/30': s === 'waiting',
                 'border-l-4 border-green-500 bg-green-50/30':  s === 'close'
             };
-        }
+        },
+
+        selectKategori(item) {
+            this.kbForm.kategori = item;
+            this.openKategori = false;
+        },
+
+        tambahKategoriBaru() {
+            if (this.kategoriSearch && !this.kategoriList.includes(this.kategoriSearch)) {
+                this.kategoriList.push(this.kategoriSearch);
+                this.kbForm.kategori = this.kategoriSearch;
+                this.kategoriSearch = '';
+                this.openKategori = false;
+            }
+        },
+
+        checkDuplicateKB() {
+            if (!this.kbForm.judul) { this.kbDuplicates = []; return; }
+            let j = this.kbForm.judul.toLowerCase();
+
+                this.kbDuplicates = this.knowledgeBase.filter(k =>
+                    k.judul.toLowerCase().includes(j)
+                    || (this.kbForm.variasi && this.kbForm.variasi.includes(k.judul))
+                );
+        },
+        checkDuplicateDiagnosis() {
+
+            if (!this.kbForm.penyebab) {
+                this.duplicateDiagnosis = [];
+                return;
+            }
+
+            const keyword = this.kbForm.penyebab.toLowerCase();
+
+            let results = [];
+
+            this.knowledgeBase.forEach(kb => {
+
+                (kb.diagnosis || []).forEach(diag => {
+
+                    if (
+                        diag.penyebab &&
+                        diag.penyebab.toLowerCase().includes(keyword)
+                    ) {
+
+                        results.push({
+                            kb_id: kb.id,
+                            judul: kb.judul,
+                            kategori: kb.kategori,
+                            diagnosis: diag
+                        });
+                    }
+                });
+            });
+
+            this.duplicateDiagnosis = results;
+        },
+
+        useExistingKB(item) {
+
+            this.kbForm.judul = item.judul;
+
+            this.kbForm.kategori = item.kategori || '';
+
+            this.kategoriFormSearch = item.kategori || '';
+
+            this.kbDuplicates = [];
+        },
+
+        async simpanKeKnowledgeBase() {
+
+            // 🔥 VALIDASI FRONTEND
+            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.penyebab || !this.kbForm.langkah) {
+                Swal.fire('Oops!', 'Lengkapi field wajib', 'warning');
+                return;
+            }
+
+            try {
+
+                let res = await fetch('/knowledge-base', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json' // 🔥 penting
+                    },
+                    body: JSON.stringify({
+                        judul: this.kbForm.judul,
+                        kategori: this.kbForm.kategori,
+                        penyebab: this.kbForm.penyebab,
+                        deskripsi: this.kbForm.deskripsi,
+                        langkah: this.kbForm.langkah,
+                        variasi: this.kbForm.variasi,
+                      
+                    })
+                });
+
+                // 🔥 AMBIL TEXT DULU (BIAR AMAN)
+                let text = await res.text();
+
+                let data;
+
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('❌ BUKAN JSON:', text);
+
+                    Swal.fire(
+                        'Server Error',
+                        'Response bukan JSON (cek backend / auth / DB)',
+                        'error'
+                    );
+                    return;
+                }
+
+                // 🔥 HANDLE ERROR RESPONSE
+                if (!res.ok) {
+
+                    let message = data.message || 'Gagal menyimpan';
+
+                    if (data.errors) {
+                        message = Object.values(data.errors).flat().join('\n');
+                    }
+
+                    Swal.fire('Gagal!', message, 'error');
+                    return;
+                }
+
+                // 🔥 SUCCESS
+                Swal.fire('Berhasil!', data.message, 'success');
+
+                // update data lokal
+                this.knowledgeBase.push(data.data);
+
+                // update kategori
+                this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori))];
+
+                // reset form
+                this.kbForm = {
+                    judul: '',
+                    kategori: '',
+                    penyebab: '',
+                    deskripsi: '',
+                    langkah: '',
+                    variasi: '',
+                   
+                };
+
+                this.openSimpanKB = false;
+
+            } catch (err) {
+
+                console.error('❌ FETCH ERROR:', err);
+
+                Swal.fire(
+                    'Error!',
+                    'Tidak bisa terhubung ke server',
+                    'error'
+                );
+            }
+            },
+        tambahKategori() {
+
+            if (!this.newKategori) return;
+
+            // Tambah ke list
+            this.kategoriList.push(this.newKategori);
+
+            // Auto pilih
+            this.kbForm.kategori = this.newKategori;
+
+            // Reset
+            this.newKategori = '';
+            this.showAddKategori = false;
+            },
+        
+
+            get filteredKategoriForm() {
+                if (!this.kategoriFormSearch) {
+                    return this.kategoriList;
+                }
+
+                return this.kategoriList.filter(k =>
+                    k.toLowerCase().includes(
+                        this.kategoriFormSearch.toLowerCase()
+                    )
+                );
+            },
+
+
     }
 }
 </script>

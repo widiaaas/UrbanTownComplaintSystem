@@ -2,34 +2,62 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
- 
+
 class Diagnosis extends Model
 {
-    use HasFactory, SoftDeletes;
-
+    use SoftDeletes;
     protected $table = 'diagnosis';
-
+    
     protected $fillable = [
         'knowledge_base_id',
         'penyebab',
         'deskripsi',
         'langkah_penyelesaian',
-        'tipe',
-        'urutan',
-        'usage_count',
-        'keluhan_id'
+        'lampiran',
+        'usage_count'
     ];
+
+    protected $casts = [
+        'lampiran' => 'array',
+        'usage_count' => 'integer'
+    ];
+
+
 
     public function knowledgeBase()
     {
-        return $this->belongsTo(KnowledgeBase::class, 'knowledge_base_id');
+        return $this->belongsTo(KnowledgeBase::class);
     }
 
-    public function keluhan()
+    public function knowledgeKeluhan()
     {
-        return $this->belongsTo(Keluhan::class);
+        return $this->hasMany(KnowledgeBaseKeluhan::class);
+    }
+
+    public function keluhans()
+    {
+        return $this->belongsToMany(
+            Keluhan::class,
+            'knowledge_base_keluhan'
+        )
+        ->withPivot([
+            'knowledge_base_id',
+            'catatan'
+        ])
+        ->withTimestamps();
+    }
+
+
+
+    public function getTotalKeluhanAttribute()
+    {
+        return $this->keluhans()->count();
+    }
+
+    public function getNamaKnowledgeAttribute()
+    {
+        return $this->knowledgeBase?->judul ?? '-';
     }
 }

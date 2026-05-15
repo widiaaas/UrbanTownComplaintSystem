@@ -62,10 +62,6 @@ class Keluhan extends Model
         return $this->hasMany(WorkOrder::class, 'keluhan_id');
     }
 
-    public function diagnosis()
-    {
-        return $this->hasMany(Diagnosis::class, 'keluhan_id');
-    }
 
     public function getTanggalAttribute()
     {

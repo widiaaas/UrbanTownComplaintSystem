@@ -15,9 +15,13 @@ class KnowledgeBase extends Model
         'departemen_terkait',
         'keywords',
         'variasi',
-        'keluhan_id',
+        'usage_count',
         'created_by',
         'status'
+    ];
+
+    protected $casts = [
+        'usage_count' => 'integer'
     ];
 
     public function diagnosis()
@@ -28,5 +32,18 @@ class KnowledgeBase extends Model
     public function creator()
     {
         return $this->belongsTo(Pengguna::class, 'created_by', 'id');
+    }
+
+    public function keluhans()
+    {
+        return $this->belongsToMany(
+            Keluhan::class,
+            'knowledge_base_keluhan'
+        )
+        ->withPivot([
+            'diagnosis_id',
+            'catatan'
+        ])
+        ->withTimestamps();
     }
 }

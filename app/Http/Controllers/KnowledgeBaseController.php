@@ -158,69 +158,56 @@ class KnowledgeBaseController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->q;
+        $query    = $request->q;
+        $kategori = $request->kategori;
 
+        // ← KUNCI: keyword kosong tapi ada kategori → return semua KB kategori itu
         if (!$query) {
+            if ($kategori) {
+                return response()->json(
+                    KnowledgeBase::where('kategori', $kategori)
+                        ->with('diagnosis')
+                        ->get()
+                );
+            }
             return response()->json([]);
         }
 
-        // 🔥 1. NORMALISASI
-        $normalized = $this->normalizeText($query, $request->kategori);
+        $normalized = $this->normalizeText($query, $kategori);
+        $keywords   = $this->extractKeywords($normalized);
 
-        // 🔥 2. EXTRACT KEYWORD
-        $keywords = $this->extractKeywords($normalized);
+        $kbList = $kategori
+            ? KnowledgeBase::where('kategori', $kategori)->with('diagnosis')->get()
+            : KnowledgeBase::with('diagnosis')->get();
 
-        // 🔥 3. AMBIL SEMUA KB
-        if ($request->kategori) {
-            $kbList = KnowledgeBase::where('kategori', $request->kategori)
-                ->with('diagnosis')
-                ->get();
-        } else {
-            $kbList = KnowledgeBase::with('diagnosis')->get();
-        }
-
-        // 🔥 4. MATCHING + SCORING
         $results = $kbList->map(function ($kb) use ($keywords) {
-
-            $score = 0;
-
-            $judul = strtolower($kb->judul);
-            $kbKeywords = explode(',', strtolower($kb->keywords));
+            $score      = 0;
+            $judul      = strtolower($kb->judul);
+            $kbKeywords = explode(',', strtolower($kb->keywords ?? ''));
 
             foreach ($keywords as $word) {
-
-                // match judul
-                if (str_contains($judul, $word)) {
-                    $score += 2;
-                }
-
-                // match keyword
-                if (in_array($word, $kbKeywords)) {
-                    $score += 1;
-                }
-
+                if (!$word) continue;
+                if (str_contains($judul, $word))        $score += 2;
+                if (in_array($word, $kbKeywords))        $score += 1;
                 foreach ($kb->diagnosis as $diag) {
-                    $penyebabText = $this->normalizeText($diag->penyebab);
-                    if (str_contains($penyebabText, $word)) {
+                    if (str_contains($this->normalizeText($diag->penyebab), $word)) {
                         $score += 2;
                     }
                 }
             }
 
             return [
-                'id' => $kb->id,
-                'judul' => $kb->judul,
-                'kategori' => $kb->kategori,
-                'score' => $score,
-                'diagnosis' => $kb->diagnosis
+                'id'                 => $kb->id,
+                'judul'              => $kb->judul,
+                'kategori'           => $kb->kategori,
+                'departemen_terkait' => $kb->departemen_terkait, // ← jangan sampai hilang
+                'score'              => $score,
+                'diagnosis'          => $kb->diagnosis,
             ];
-        });
-
-        // 🔥 5. FILTER + SORT
-        $results = $results
-            ->filter(fn($r) => $r['score'] > 0)
-            ->sortByDesc('score')
-            ->values();
+        })
+        ->filter(fn($r) => $r['score'] > 0)
+        ->sortByDesc('score')
+        ->values();
 
         return response()->json($results);
     }

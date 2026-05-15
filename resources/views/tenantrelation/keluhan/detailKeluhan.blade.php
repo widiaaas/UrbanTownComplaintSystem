@@ -47,7 +47,7 @@
             <div class="flex gap-2 flex-wrap">
                 <template x-for="file in keluhan.lampiranKeluhan" :key="file">
                     <button
-                        @click="previewFile = file; openPreview = true"
+                        @click="previewFile = file; openPreview = true" 
                         class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
                         📎 <span x-text="file.split('/').pop()"></span>
                     </button>
@@ -126,12 +126,7 @@
         <div class="flex items-center justify-between">
             <h3 class="font-semibold">Keputusan Penanganan</h3>
             <div class="flex gap-4 items-center">
-                {{-- TOMBOL KNOWLEDGE BASE --}}
-                <button
-                    @click="openKnowledgeBase = true"
-                    class="text-sm text-green-600 hover:underline">
-                    Lihat Knowledge Base
-                </button>
+                
                 {{-- RIWAYAT --}}
                 <button
                     @click="openRiwayat = true"
@@ -146,27 +141,6 @@
                 <div class="text-sm text-gray-500 italic bg-gray-50 border rounded-lg p-3">
                     Keluhan sudah ditutup. Riwayat keputusan tetap dapat dilihat,
                     namun tidak dapat menambahkan keputusan baru.
-                </div>
-                <div class="flex justify-end">
-                    <button
-                        @click="
-                            // 🔥 SET DATA OTOMATIS
-                            kbForm.judul = keluhan.judul || '';
-                            kbForm.kategori = selectedKategori || '';
-                            kbForm.dept = 'Engineering'; // atau dari WO nanti
-
-                            // 🔥 mapping penting
-                            kbForm.penyebab = keputusan.judul || '';
-                            kbForm.langkah = keputusan.deskripsi || '';
-
-                            // optional
-                            kbForm.deskripsi = keluhan.deskripsi || '';
-
-                            openSimpanKB = true
-                        "
-                        class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
-                        Simpan Solusi ke Knowledge Base
-                    </button>
                 </div>
             </div>
         </template>
@@ -250,12 +224,7 @@
                     </div>
                 </div>
                 <div class="flex justify-between items-center pt-2">
-                    {{-- TOMBOL SIMPAN KE KB (status belum close) --}}
-                    <button
-                        @click="openSimpanKB = true"
-                        class="text-green-600 text-sm hover:underline">
-                        Simpan ke Knowledge Base
-                    </button>
+
                     <button @click="simpanKeputusanAkhir"
                         class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                         Simpan Keputusan
@@ -265,9 +234,68 @@
         </template>
 
         <template x-if="normalizeStatus(keluhan.status) === 'close'">
-            <div class="text-sm text-gray-500 italic bg-gray-50 border rounded-lg p-3">
-                Keluhan sudah selesai. Form keputusan tidak dapat diubah.
+
+            <div class="space-y-4">
+
+                {{-- INFO --}}
+                <div class="text-sm text-gray-500 italic bg-gray-50 border rounded-lg p-3">
+                    Keluhan sudah selesai. Form keputusan tidak dapat diubah.
+                </div>
+
+                {{-- KEPUTUSAN --}}
+                <div>
+
+                    <div class="pl-4 space-y-2">
+
+                        <p class="text-sm text-gray-700 whitespace-pre-line"
+                            x-text="keluhan.keputusan || '-'">
+                        </p>
+
+                        <p class="text-xs text-gray-400"
+                            x-text="keluhan.tanggalKeputusan">
+                        </p>
+
+                    </div>
+                </div>
+
+                {{-- LAMPIRAN --}}
+                <div>
+
+                    <template x-if="keluhan.lampiranKeputusan.length">
+
+                        <div class="flex flex-wrap gap-2">
+
+                            <template
+                                x-for="(file, i) in keluhan.lampiranKeputusan"
+                                :key="i">
+
+                                <button
+                                    @click="openPreviewFile(file)"
+                                    class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:underline">
+                                    
+                                    📎 Lampiran Keputusan
+                                    <span x-text="i + 1"></span>
+
+                                </button>
+
+                            </template>
+
+                        </div>
+
+                    </template>
+
+                    <template x-if="!keluhan.lampiranKeputusan.length">
+
+                        <p class="text-xs text-gray-400 italic">
+                            Tidak ada lampiran keputusan
+                        </p>
+
+                    </template>
+
+                </div>
+
             </div>
+
         </template>
     </div>
 
@@ -466,227 +494,7 @@
             </div>
         </div>
     </div>
-
-    {{-- ================= MODAL KNOWLEDGE BASE ================= --}}
-    <div x-show="openKnowledgeBase" x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-
-        <div class="bg-white w-full max-w-5xl rounded-xl shadow-lg overflow-hidden">
-
-            <!-- HEADER -->
-            <div class="flex justify-between items-center px-5 py-3 border-b">
-                <div>
-                    <h3 class="text-base font-semibold">Knowledge Base</h3>
-                    <p class="text-xs text-gray-500">Pencarian solusi</p>
-                </div>
-                <button @click="openKnowledgeBase = false" class="text-lg">✕</button>
-            </div>
-
-            <!-- CONTENT -->
-            <div class="p-4 grid grid-cols-12 gap-3 h-[75vh]">
-
-                <!-- LEFT -->
-                <div class="col-span-4 border rounded-lg p-3 space-y-3 overflow-y-auto">
-
-                    <!-- kategori -->
-                    <select x-model="selectedKategori"
-                        class="w-full border rounded px-2 py-2 text-sm">
-                        <option value="">Pilih kategori</option>
-                        <template x-for="kat in kategoriList">
-                            <option :value="kat" x-text="kat"></option>
-                        </template>
-                    </select>
-
-                    <!-- search -->
-                    <input type="text"
-                        x-model="searchKB"
-                        @input.debounce.400ms="searchKBFromServer"
-                        placeholder="Cari masalah..."
-                        class="w-full border px-2 py-2 rounded text-sm"
-                        :disabled="!selectedKategori">
-
-                    <!-- empty -->
-                    <template x-if="!selectedKategori">
-                        <p class="text-xs text-gray-400 text-center">
-                            Pilih kategori dulu
-                        </p>
-                    </template>
-
-                    <!-- list -->
-                    <div class="space-y-2">
-                        <template x-for="item in filteredKnowledgeBase" :key="item.id">
-                            <button @click="selectKB(item)"
-                                class="w-full text-left p-2 rounded-lg border text-sm transition"
-                                :class="selectedKB?.id === item.id
-                                    ? 'bg-green-50 border-green-400'
-                                    : 'bg-white hover:bg-green-50'">
-
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-medium" x-text="item.judul"></p>
-                                        <p class="text-[11px] text-gray-400" x-text="item.kategori"></p>
-                                    </div>
-                                </div>
-                            </button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- MIDDLE -->
-                <div class="col-span-3 border rounded-lg p-3 overflow-y-auto">
-
-                    <template x-if="selectedKB">
-                        <div class="space-y-2">
-
-                            <input type="text"
-                                x-model="searchDiagnosis"
-                                placeholder="Cari penyebab..."
-                                class="w-full border px-2 py-2 rounded text-sm">
-
-                            <template x-for="diag in filteredDiagnosis" :key="diag.id">
-                                <button @click="selectDiagnosis(diag)"
-                                    class="w-full text-left p-2 rounded border text-sm transition"
-                                    :class="selectedDiagnosis?.id === diag.id
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-green-50'">
-
-                                    <p x-html="highlightText(diag.penyebab)"></p>
-                                </button>
-                            </template>
-
-                        </div>
-                    </template>
-
-                    <template x-if="!selectedKB">
-                        <p class="text-xs text-gray-400 text-center mt-10">
-                            Pilih knowledge dulu
-                        </p>
-                    </template>
-                </div>
-
-                <!-- RIGHT -->
-                <div class="col-span-5 bg-gray-50 rounded-lg p-4 overflow-y-auto">
-
-                    <template x-if="selectedDiagnosis">
-                        <div class="bg-white p-3 rounded-lg border space-y-3 text-sm">
-
-                            <h3 class="font-semibold">Detail Solusi</h3>
-
-                            <div>
-                                <p class="text-xs text-gray-500">Penyebab</p>
-                                <p x-text="selectedDiagnosis.penyebab"></p>
-                            </div>
-
-                            <div x-show="selectedDiagnosis.deskripsi">
-                                <p class="text-xs text-gray-500">Deskripsi</p>
-                                <p class="text-gray-600"
-                                    x-text="selectedDiagnosis.deskripsi"></p>
-                            </div>
-
-                            <div>
-                                <p class="text-xs text-gray-500">Langkah</p>
-                                <p class="whitespace-pre-line"
-                                    x-text="selectedDiagnosis.langkah_penyelesaian"></p>
-                            </div>
-
-                            <p class="text-xs text-gray-400 mt-3">
-                                Gunakan sebagai referensi dalam menentukan keputusan
-                            </p>
-
-                        </div>
-                    </template>
-
-                    <template x-if="!selectedDiagnosis">
-                        <p class="text-gray-400 text-center mt-10 text-sm">
-                            Pilih penyebab untuk melihat detail
-                        </p>
-                    </template>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    {{-- ================= MODAL SIMPAN KB ================= --}}
-    <div x-show="openSimpanKB" x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-lg flex flex-col max-h-[90vh]">
-
-            {{-- HEADER --}}
-            <div class="flex justify-between items-center px-6 py-4 border-b">
-                <h3 class="font-semibold text-lg">Simpan Knowledge</h3>
-                <button @click="openSimpanKB = false" class="text-xl">&times;</button>
-            </div>
-
-            {{-- CONTENT --}}
-            <div class="p-6 space-y-6 overflow-y-auto">
-
-                {{-- INFORMASI UMUM --}}
-                <div class="space-y-3">
-                    <h4 class="text-sm font-semibold text-gray-600">Informasi Umum</h4>
-
-                    <input x-model="kbForm.judul"
-                        placeholder="Judul masalah"
-                        class="w-full border px-3 py-2 rounded">
-
-                    <input x-model="kbForm.variasi"
-                        placeholder="Variasi kata (opsional)"
-                        class="w-full border px-3 py-2 rounded">
-
-                    <select x-model="kbForm.kategori"
-                        class="w-full border px-3 py-2 rounded">
-                        <option value="">Pilih kategori</option>
-                        <template x-for="kat in kategoriList" :key="kat">
-                            <option :value="kat" x-text="kat"></option>
-                        </template>
-                    </select>
-                </div>
-
-                {{-- DETAIL --}}
-                <div class="space-y-3">
-                    <h4 class="text-sm font-semibold text-gray-600">Detail Penanganan</h4>
-
-                    <textarea x-model="kbForm.penyebab"
-                        placeholder="Penyebab"
-                        class="w-full border px-3 py-2 rounded"></textarea>
-
-                    <textarea x-model="kbForm.deskripsi"
-                        placeholder="Deskripsi (opsional)"
-                        class="w-full border px-3 py-2 rounded"></textarea>
-
-                    <textarea x-model="kbForm.langkah"
-                        placeholder="Langkah penyelesaian"
-                        class="w-full border px-3 py-2 rounded"></textarea>
-                </div>
-
-                {{-- PREVIEW --}}
-                <div class="bg-green-50 p-3 rounded text-sm">
-                    <p><b>Judul:</b> <span x-text="kbForm.judul"></span></p>
-                    <p><b>Kategori:</b> <span x-text="kbForm.kategori"></span></p>
-                    <p><b>Penyebab:</b> <span x-text="kbForm.penyebab"></span></p>
-                    <p><b>Solusi:</b> <span x-text="kbForm.langkah"></span></p>
-                </div>
-
-            </div>
-
-            {{-- FOOTER --}}
-            <div class="p-4 border-t flex justify-end gap-2 bg-gray-50">
-                <button @click="openSimpanKB = false"
-                    class="bg-gray-200 px-4 py-2 rounded">Batal</button>
-
-                <button @click="simpanKeKnowledgeBase"
-                    class="bg-green-600 text-white px-4 py-2 rounded">
-                    Simpan
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-</div>{{-- END x-data --}}
-
+</div>
 <script>
 window.detailKeluhan = @json($data);
 window.departemen = @json($departemen);
@@ -699,12 +507,12 @@ function detailKeluhanApp() {
         openWO: false,
         openRiwayat: false,
         openLaporan: false,
-        openKnowledgeBase: false,
-        openSimpanKB: false,
         previewFile: null,
         openPreview: false,
         openKategori: false,
+        openKategoriForm: false,
         kategoriSearch: '',
+        kategoriFormSearch: '',
         showAddKategori: false,
         newKategori: '',
       
@@ -718,21 +526,6 @@ function detailKeluhanApp() {
         kbDuplicates: [],
         knowledgeBase: [],
 
-        searchKB: '',
-        selectedKB: null,
-        selectedDiagnosis: null,
-        searchDiagnosis: '',
-
-        kbForm: {
-            judul: '',
-            kategori: '',
-            dept: '',
-            penyebab: '',
-            deskripsi: '',
-            langkah: '',
-            lampiran: [],
-            variasi: ''
-        },
 
         workOrders: [],
         woForm: {
@@ -766,15 +559,20 @@ function detailKeluhanApp() {
                 waktu: data.waktu,
                 judul: data.pengajuan.judul,
                 deskripsi: data.pengajuan.deskripsi,
-                lampiranKeluhan: data.pengajuan.lampiran || [],
+                keputusan: data.keputusan_akhir || '',
+                tanggalKeputusan:
+                    data.tanggal_keputusan_format || '-',
+                lampiranKeputusan:
+                    data.lampiran_keputusan || [],
+                lampiranKeluhan:
+                    data.pengajuan.lampiran || [],
                 status: this.normalizeStatus(data.status)
             };
             this.departemenList = window.departemen || [];
             this.keputusan.status = this.normalizeStatus(data.status);
             this.riwayat = data.riwayat_penanganan || [];
             this.workOrders = data.work_orders || [];
-            this.knowledgeBase = window.knowledgeBase || [];
-            this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori))];
+            this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori).filter(Boolean))];
             
         },
 
@@ -786,37 +584,7 @@ function detailKeluhanApp() {
         get sudahAdaWO() {
             return this.workOrders.length > 0;
         },
-
-        get filteredKategori() {
-            if (!this.kategoriSearch) return this.kategoriList;
-            return this.kategoriList.filter(k =>
-                k.toLowerCase().includes(this.kategoriSearch.toLowerCase())
-            );
-        },
-
-        get filteredKnowledgeBase() {
-
-            let data = this.knowledgeBase;
-
-            // filter kategori tetap dipakai
-            if (this.selectedKategori) {
-                data = data.filter(item =>
-                    item.kategori === this.selectedKategori
-                );
-            }
-
-            return data;
-            },
-
-        get filteredDiagnosis() {
-            if (!this.selectedKB || !this.selectedKB.diagnosis) return [];
-            if (!this.searchDiagnosis) return this.selectedKB.diagnosis;
-            let keyword = this.searchDiagnosis.toLowerCase();
-            return this.selectedKB.diagnosis.filter(d =>
-                d.penyebab && d.penyebab.toLowerCase().includes(keyword)
-            );
-        },
-
+       
         /* ================= HELPERS ================= */
         isImage(file) {
             return /\.(jpg|jpeg|png|gif)$/i.test(file);
@@ -884,158 +652,7 @@ function detailKeluhanApp() {
             this.openPreview = true;
         },
 
-        /* ================= KB ================= */
-        selectKB(item) {
-            this.selectedKB = item;
-
-            // auto pilih solusi utama
-            if (item.diagnosis) {
-                let utama = item.diagnosis.find(d => d.tipe === 'utama');
-                this.selectedDiagnosis = utama || item.diagnosis[0];
-            }
-        },
-
-        selectDiagnosis(diag) {
-            this.selectedDiagnosis = diag;
-        },
-
-        selectKategori(item) {
-            this.kbForm.kategori = item;
-            this.openKategori = false;
-        },
-
-        tambahKategoriBaru() {
-            if (this.kategoriSearch && !this.kategoriList.includes(this.kategoriSearch)) {
-                this.kategoriList.push(this.kategoriSearch);
-                this.kbForm.kategori = this.kategoriSearch;
-                this.kategoriSearch = '';
-                this.openKategori = false;
-            }
-        },
-
-        checkDuplicateKB() {
-            if (!this.kbForm.judul) { this.kbDuplicates = []; return; }
-            let j = this.kbForm.judul.toLowerCase();
-
-                this.kbDuplicates = this.knowledgeBase.filter(k =>
-                    k.judul.toLowerCase().includes(j)
-                    || (this.kbForm.variasi && this.kbForm.variasi.includes(k.judul))
-                );
-            
-        },
-
-        useExistingKB(item) {
-            this.kbForm.judul = item.judul;
-            this.kbDuplicates = [];
-        },
-
-        async simpanKeKnowledgeBase() {
-
-            // 🔥 VALIDASI FRONTEND
-            if (!this.kbForm.judul || !this.kbForm.kategori || !this.kbForm.penyebab || !this.kbForm.langkah) {
-                Swal.fire('Oops!', 'Lengkapi field wajib', 'warning');
-                return;
-            }
-
-            try {
-
-                let res = await fetch('/knowledge-base', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                        'Accept': 'application/json' // 🔥 penting
-                    },
-                    body: JSON.stringify({
-                        judul: this.kbForm.judul,
-                        kategori: this.kbForm.kategori,
-                        penyebab: this.kbForm.penyebab,
-                        deskripsi: this.kbForm.deskripsi,
-                        langkah: this.kbForm.langkah,
-                        variasi: this.kbForm.variasi,
-                        dept: this.kbForm.dept
-                    })
-                });
-
-                // 🔥 AMBIL TEXT DULU (BIAR AMAN)
-                let text = await res.text();
-
-                let data;
-
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('❌ BUKAN JSON:', text);
-
-                    Swal.fire(
-                        'Server Error',
-                        'Response bukan JSON (cek backend / auth / DB)',
-                        'error'
-                    );
-                    return;
-                }
-
-                // 🔥 HANDLE ERROR RESPONSE
-                if (!res.ok) {
-
-                    let message = data.message || 'Gagal menyimpan';
-
-                    if (data.errors) {
-                        message = Object.values(data.errors).flat().join('\n');
-                    }
-
-                    Swal.fire('Gagal!', message, 'error');
-                    return;
-                }
-
-                // 🔥 SUCCESS
-                Swal.fire('Berhasil!', data.message, 'success');
-
-                // update data lokal
-                this.knowledgeBase.push(data.data);
-
-                // update kategori
-                this.kategoriList = [...new Set(this.knowledgeBase.map(k => k.kategori))];
-
-                // reset form
-                this.kbForm = {
-                    judul: '',
-                    kategori: '',
-                    penyebab: '',
-                    deskripsi: '',
-                    langkah: '',
-                    variasi: '',
-                    dept: 'Engineering'
-                };
-
-                this.openSimpanKB = false;
-
-            } catch (err) {
-
-                console.error('❌ FETCH ERROR:', err);
-
-                Swal.fire(
-                    'Error!',
-                    'Tidak bisa terhubung ke server',
-                    'error'
-                );
-            }
-            },
-        tambahKategori() {
-
-            if (!this.newKategori) return;
-
-            // Tambah ke list
-            this.kategoriList.push(this.newKategori);
-
-            // Auto pilih
-            this.kbForm.kategori = this.newKategori;
-
-            // Reset
-            this.newKategori = '';
-            this.showAddKategori = false;
-            },
-
+  
         /* ================= STATUS ================= */
         confirmUpdateStatus() {
             const oldStatus = this.keluhan.status;
@@ -1225,26 +842,7 @@ function detailKeluhanApp() {
             }));
             this.selectedWO = { ...wo, laporan };
             this.openLaporan = true;
-        },
-
-        async searchKBFromServer() {
-
-            // kalau kosong → load semua lagi
-            if (!this.searchKB) {
-                this.knowledgeBase = window.knowledgeBase;
-                return;
-            }
-
-            try {
-                let res = await fetch(`/knowledge-base/search?q=${this.searchKB}&kategori=${this.selectedKategori}`)
-                let data = await res.json();
-
-                this.knowledgeBase = data;
-
-            } catch (e) {
-                console.error('Search KB error:', e);
-            }
-            }
+        }
     }
 }
 </script>

@@ -4,11 +4,13 @@
 
         {{-- LIST KB --}}
         <div class="col-span-3 flex flex-col">
-            <div class="border rounded-xl p-3 bg-white shadow">
+            <div class="border rounded-xl p-3 bg-white">
                 <div class="sticky top-0 z-20 bg-white pb-2 space-y-2">
 
                     {{-- Filter Kategori --}}
-                    <select x-model="selectedKategori"
+                    <select 
+                        x-model="selectedKategori"
+                        @change="onKategoriChange" 
                         class="w-full border rounded-lg px-3 py-2 text-sm">
                         <option value="">Semua Kategori</option>
                         <template x-for="kat in kategoriList" :key="kat">
@@ -21,8 +23,16 @@
                         type="text"
                         x-model="kbSearch"
                         @input.debounce.400ms="searchKBFromServer"
-                        placeholder="Cari judul atau kategori..."
-                        class="w-full border rounded-lg px-3 py-2 text-sm">
+                        placeholder="Cari masalah..."
+                        class="w-full border rounded-lg px-3 py-2 text-sm"
+                        :disabled="!selectedKategori">
+
+                    <template x-if="!selectedKategori">
+                        <p class="text-xs text-gray-400 text-center">
+                            Pilih kategori terlebih dahulu
+                        </p>
+                    </template>
+
                 </div>
 
                 <div class="overflow-y-auto space-y-2 mt-2" style="max-height: 70vh">
@@ -117,28 +127,28 @@
         {{-- DETAIL --}}
         <div class="col-span-6 flex flex-col">
             <template x-if="selectedDiagnosis">
-                <div class="border rounded-xl p-4 bg-green-50 shadow">
+                <div class="bg-gray-50 rounded-lg p-4 overflow-y-auto">
                     <div class="space-y-4">
                         <h2 class="text-lg font-semibold text-gray-800">Detail Penanganan</h2>
 
                         <div>
                             <p class="text-xs text-gray-500 font-semibold">Penyebab</p>
-                            <div class="bg-white border rounded p-3 mt-1" x-text="selectedDiagnosis.penyebab"></div>
+                            <div class="bg-white border rounded-lg p-3 mt-1" x-text="selectedDiagnosis.penyebab"></div>
                         </div>
 
                         <div>
                             <p class="text-xs text-gray-500 font-semibold">Departemen Terkait</p>
-                            <div class="bg-white border rounded p-3 mt-1" x-text="selectedKB.dept || '-'"></div>
+                            <div class="bg-white border rounde-lg p-3 mt-1" x-text="selectedKB.departemen_terkait || '-'"></div>
                         </div>
 
                         <div>
                             <p class="text-xs text-gray-500 font-semibold">Deskripsi</p>
-                            <div class="bg-white border rounded p-3 mt-1" x-text="selectedDiagnosis.deskripsi || '-'"></div>
+                            <div class="bg-white border rounded-lg p-3 mt-1" x-text="selectedDiagnosis.deskripsi || '-'"></div>
                         </div>
 
                         <div>
                             <p class="text-xs text-gray-500 font-semibold">Langkah Penyelesaian</p>
-                            <div class="bg-white border rounded p-3 mt-1 whitespace-pre-line"
+                            <div class="bg-white border rounded-lg p-3 mt-1 whitespace-pre-line"
                                 x-text="selectedDiagnosis.langkah_penyelesaian"></div>
                         </div>
 
@@ -179,7 +189,9 @@
         {{-- LIST KB --}}
         <div class="bg-white rounded-xl shadow">
             <div class="p-3 border-b space-y-2">
-                <select x-model="selectedKategori"
+            <select 
+                    x-model="selectedKategori"
+                    @change="onKategoriChange" 
                     class="w-full border rounded-lg px-3 py-2 text-sm">
                     <option value="">Semua Kategori</option>
                     <template x-for="kat in kategoriList" :key="kat">
@@ -190,8 +202,15 @@
                     type="text"
                     x-model="kbSearch"
                     @input.debounce.400ms="searchKBFromServer"
-                    placeholder="Cari judul atau kategori..."
-                    class="w-full border rounded-lg px-3 py-2 text-sm">
+                    placeholder="Cari masalah..."
+                    class="w-full border rounded-lg px-3 py-2 text-sm"
+                    :disabled="!selectedKategori">
+
+                <template x-if="!selectedKategori">
+                    <p class="text-xs text-gray-400 text-center">
+                        Pilih kategori terlebih dahulu
+                    </p>
+                </template>
             </div>
             <div class="p-3 space-y-2 max-h-64 overflow-y-auto">
                 <template x-for="item in filteredKnowledgeBase" :key="item.id">
@@ -267,25 +286,171 @@
                 </div>
             </div>
 
-            <div x-show="selectedDiagnosis" x-cloak class="bg-green-50 rounded-xl shadow p-4 space-y-4">
-                <h2 class="text-lg font-semibold text-gray-800">Detail Penanganan</h2>
+            <div x-show="selectedDiagnosis"
+                x-cloak
+                class="bg-gray-50 rounded-lg p-4 overflow-y-auto">
 
-                <div>
-                    <p class="text-xs text-gray-500 font-semibold">Penyebab</p>
-                    <div class="bg-white border rounded p-3 mt-1" x-text="selectedDiagnosis?.penyebab"></div>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 font-semibold">Departemen Terkait</p>
-                    <div class="bg-white border rounded p-3 mt-1" x-text="selectedKB?.dept || '-'"></div>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 font-semibold">Deskripsi</p>
-                    <div class="bg-white border rounded p-3 mt-1" x-text="selectedDiagnosis?.deskripsi || '-'"></div>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 font-semibold">Langkah Penyelesaian</p>
-                    <div class="bg-white border rounded p-3 mt-1 whitespace-pre-line"
-                        x-text="selectedDiagnosis?.langkah_penyelesaian"></div>
+                <div class="bg-white p-4 rounded-xl border space-y-4 text-sm">
+
+                    {{-- HEADER --}}
+                    <div class="border-b pb-3">
+                        <h2 class="text-lg font-semibold text-gray-800">
+                            Detail Penanganan
+                        </h2>
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            Referensi solusi untuk membantu penanganan keluhan
+                        </p>
+                    </div>
+
+                    {{-- PENYEBAB --}}
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold text-gray-500 tracking-wide">
+                            Penyebab
+                        </p>
+
+                        <div class="bg-white border rounded-lg p-3 text-gray-700">
+                            <p x-text="selectedDiagnosis?.penyebab || '-'"></p>
+                        </div>
+                    </div>
+
+                    {{-- DEPARTEMEN --}}
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold text-gray-500 tracking-wide">
+                            Departemen Terkait
+                        </p>
+
+                        <div class="bg-white border rounded-lg p-3 text-gray-700">
+                            <p x-text="selectedKB?.departemen_terkait || '-'"></p>
+                        </div>
+                    </div>
+
+                    {{-- DESKRIPSI --}}
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold text-gray-500  tracking-wide">
+                            Deskripsi
+                        </p>
+
+                        <div class="bg-white border rounded-lg p-3 text-gray-700">
+                            <p x-text="selectedDiagnosis?.deskripsi || '-'"></p>
+                        </div>
+                    </div>
+
+                    {{-- LANGKAH --}}
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold text-gray-500 tracking-wide">
+                            Langkah Penyelesaian
+                        </p>
+
+                        <div class="bg-white border rounded-lg p-3 text-gray-700 whitespace-pre-line">
+                            <p x-text="selectedDiagnosis?.langkah_penyelesaian || '-'"></p>
+                        </div>
+                    </div>
+
+                    {{-- LAMPIRAN --}}
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold text-gray-500 tracking-wide">
+                            Lampiran
+                        </p>
+
+                        <div class="flex flex-wrap gap-2">
+
+                            <template x-for="(file, index) in (selectedDiagnosis?.lampiran || [])" :key="index">
+
+                                <button
+                                    @click="openPreviewFile(file)"
+                                    class="px-3 py-1 text-xs rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+
+                                    📎 <span x-text="typeof file === 'string' ? file.split('/').pop() : file.name"></span>
+
+                                </button>
+
+                            </template>
+
+                            <template x-if="!selectedDiagnosis?.lampiran || selectedDiagnosis.lampiran.length === 0">
+
+                                <p class="text-xs text-gray-400 italic">
+                                    Tidak ada lampiran
+                                </p>
+
+                            </template>
+                            {{-- DIGUNAKAN PADA KELUHAN --}}
+                                <div class="space-y-2"
+                                    x-show="selectedDiagnosis?.related_keluhan && selectedDiagnosis.related_keluhan.length">
+
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-semibold text-gray-500 tracking-wide">
+                                            Digunakan pada Keluhan
+                                        </p>
+
+                                        <span class="text-[11px] text-gray-400"
+                                            x-text="selectedDiagnosis.related_keluhan.length + ' keluhan'">
+                                        </span>
+                                    </div>
+
+                                    <div class="space-y-2">
+
+                                        <template
+                                            x-for="keluhan in selectedDiagnosis.related_keluhan"
+                                            :key="keluhan.id">
+
+                                            <a
+                                                :href="`/detail-keluhan/${keluhan.id}`"
+                                                class="block border rounded-xl p-3 bg-gray-50 hover:bg-green-50 hover:border-green-400 transition">
+
+                                                <div class="flex justify-between items-start gap-3">
+
+                                                    <div class="space-y-1">
+
+                                                        {{-- JUDUL --}}
+                                                        <p class="font-medium text-sm text-gray-800"
+                                                            x-text="keluhan.judul">
+                                                        </p>
+
+                                                        {{-- TIKET --}}
+                                                        <p class="text-xs text-gray-500">
+                                                            Tiket:
+                                                            <span x-text="keluhan.ticket"></span>
+                                                        </p>
+
+                                                        {{-- UNIT --}}
+                                                        <p class="text-xs text-gray-500">
+                                                            Unit:
+                                                            <span x-text="keluhan.unit || '-'"></span>
+                                                        </p>
+
+                                                    </div>
+
+                                                    {{-- STATUS --}}
+                                                    <div>
+
+                                                        <span
+                                                            class="text-[11px] px-2 py-1 rounded-full"
+                                                            :class="{
+                                                                'bg-blue-100 text-blue-700': keluhan.status === 'open',
+                                                                'bg-yellow-100 text-yellow-700': keluhan.status === 'on_progress',
+                                                                'bg-green-100 text-green-700': keluhan.status === 'close'
+                                                            }">
+
+                                                            <span x-text="keluhan.status"></span>
+
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </a>
+
+                                        </template>
+
+                                    </div>
+
+                                </div>
+                        </div>
+                    </div>
+
+
                 </div>
             </div>
         </div>

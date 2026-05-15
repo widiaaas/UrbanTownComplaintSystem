@@ -224,7 +224,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/rekap-penanganan/data', [LaporanController::class, 'rekapData']);
         Route::get('/rekap-penanganan/pdf', [LaporanController::class, 'exportPdf']);
         
-       // 🔥 KNOWLEDGE BASE - halaman view
+       
+    });
+
+    // ================= DEPARTEMEN =================
+    Route::middleware(['role:departemen'])->group(function () {
+        Route::get('/dashboardDepartemen', fn() => view('departemen.dashboard'));
+        Route::get('/work-order-masuk', [WorkOrderController::class, 'woMasuk']);
+        Route::post('/work-order/{id}/ambil', [WorkOrderController::class, 'ambilWO']);
+        Route::get('/daftar-work-order', [WorkOrderController::class, 'daftarPenanganan']);
+        Route::get('/detailWorkOrder/{id}', [WorkOrderController::class, 'detail']);
+        Route::post('/work-order/{id}/status', [WorkOrderController::class, 'updateStatus']);
+
+        Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);
+
+
+        // 🔥 KNOWLEDGE BASE - halaman view
         Route::get('/knowledge-base', [KnowledgeBaseController::class, 'page']);
         
         // 🔥 KNOWLEDGE BASE - API (untuk JS fetch)
@@ -240,27 +255,10 @@ Route::middleware(['auth'])->group(function () {
         // 🔥 KB CRUD
         Route::put('/knowledge-base/{id}', [KnowledgeBaseController::class, 'update']);
         Route::delete('/knowledge-base/{id}', [KnowledgeBaseController::class, 'destroy']);
-    });
-
-    // ================= DEPARTEMEN =================
-    Route::middleware(['role:departemen'])->group(function () {
-        Route::get('/dashboardDepartemen', fn() => view('departemen.dashboard'));
-        Route::get('/work-order-masuk', [WorkOrderController::class, 'woMasuk']);
-        Route::post('/work-order/{id}/ambil', [WorkOrderController::class, 'ambilWO']);
-        Route::get('/daftar-work-order', [WorkOrderController::class, 'daftarPenanganan']);
-        Route::get('/detailWorkOrder/{id}', [WorkOrderController::class, 'detail']);
-        Route::post('/work-order/{id}/status', [WorkOrderController::class, 'updateStatus']);
-
-        Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);
-
-
-        Route::get('/knowledge-base/list', [KnowledgeBaseController::class, 'index']);
-        Route::get('/knowledge-base/search', [KnowledgeBaseController::class, 'search']);
-        
         
     });
 
-
+    
     Route::middleware(['role:unit'])->group(function () {
 
         Route::get('/ajukanKeluhan', [KeluhanController::class, 'index']);

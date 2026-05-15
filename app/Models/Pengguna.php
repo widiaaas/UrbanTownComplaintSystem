@@ -69,8 +69,4 @@ class Pengguna extends Authenticatable
         return $this->hasMany(WorkOrder::class, 'penanggung_jawab_id');
     }
 
-    public function knowledgeBase()
-    {
-        return $this->hasMany(KnowledgeBase::class, 'created_by');
-    }
 }

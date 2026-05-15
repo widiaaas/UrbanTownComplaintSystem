@@ -291,22 +291,30 @@ function kbPage() {
          * Saat search kosong → kembalikan ke window.knowledgeBase (data awal).
          */
         async searchKBFromServer() {
-            if (!this.kbSearch.trim()) {
-                // Kosongkan search → kembalikan ke data asli
-                this.knowledgeBase = window.knowledgeBase || [];
-                return;
-            }
             try {
-                const res  = await fetch(
-                    `/knowledge-base/search?q=${encodeURIComponent(this.kbSearch)}&kategori=${encodeURIComponent(this.selectedKategori)}`
-                );
+
+                const keyword = this.kbSearch.trim();
+
+                // 🔥 kalau kosong tapi kategori ada
+                if (!keyword && !this.selectedKategori) {
+                    this.knowledgeBase = window.knowledgeBase || [];
+                    return;
+                }
+
+                const url =
+                    `/knowledge-base/search?q=${encodeURIComponent(keyword)}&kategori=${encodeURIComponent(this.selectedKategori)}`;
+
+                const res = await fetch(url);
+
                 const data = await res.json();
-                // Ganti this.knowledgeBase → filteredKnowledgeBase hanya filter kategori
+
                 this.knowledgeBase = data;
+
             } catch (e) {
+
                 console.error('Search KB error:', e);
             }
-        },
+            },
 
         /* ===== KATEGORI ===== */
         tambahKategori() {
@@ -334,7 +342,7 @@ function kbPage() {
             this.editingId       = item.id;
             this.kbForm.judul    = item.judul;
             this.kbForm.kategori = item.kategori;
-            this.kbForm.dept     = item.dept || '';
+            this.kbForm.dept = item.departemen_terkait || '';
             this.openKBModal     = true;
         },
 

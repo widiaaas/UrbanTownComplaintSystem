@@ -16,8 +16,8 @@ return new class extends Migration
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
             $table->foreignId('unit_id')->nullable()->constrained('units')->nullOnDelete();
-            $table->date('tanggal_masuk');
-            $table->date('tanggal_keluar')->nullable();
+            // $table->date('tanggal_masuk');
+            // $table->date('tanggal_keluar')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
