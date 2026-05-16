@@ -13,12 +13,12 @@ class Unit extends Model
     protected $table = 'units';
 
     protected $fillable = [
-        'no_unit', 
+        'nomor_unit',  
         'gedung',
         'lantai',
         'nomor_kamar',
         'status',
-        'user_id',
+        'pengguna_id',
     ];
 
     protected $casts = [
@@ -26,11 +26,14 @@ class Unit extends Model
     ];
     protected $appends = ['current_penghuni'];
 
-    public function user()
+    public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'user_id');
+        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+    }   
+    public function riwayatHunian()
+    {
+        return $this->hasMany(RiwayatHunian::class);
     }
-
     public function penghunis()
     {
         return $this->hasMany(Penghuni::class, 'unit_id');
@@ -38,8 +41,9 @@ class Unit extends Model
 
     public function penghuniAktif()
     {
-        return $this->hasOne(Penghuni::class, 'unit_id')
-            ->where('status', 'Aktif');
+        return $this->hasOne(RiwayatHunian::class, 'unit_id')
+            ->where('status', 'Aktif')
+            ->latestOfMany();
     }
 
     public function keluhans()
@@ -49,6 +53,6 @@ class Unit extends Model
 
     public function getCurrentPenghuniAttribute()
     {
-        return $this->penghuniAktif?->nama;
+        return $this->penghuniAktif?->penghuni?->nama;
     }
 }

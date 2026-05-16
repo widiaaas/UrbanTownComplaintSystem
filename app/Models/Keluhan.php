@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Keluhan extends Model
 {
     use HasFactory,SoftDeletes;
- 
+  
     protected $table = 'keluhans';
 
     protected $fillable = [
-        'ticket',
+        'nomor_tiket',
         'unit_id',
         'penghuni_id',
         'judul',
@@ -22,6 +22,7 @@ class Keluhan extends Model
         'penanggung_jawab_id',
         'taken_at',
         'keputusan',
+        'tanggal_pengajuan',
         'tanggal_keputusan',
         'lampiran_pengajuan',
         'lampiran_keputusan',
@@ -30,6 +31,7 @@ class Keluhan extends Model
     protected $casts = [
         'status' => 'string',
         'taken_at' => 'datetime',
+        'tanggal_pengajuan' => 'datetime',
         'tanggal_keputusan' => 'datetime',
         'lampiran_pengajuan' => 'array',
         'lampiran_keputusan' => 'array',
@@ -54,7 +56,7 @@ class Keluhan extends Model
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
+        return $this->belongsTo(Karyawan::class, 'penanggung_jawab_id');
     }
 
     public function workOrders()

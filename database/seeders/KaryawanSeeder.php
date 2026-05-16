@@ -7,54 +7,78 @@ use App\Models\Karyawan;
 
 class KaryawanSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
+        /**
+         * =====================================================
+         * ADMIN
+         * =====================================================
+         */
         Karyawan::create([
-            'user_id' => 1,
+
+            'pengguna_id' => 1,
+
+            'departemen_id' => null,
+
             'nip' => 'ADM001',
-            'nama' => 'Admin Sistem',
-            'telp' => '081234567890',
-            'email' => 'admin@example.com',
-            'role' => 'admin',
-            'departemen' => null,
+
+            'nama' => 'Administrator',
+
+            'no_telepon' => '081234567890',
+
+            'email' => 'admin@apartemen.com',
+
             'jenis_kelamin' => 'Laki-laki',
-            'status' => 'Aktif'
+
+            'status' => 'Aktif',
         ]);
 
+        /**
+         * =====================================================
+         * TENANT RELATION
+         * =====================================================
+         */
         Karyawan::create([
-            'user_id' => 2,
+
+            'pengguna_id' => 2,
+
+            'departemen_id' => null,
+
             'nip' => 'TR001',
+
             'nama' => 'Budi Santoso',
-            'telp' => '081298765432',
-            'email' => 'tr1@example.com',
-            'role' => 'tenant_relation',
-            'departemen' => null,
+
+            'no_telepon' => '081234567891',
+
+            'email' => 'tenantrelation@apartemen.com',
+
             'jenis_kelamin' => 'Laki-laki',
-            'status' => 'Aktif'
+
+            'status' => 'Aktif',
         ]);
 
+        /**
+         * =====================================================
+         * STAFF DEPARTEMEN ENGINEERING
+         * =====================================================
+         */
         Karyawan::create([
-            'user_id' => 3,
+
+            'pengguna_id' => 3,
+
+            'departemen_id' => 1,
+
             'nip' => 'ENG001',
-            'nama' => 'Andi Wijaya',
-            'telp' => '081234567891',
-            'email' => 'eng1@example.com',
-            'role' => 'departemen',
-            'departemen' => 'Engineering',
-            'jenis_kelamin' => 'Laki-laki',
-            'status' => 'Aktif'
-        ]);
 
-        Karyawan::create([
-            'user_id' => 4,
-            'nip' => 'OPS001',
-            'nama' => 'Siti Aminah',
-            'telp' => '081234567892',
-            'email' => 'ops1@example.com',
-            'role' => 'departemen',
-            'departemen' => 'Operational',
-            'jenis_kelamin' => 'Perempuan',
-            'status' => 'Aktif'
+            'nama' => 'Andi Wijaya',
+
+            'no_telepon' => '081234567892',
+
+            'email' => 'engineering@apartemen.com',
+
+            'jenis_kelamin' => 'Laki-laki',
+
+            'status' => 'Aktif',
         ]);
     }
 }

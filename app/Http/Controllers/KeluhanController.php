@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Keluhan;
+use App\Models\Departemen;
 use App\Models\WorkOrder;
-use App\Models\KnowledgeBase;
 use App\Models\RiwayatPenangananWO;
 use App\Models\RiwayatPenangananKeluhan;
 
@@ -32,13 +32,19 @@ class KeluhanController extends Controller
         }
 
         // ================= CEK PENGHUNI =================
-        $penghuni = $unit->penghuniAktif;
+        $riwayatAktif = $unit->penghuniAktif;
 
-        if (!$penghuni) {
-            return response()->json([
-                'message' => 'Penghuni aktif tidak ditemukan'
-            ], 404);
-        }
+            if (
+                !$riwayatAktif ||
+                !$riwayatAktif->penghuni
+            ) {
+
+                return response()->json([
+                    'message' => 'Penghuni aktif tidak ditemukan'
+                ], 404);
+            }
+
+            $penghuni = $riwayatAktif->penghuni;
 
         // ================= VALIDASI =================
         $validator = Validator::make($request->all(), [
@@ -74,15 +80,15 @@ class KeluhanController extends Controller
         }
 
         // ================= GENERATE TICKET =================
-        $noUnit = $unit->no_unit;
+        $noUnit = $unit->nomor_unit;
 
         $lastKeluhan = Keluhan::where('unit_id', $unit->id)
-            ->orderBy('id', 'desc')
+            ->latest()
             ->first();
 
-        if ($lastKeluhan && $lastKeluhan->ticket) {
-            // ambil angka terakhir dari ticket (4 digit terakhir)
-            $lastNumber = (int) substr($lastKeluhan->ticket, -4);
+        if ($lastKeluhan && $lastKeluhan->nomor_tiket) {
+            // ambil angka terakhir dari nomor_tiket (4 digit terakhir)
+            $lastNumber = (int) substr($lastKeluhan->nomor_tiket, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
@@ -91,23 +97,24 @@ class KeluhanController extends Controller
         // format jadi 0001
         $urutan = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-        // hasil ticket
-        $ticket = 'KEL/' . $noUnit . '/' . $urutan;
+        // hasil nomor_tiket
+        $nomor_tiket = 'KEL/' . $noUnit . '/' . $urutan;
 
         // ================= SIMPAN =================
         $keluhan = Keluhan::create([
-            'ticket' => $ticket,
+            'nomor_tiket' => $nomor_tiket,
             'unit_id' => $unit->id,
             'penghuni_id' => $penghuni->id,
             'judul' => trim($request->judul),
             'deskripsi' => trim($request->deskripsi),
             'lampiran_pengajuan' => $filesPath,
+            'tanggal_pengajuan' => now(),
             
         ]);
 
         return response()->json([
             'message' => 'Keluhan berhasil dikirim',
-            'ticket' => $ticket,
+            'nomor_tiket' => $nomor_tiket,
             'data' => $keluhan
         ], 201);
     }
@@ -115,30 +122,117 @@ class KeluhanController extends Controller
     public function riwayat()
     {
         $user = auth()->user();
+
         $unit = $user->unit;
 
         if (!$unit) {
+
             abort(404, 'Unit tidak ditemukan');
         }
 
-        $keluhan = Keluhan::with(['riwayatPenanganan', 'penghuni'])
+        /**
+         * ============================================
+         * RIWAYAT HUNIAN AKTIF
+         * ============================================
+         */
+        $riwayatAktif = $unit->penghuniAktif;
+
+        if (
+            !$riwayatAktif ||
+            !$riwayatAktif->penghuni
+        ) {
+
+            $keluhan = collect();
+
+            return view(
+                'penghuni.riwayatKeluhan',
+                compact('keluhan')
+            );
+        }
+
+        /**
+         * ============================================
+         * PENGHUNI AKTIF
+         * ============================================
+         */
+        $penghuni = $riwayatAktif->penghuni;
+
+        /**
+         * ============================================
+         * KELUHAN MILIK PENGHUNI
+         * PADA UNIT INI
+         * ============================================
+         */
+        $keluhan = Keluhan::with([
+                'riwayatPenanganan',
+                'penghuni',
+                'workOrders.departemen'
+            ])
+
             ->where('unit_id', $unit->id)
-            ->whereIn('status', ['unassigned','open', 'on_progress', 'close'])
+
+            ->where(
+                'penghuni_id',
+                $penghuni->id
+            )
+
+            ->whereIn('status', [
+                'unassigned',
+                'open',
+                'on_progress',
+                'close'
+            ])
+
             ->latest()
+
             ->get();
 
-        // dd($keluhan);
-        return view('penghuni.riwayatKeluhan', compact('keluhan'));
+        return view(
+            'penghuni.riwayatKeluhan',
+            compact('keluhan')
+        );
     }
 
     public function keluhanMasuk()
     {
-        $keluhan = Keluhan::with(['unit', 'penghuni', 'penanggungJawab'])
-            ->whereDoesntHave('penanggungJawab')
-            ->latest()
-            ->get();
+        $keluhan = Keluhan::with([
+                'unit',
+                'penghuni',
+                'penanggungJawab'
+            ])
 
-        return view('tenantrelation.keluhan.keluhanMasuk', compact('keluhan'));
+            ->whereNull('penanggung_jawab_id')
+            ->latest()
+            ->get()
+            ->map(function ($k) {
+                return [
+                    'id' => $k->id,
+                    'nomor_tiket' => $k->nomor_tiket,
+                    'judul' =>$k->judul,
+                    'deskripsi' => $k->deskripsi,
+                    'tanggal' =>
+                        optional(
+                            $k->tanggal_pengajuan
+                        )->format('d-m-Y H:i'),
+                    'status' =>$k->status,
+                    'lampiran' => $k->lampiran_pengajuan ?? [],
+                    'unit' => [
+                        'id' =>$k->unit?->id,
+                        'nomor_unit' =>$k->unit?->nomor_unit
+                    ],
+                    'penghuni' => [
+                        'id' =>$k->penghuni?->id,
+                        'nama' => $k->penghuni?->nama,
+                        'telepon' =>$k->penghuni?->telepon,
+                    ],
+                    'penanggungJawab' =>$k->penanggungJawab
+                ];
+            });
+
+        return view(
+            'tenantrelation.keluhan.keluhanMasuk',
+            compact('keluhan')
+        );
     }
 
     public function ambilKeluhan($id)
@@ -147,18 +241,17 @@ class KeluhanController extends Controller
 
         $keluhan = Keluhan::with('penanggungJawab')->findOrFail($id);
 
-        // ❌ kalau sudah punya relasi
         if ($keluhan->penanggungJawab) {
             return response()->json([
                 'message' => 'Keluhan sudah diambil'
             ], 400);
         }
 
-        // ✅ assign
-        $keluhan->penanggungJawab()->associate($user);
-        $keluhan->status = 'open';
-        $keluhan->taken_at = now();
-        $keluhan->save();
+        $keluhan->update([
+            'penanggung_jawab_id' => $user->karyawan->id,
+            'status' => 'open',
+            'taken_at' => now(),
+        ]);
 
         return response()->json([
             'message' => 'Keluhan berhasil diambil',
@@ -171,8 +264,8 @@ class KeluhanController extends Controller
         $user = auth()->user();
 
          // 🔥 pakai query builder
-        $query = $user->keluhanDiambil()
-        ->with(['unit', 'penghuni','workOrders']);
+        $query = $user->karyawan->keluhans()
+        ->with(['unit', 'penghuni','workOrders.departemen']);
 
          // 🔹 FILTER STATUS KELUHAN
         if ($request->filled('status')) {
@@ -207,11 +300,11 @@ class KeluhanController extends Controller
             ->map(function ($k) {
                 return [
                     'id' => $k->id,
-                    'ticket' => $k->ticket,
+                    'nomor_tiket' => $k->nomor_tiket,
                     'waktu' => optional($k->created_at)->format('d-m-Y H:i'),
                     'penghuni' => $k->penghuni->nama ?? '-',
-                    'unit' => $k->unit->no_unit ?? '-',
-                    'status' => strtolower(str_replace('_', ' ', $k->status ?? 'open'))
+                    'unit' => $k->unit->nomor_unit ?? '-',
+                    'status' => $k->status_label,
                 ];
             });
 
@@ -253,7 +346,9 @@ class KeluhanController extends Controller
         if ($request->catatan) {
             RiwayatPenangananKeluhan::create([
                 'keluhan_id' => $keluhan->id,
-                'keterangan' => $request->catatan,
+                'status' => $status,
+                'judul' => 'Update Status',
+                'deskripsi' => $request->catatan,
                 'waktu' => now()
             ]);
         }
@@ -277,25 +372,23 @@ class KeluhanController extends Controller
         ])->findOrFail($id);
 
         // 🔥 SECURITY (WAJIB)
-        if ($keluhan->penanggung_jawab_id !== $user->id) {
+        if (
+            $keluhan->penanggung_jawab_id !==
+            $user->id
+        ) {
             abort(403, 'Tidak punya akses ke keluhan ini');
         }
-        $departemen = [
-            'Operational',
-            'Engineering',
-            'Finance',
-            'Legal',
-            'Developer'
-        ];
-
-        $knowledgeBase = KnowledgeBase::with(['diagnosis' => function ($q) {
-            $q->orderBy('urutan');
-        }])->get();
+        $departemen = Departemen::select(
+            'id',
+            'nama_departemen'
+        )
+        ->orderBy('nama_departemen')
+        ->get();
 
         $data = [
             'id' => $keluhan->id,
-            'ticket' => $keluhan->ticket,
-            'unit' => $keluhan->unit->no_unit ?? '-',
+            'nomor_tiket' => $keluhan->nomor_tiket,
+            'unit' => $keluhan->unit->nomor_unit ?? '-',
             'penghuni' => $keluhan->penghuni->nama ?? '-',
             'telepon' => $keluhan->penghuni->telepon ?? '-',
             'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'unassigned')),
@@ -308,7 +401,6 @@ class KeluhanController extends Controller
                 'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
                 'lampiran' => $keluhan->lampiran_pengajuan ?? [],
             ],
-            'riwayat_penanganan' => $keluhan->riwayatPenanganan->values(),
             
             // 🔥 RIWAYAT
             'riwayat_penanganan' => $keluhan->riwayatPenanganan
@@ -331,48 +423,61 @@ class KeluhanController extends Controller
 
             'lampiran_keputusan' => $keluhan->lampiran_keputusan ?? [],
 
-            // 🔥 INI YANG KURANG
             'work_orders' => $keluhan->workOrders->map(function ($wo) {
-                $pj = $wo->penanggungJawab; 
+                $pj = $wo->penanggungJawab;
                 return [
                     'id' => $wo->id,
                     'no' => $wo->nomor_wo,
-                    'dept' => $wo->departemen_tujuan,
-                    'status' => $wo->status,
+                    'dept' =>
+                            $wo->departemen?->nama_departemen ?? '-',
+                            'status' => $wo->status ?? 'pending',
                     'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
                     'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
-                    'petugas' => $pj 
-                        ? ($pj->karyawan?->nama ?? $pj->username) 
-                        : '-',
+                    'petugas' => $pj?->karyawan?->nama ?? '-',
+                    'laporan' => $wo->riwayat
+                        ->sortBy('waktu')
+                        ->map(function ($r) {
+                            return [
+                                'status' => strtolower(
+                                    str_replace( '_', ' ',$r->status ?? 'pending')),
+                                'judul' => $r->judul?? 'Update Penanganan',
+                                'deskripsi' =>$r->deskripsi ?? '',
+                                'waktu' => $r->waktu? \Carbon\Carbon::parse($r->waktu
+                                    )->format('d M Y H:i')
+                                    : (
+                                        $r->created_at
+                                            ? $r->created_at->format(
+                                                'd M Y H:i'
+                                            )
+                                            : '-'
+                                    ),
             
-                    // 🔥 INI YANG KURANG
-                    'laporan' => $wo->riwayat->map(function ($r) {
-                        return [
-                            'status' => $r->status,
-                            'judul' => $r->judul ?? 'Update Penanganan',
-                            'deskripsi' => $r->deskripsi ?? '',
-                            'waktu' => $r->waktu
-                                ? \Carbon\Carbon::parse($r->waktu)->format('d M Y H:i')
-                                : ($r->created_at 
-                                    ? $r->created_at->format('d M Y H:i') 
-                                    : '-'),
-
-                            'lampiran' => $r->lampiran ?? []
-                        ];
-                    })
+                                'lampiran' =>$r->lampiran ?? []
+                            ];
+                        })
+                        ->values()
                 ];
             })->values()
         ];
 
 
-        return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen','knowledgeBase'));
+        return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen'));
     }
 
     public function keputusanAkhir(Request $request, $id)
     {
         $keluhan = Keluhan::findOrFail($id);
+        
+        if ($keluhan->status === 'close') {
 
+            return response()->json([
+        
+                'message' =>
+                    'Keluhan sudah ditutup'
+        
+            ], 403);
+        }
         // ================= VALIDASI =================
         $validator = Validator::make($request->all(), [
             'keputusan' => ['required', 'string', 'min:5'],
@@ -411,62 +516,26 @@ class KeluhanController extends Controller
         $keluhan->update([
             'keputusan' => trim($request->keputusan),
             'tanggal_keputusan' => now(),
-            'lampiran_keputusan' => $filesPath, // 🔥 overwrite atau bisa merge kalau mau
+            'lampiran_keputusan' => array_merge(
+                $keluhan->lampiran_keputusan ?? [],
+                $filesPath
+            ),
             'status' => 'close'
         ]);
         $keluhan->refresh(); 
 
         return response()->json([
-            'message' => 'Keputusan berhasil disimpan & keluhan ditutup'
+            'message' =>'Keputusan berhasil disimpan & keluhan ditutup',
+            'data' => [
+                'status' =>   $keluhan->status,
+                'keputusan' => $keluhan->keputusan,
+                'tanggal_keputusan' =>
+                    optional(
+                        $keluhan->tanggal_keputusan
+                    )->format('d-m-Y H:i'),
+                'lampiran_keputusan' =>$keluhan->lampiran_keputusan ?? []
+            ]
         ]);
     }
-
-
-    // ////  BUAT WORK ORDER
-    // public function storeWO(Request $request, $id)
-    // {
-    //     $keluhan = Keluhan::findOrFail($id);
-
-    //     // VALIDASI
-    //     $request->validate([
-    //         'departemen' => 'required',
-    //         'instruksi' => 'required|string',
-    //         'lokasi' => 'required|string'
-    //     ]);
-
-    //     // GENERATE NOMOR WO
-    //     $last = WorkOrder::latest()->first();
-    //     $no = $last ? ((int) substr($last->nomor_wo, -3)) + 1 : 1;
-
-    //     $nomorWO = 'WO-' . date('Y') . '-' . str_pad($no, 3, '0', STR_PAD_LEFT);
-
-    //     // SIMPAN
-    //     $wo = WorkOrder::create([
-    //         'nomor_wo' => $nomorWO,
-    //         'keluhan_id' => $keluhan->id,
-    //         'departemen_tujuan' => $request->departemen,
-    //         'instruksi' => $request->instruksi,
-    //         'status' => 'open'
-    //     ]);
-
-    //     return response()->json([
-    //         'message' => 'Work Order berhasil dibuat',
-    //         'data' => [
-    //             'id' => $wo->id,
-    //             'no' => $wo->nomor_wo,
-    //             'dept' => $wo->departemen_tujuan,
-    //             'instruksi' => $wo->instruksi,
-    //             'status' => $wo->status,
-    //             'tanggal' => $wo->created_at->format('d-m-Y H:i'),
-    //             'lokasi' => $request->lokasi
-    //         ]
-    //     ]);
-
-    //     if ($keluhan->workOrders()->exists()) {
-    //         return response()->json([
-    //             'message' => 'Work Order sudah ada untuk keluhan ini'
-    //         ], 400);
-    //     }
-    // }
 
 }

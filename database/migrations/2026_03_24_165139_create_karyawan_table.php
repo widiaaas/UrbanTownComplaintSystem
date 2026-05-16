@@ -9,16 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('karyawans', function (Blueprint $table) {
+
             $table->id();
-            $table->foreignId('user_id')->constrained('penggunas')->onDelete('cascade');
+            $table->foreignId('pengguna_id')->unique()->constrained('penggunas')->cascadeOnDelete();
+            $table->foreignId('departemen_id')->nullable()->constrained('departemens')->nullOnDelete();
             $table->string('nip', 20)->unique();
             $table->string('nama', 100);
-            $table->string('telp', 20);
+            $table->string('no_telepon', 15);
             $table->string('email', 100)->unique();
-            $table->enum('role', ['admin','tenant_relation','departemen']);
-            $table->enum('departemen', ['Operational', 'Engineering', 'Finance', 'Legal','Developer'])->nullable();
-            $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
-            $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
+            $table->enum('jenis_kelamin', ['Laki-laki','Perempuan']);
+            $table->enum('status', [ 'Aktif','Nonaktif'])->default('Aktif');
             $table->timestamps();
             $table->softDeletes();
         });

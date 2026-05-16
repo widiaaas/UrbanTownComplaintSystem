@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('penggunas', function (Blueprint $table) {
             $table->id();
-            $table->string('username', 50)->unique();
+            $table->string('username', 30)->unique();
             $table->string('password');
-            $table->enum('role', ['karyawan', 'unit']);
+            $table->enum('role', ['admin', 'unit','tenant_relation','departemen']);
             $table->boolean('is_active')->default(true);
             $table->boolean('must_change_password')->default(true);
-            // $table->timestamp('last_login')->nullable();
+       
             $table->timestamps();
         });
     }

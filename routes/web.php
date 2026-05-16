@@ -145,7 +145,7 @@ Route::get('/tesKB', function () {
     return view('tesKB');
 });
 // ==================== AUTHENTICATED ROUTES ====================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth','active'])->group(function () {
 
     // --- GantiPassword ---
     Route::get('/ganti-password', [AuthController::class, 'showChangeForm'])->name('password.change');
@@ -176,9 +176,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/IndexPenghuni', [PenghuniController::class, 'index'])->name('admin.penghuni.index');
         Route::post('/penghuni/store', [PenghuniController::class, 'store'])->name('admin.penghuni.store');
         Route::put('/penghuni/update/{penghuni}', [PenghuniController::class, 'update'])->name('admin.penghuni.update');
-        Route::delete('/penghuni/delete/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
+        // Route::delete('/penghuni/delete/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
         Route::get('/penghuni/{penghuni}/show', [PenghuniController::class, 'show'])->name('admin.penghuni.show');
-
+        Route::patch('/keluar-unit/{penghuni}',[PenghuniController::class, 'keluarUnit']);
         // ================= KARYAWAN =================
         Route::get('/IndexKaryawan', [KaryawanController::class, 'index'])->name('admin.karyawan.index');
         Route::post('/karyawan', [KaryawanController::class, 'store'])->name('admin.karyawan.store');
@@ -237,25 +237,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/work-order/{id}/status', [WorkOrderController::class, 'updateStatus']);
 
         Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);
-
-
-        // 🔥 KNOWLEDGE BASE - halaman view
-        Route::get('/knowledge-base', [KnowledgeBaseController::class, 'page']);
-        
-        // 🔥 KNOWLEDGE BASE - API (untuk JS fetch)
-        Route::get('/knowledge-base/list', [KnowledgeBaseController::class, 'index']);
-        Route::post('/knowledge-base', [KnowledgeBaseController::class, 'store']);
-        Route::get('/knowledge-base/search', [KnowledgeBaseController::class, 'search']);
-        
-        // 🔥 CRUD Diagnosis
-        Route::post('/knowledge-base/{kb}/diagnosis', [KnowledgeBaseController::class, 'storeDiagnosis']);
-        Route::post('/knowledge-base/{kb}/diagnosis/{diagnosis}', [KnowledgeBaseController::class, 'updateDiagnosis']);
-        Route::delete('/knowledge-base/{kb}/diagnosis/{diagnosis}', [KnowledgeBaseController::class, 'destroyDiagnosis']);
-        
-        // 🔥 KB CRUD
-        Route::put('/knowledge-base/{id}', [KnowledgeBaseController::class, 'update']);
-        Route::delete('/knowledge-base/{id}', [KnowledgeBaseController::class, 'destroy']);
-        
     });
 
     

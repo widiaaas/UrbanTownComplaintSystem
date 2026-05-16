@@ -13,20 +13,39 @@ class Karyawan extends Model
     protected $table = 'karyawans';
 
     protected $fillable = [
-        'user_id',
+        'pengguna_id',
+        'departemen_id',
         'nip',
         'nama',
-        'telp',
+        'no_telepon',
         'email',
-        'role',
-        'departemen',
         'jenis_kelamin',
         'status',
     ];
 
-    public function user()
+    protected $casts = [
+        'status' => 'string',
+    ];
+
+    public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'user_id');
+        return $this->belongsTo(Pengguna::class, 'pengguna_id');
     }
 
+    public function departemen()
+    {
+        return $this->belongsTo(Departemen::class, 'departemen_id');
+    }
+
+    public function keluhans()
+    {
+        return $this->hasMany(
+            Keluhan::class,'penanggung_jawab_id','pengguna_id'
+        );
+    }
+
+    public function workOrders()
+    {
+        return $this->hasMany(WorkOrder::class, 'penanggung_jawab_id');
+    }
 }

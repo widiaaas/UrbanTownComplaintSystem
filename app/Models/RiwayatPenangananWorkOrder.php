@@ -12,7 +12,7 @@ class RiwayatPenangananWorkOrder extends Model
 
     protected $table = 'riwayat_penanganan_work_orders';
 
-    protected $fillable = [
+    protected $fillable = [ 
         'work_order_id', 
         'status',
         'judul',

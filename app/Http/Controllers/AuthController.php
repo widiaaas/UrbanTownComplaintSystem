@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Pengguna;
 
 class AuthController extends Controller
 {
@@ -20,138 +20,228 @@ class AuthController extends Controller
     {
         // VALIDASI
         $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
         // CARI USER
         $user = Pengguna::where('username', $request->username)->first();
 
+        
+        // USER TIDAK DITEMUKAN
         if (!$user) {
             return back()
-                ->withErrors(['username' => 'Username tidak ditemukan'])
+                ->withErrors([
+                    'username' => 'Username tidak ditemukan'
+                ])
                 ->withInput();
         }
 
-        // CEK AKTIF
+        // AKUN NONAKTIF
         if (!$user->is_active) {
             return back()
-                ->withErrors(['username' => 'Akun tidak aktif']);
+                ->withErrors([
+                    'username' => 'Akun tidak aktif'
+                ]);
         }
 
-        // CEK PASSWORD
+        // PASSWORD SALAH
         if (!Hash::check($request->password, $user->password)) {
             return back()
-                ->withErrors(['password' => 'Password salah'])
+                ->withErrors([
+                    'password' => 'Password salah'
+                ])
                 ->withInput();
         }
 
         // LOGIN
         Auth::login($user, $request->remember ?? false);
 
-        // SECURITY (WAJIB)
+        // REGENERATE SESSION
         $request->session()->regenerate();
-
-        // UPDATE LAST LOGIN
-        $user->update([
-            'last_login' => now()
+        session([
+            'password_hash' => $user->password
         ]);
 
-        // HARUS GANTI PASSWORD
+        // WAJIB GANTI PASSWORD
         if ($user->must_change_password) {
             return redirect()->route('password.change');
         }
 
-        // ================= ROLE BASED REDIRECT =================
+        // VALIDASI KARYAWAN
+        if (in_array($user->role, [
+            'admin',
+            'tenant_relation',
+            'departemen'
+        ])) {
 
-        // UNIT (TENANT)
-        if ($user->role === 'unit') {
-            return redirect('/ajukanKeluhan');
-        }
+            if (!$user->karyawan) {
 
-        // KARYAWAN
-        if ($user->role === 'karyawan') {
-
-            $karyawan = $user->karyawan;
-
-            if (!$karyawan) {
                 Auth::logout();
+
                 return back()->withErrors([
                     'username' => 'Data karyawan tidak ditemukan'
                 ]);
             }
+        }
+
+        // REDIRECT
+        if ($user->role === 'unit') {
+            return redirect('/ajukanKeluhan');
+        }
+
+        if (in_array($user->role, [
+            'admin',
+            'tenant_relation',
+            'departemen'
+        ])) {
 
             return redirect('/dashboard');
         }
 
-        // fallback
         return redirect('/');
     }
 
-    // ================= SHOW FORM =================
+    // ================= FORM GANTI PASSWORD =================
     public function showChangeForm()
     {
-        if (!Auth::check()) {
-            return redirect('/');
-        }
-    
-        // 🔒 kalau sudah tidak wajib ganti password → jangan boleh akses
-        if (!Auth::user()->must_change_password) {
-            return redirect('/dashboard');
-        }
-    
-        return view('auth.gantiPassword');
-    }
-
-    // ================= GANTI PASSWORD =================
-    // ================= GANTI PASSWORD =================
-    public function change(Request $request)
-    {
-        // 🔒 pastikan user login
+        // BELUM LOGIN
         if (!Auth::check()) {
             return redirect('/');
         }
 
         $user = Auth::user();
 
-        // 🔥 VALIDASI KUAT (tanpa JS)
+        //akun dinonaktifkan 
+        if (!$user->is_active) {
+
+            Auth::logout();
+        
+            request()->session()->invalidate();
+        
+            request()->session()->regenerateToken();
+        
+            return redirect('/')
+                ->withErrors([
+                    'username' =>
+                        'Akun sudah tidak aktif'
+                ]);
+        }
+
+        // password direset admin
+        if (
+            session('password_hash') !== $user->password
+        ) {
+        
+            Auth::logout();
+        
+            request()->session()->invalidate();
+        
+            request()->session()->regenerateToken();
+        
+            return redirect('/')
+                ->withErrors([
+                    'username' =>
+                        'Session telah berakhir, silakan login kembali'
+                ]);
+        }
+
+        // SUDAH TIDAK WAJIB GANTI PASSWORD
+        if (!$user->must_change_password) {
+
+            if ($user->role === 'unit') {
+                return redirect('/ajukanKeluhan');
+            }
+
+            if (in_array($user->role, [
+                'admin',
+                'tenant_relation',
+                'departemen'
+            ])) {
+
+                return redirect('/dashboard');
+            }
+
+            return redirect('/');
+        }
+
+        return view('auth.gantiPassword');
+    }
+
+    // ================= GANTI PASSWORD =================
+    public function change(Request $request)
+    {
+        // VALIDASI LOGIN
+        if (!Auth::check()) {
+            return redirect('/');
+        }
+
+        $user = Auth::user();
+
+        // akun nonaktif
+        if (!$user->is_active) {
+
+            Auth::logout();
+        
+            request()->session()->invalidate();
+        
+            request()->session()->regenerateToken();
+        
+            return redirect('/')
+                ->withErrors([
+                    'username' =>
+                        'Akun sudah tidak aktif'
+                ]);
+        }
+
+        // VALIDASI PASSWORD
         $request->validate([
             'password' => [
                 'required',
                 'string',
                 'min:6',
                 'confirmed',
-                'regex:/[A-Z]/',      // minimal 1 huruf besar
-                'regex:/[0-9]/',      // minimal 1 angka
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
             ]
         ], [
             'password.required' => 'Password wajib diisi',
             'password.min' => 'Password minimal 6 karakter',
             'password.confirmed' => 'Konfirmasi password tidak cocok',
-            'password.regex' => 'Password harus mengandung huruf besar dan angka'
+            'password.regex' => 'Password harus mengandung huruf besar dan angka',
         ]);
 
-        // 🔥 CEK PASSWORD LAMA (tidak boleh sama)
+        // PASSWORD BARU TIDAK BOLEH SAMA
         if (Hash::check($request->password, $user->password)) {
+
             return back()->withErrors([
                 'password' => 'Password baru tidak boleh sama dengan password lama'
             ]);
         }
 
-        // 🔥 UPDATE PASSWORD
+        // UPDATE PASSWORD
         $user->update([
             'password' => Hash::make($request->password),
             'must_change_password' => false,
-            'last_login' => now()
         ]);
 
-        // 🔥 REDIRECT BERDASARKAN ROLE
+        session([
+            'password_hash' => $user->fresh()->password
+        ]);
+
+        // REDIRECT
         if ($user->role === 'unit') {
+
             return redirect('/ajukanKeluhan')
                 ->with('success', 'Password berhasil diubah');
         }
 
-        if ($user->role === 'karyawan') {
+        if (in_array($user->role, [
+            'admin',
+            'tenant_relation',
+            'departemen'
+        ])) {
+
             return redirect('/dashboard')
                 ->with('success', 'Password berhasil diubah');
         }
@@ -159,12 +249,14 @@ class AuthController extends Controller
         return redirect('/')
             ->with('success', 'Password berhasil diubah');
     }
+
     // ================= LOGOUT =================
     public function logout(Request $request)
     {
         Auth::logout();
 
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
         return redirect('/');

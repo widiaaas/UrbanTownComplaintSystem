@@ -12,7 +12,7 @@ class Penghuni extends Model
  
     protected $table = 'penghunis';
 
-    protected $fillable = [
+    protected $fillable = [  
         'nama',
         'email',
         'telepon',
@@ -21,6 +21,7 @@ class Penghuni extends Model
         'unit_id',
         'tanggal_masuk',
         'tanggal_keluar',
+        
     ];
 
     protected $casts = [
@@ -34,10 +35,22 @@ class Penghuni extends Model
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
+    public function riwayatHunian()
+    {
+        return $this->hasMany(RiwayatHunian::class);
+    }
 
     public function keluhans()
     {
         return $this->hasMany(Keluhan::class, 'penghuni_id');
+    }
+    
+    public function penanggungJawab()
+    {
+        return $this->belongsTo(
+            Karyawan::class,
+            'penanggung_jawab_id'
+        );
     }
 
     public function getCurrentPenghuniAttribute()

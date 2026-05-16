@@ -43,14 +43,14 @@
                 {{-- TELEPON --}}
                 <div class="flex justify-between">
                     <span class="font-semibold">Nomor Telepon</span>
-                    <span x-text="form.telp"></span>
+                    <span x-text="form.no_telepon"></span>
                 </div>
 
                 {{-- DEPARTEMEN (HANYA KARYAWAN) --}}
-                <template x-if="user.role === 'karyawan'">
+                <template x-if=" user.role === 'admin' || user.role === 'tenant_relation' || user.role === 'departemen'">
                     <div class="flex justify-between">
                         <span class="font-semibold">Jabatan</span>
-                        <span x-text="form.departemen"></span>
+                        <span x-text="form.jabatan"></span>
                     </div>
                 </template>
 
@@ -62,17 +62,33 @@
 
                 {{-- STATUS --}}
                 <div class="flex justify-between">
-                    <span class="font-semibold">Status</span>
-                    <span class="text-green-600">Aktif</span>
+                    <span class="font-semibold">
+                        Status
+                    </span>
+                    <span
+                        :class="form.nama === 'Belum ada penghuni'? 'text-red-600': 'text-green-600'"
+                        x-text="form.nama === 'Belum ada penghuni'? 'Kosong': 'Aktif'">
+                    </span>
                 </div>
 
                 {{-- BUTTON --}}
                 <div class="text-right">
-                    <button class="btn btn-warning" @click="editMode=true">
+                    <button
+                        class="btn btn-warning"
+                        @click="editMode=true"
+                        :disabled="
+                            user.role === 'unit' &&
+                            form.nama === 'Belum ada penghuni'
+                        "
+                        :class="
+                            user.role === 'unit' &&
+                            form.nama === 'Belum ada penghuni'
+                            ? 'opacity-50 cursor-not-allowed'
+                            : ''
+                        ">
                         Edit
                     </button>
                 </div>
-
             </div>
         </template>
 
@@ -86,11 +102,11 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-1">Email</label>
-                    <input x-model="form.email" class="input w-full">
+                    <input type="email" x-model="form.email"class="input w-full">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-1">Telepon</label>
-                    <input x-model="form.telp" class="input w-full">
+                    <input type="tel" x-model="form.no_telepon" class="input w-full">
                 </div>
 
                 <div>
@@ -224,8 +240,8 @@ function profileData(){
         form:{
             nama:'',
             email:'',
-            telp:'',
-            departemen:'',
+            no_telepon:'',
+            jabatan:'',
             jenis_kelamin:''
         },
 
@@ -264,41 +280,38 @@ function profileData(){
                 this.options.jenis_kelamin = data.options?.jenis_kelamin ?? [];
 
                 // jika karyawan
-                if(data.user.role === 'karyawan'){
+                if(data.user.role === 'admin' ||data.user.role === 'tenant_relation' ||data.user.role === 'departemen'){
                     const p = data.profile;
 
                     this.form.nama = p?.nama ?? '';
                     this.form.email = p?.email ?? '';
-                    this.form.telp = p?.telp ?? '';
+                    this.form.no_telepon = p?.no_telepon ?? '';
                     this.form.jenis_kelamin = p?.jenis_kelamin ?? '';
 
                     // 🔥 mapping role ke label
-                    if(p?.role === 'admin'){
-                        this.form.departemen = 'Admin';
+                    if(data.user.role === 'admin'){
+                        this.form.jabatan = 'Admin';
                     }
-                    else if(p?.role === 'tenant_relation'){
-                        this.form.departemen = 'Tenant Relation';
+                    else if(data.user.role === 'tenant_relation'){
+                        this.form.jabatan = 'Tenant Relation';
                     }
-                    else if(p?.role === 'departemen'){
-                        this.form.departemen = p?.departemen ?? '';
+                    else if(data.user.role === 'departemen'){
+                        this.form.jabatan =
+                            p?.departemen?.nama_departemen ?? 'Departemen';
                     }
                 }
 
                 // jika unit
+                // jika unit
                 if(data.user.role === 'unit'){
-                const unit = data.profile;
-                const penghuni = unit?.penghuni;
-
-                // 🔥 username = no unit
-                this.user.username = unit?.no_unit ?? '-';
-
-                // 🔥 ambil dari penghuni aktif
-                this.form.nama = penghuni?.nama ?? 'Belum ada penghuni';
-                this.form.email = penghuni?.email ?? '-';
-                this.form.telp = penghuni?.telepon ?? '-';
-                this.form.jenis_kelamin = penghuni?.jenis_kelamin ?? '-';
-
-            }
+                    const unit = data.profile;
+                    const penghuni = unit?.penghuni;
+                    this.user.username =unit?.nomor_unit ?? '-';
+                    this.form.nama = penghuni?.nama ??'Belum ada penghuni';
+                    this.form.email =penghuni?.email ?? '-';
+                    this.form.no_telepon =penghuni?.telepon ?? '-';
+                    this.form.jenis_kelamin =penghuni?.jenis_kelamin ?? '-';
+                }
             }catch(err){
                 console.error(err);
             }

@@ -4,91 +4,33 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\RiwayatPenangananKeluhan;
-use Carbon\Carbon;
 
 class RiwayatPenangananKeluhanSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 2,
+            'keluhan_id' => 1,
+
             'status' => 'open',
-            'judul' => 'Keluhan Masuk',
-            'deskripsi' => 'Keluhan diterima oleh sistem.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(3)
+
+            'judul' => 'Keluhan Dibuat',
+
+            'deskripsi' => 'Penghuni membuat laporan keluhan AC tidak dingin.',
+
+            'waktu' => now()->subHours(3),
         ]);
 
         RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 2,
+            'keluhan_id' => 1,
+
             'status' => 'on_progress',
-            'judul' => 'TR Mengambil Keluhan',
-            'deskripsi' => 'Keluhan diambil oleh Tenant Relation.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(1)
-        ]);
 
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 3,
-            'status' => 'open',
-            'judul' => 'Keluhan Masuk',
-            'deskripsi' => 'Keluhan diterima oleh sistem.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(4)
-        ]);
+            'judul' => 'Keluhan Diproses',
 
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 3,
-            'status' => 'on_progress',
-            'judul' => 'TR Mengambil Keluhan',
-            'deskripsi' => 'Keluhan diambil oleh Tenant Relation.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(3)
-        ]);
+            'deskripsi' => 'Tenant relation telah mengambil keluhan.',
 
-
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 4,
-            'status' => 'open',
-            'judul' => 'Keluhan Masuk',
-            'deskripsi' => 'Keluhan diterima oleh sistem.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(7)
-        ]);
-
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 4,
-            'status' => 'on_progress',
-            'judul' => 'TR Mengambil Keluhan',
-            'deskripsi' => 'Keluhan diambil oleh Tenant Relation.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(6)
-        ]);
-
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 4,
-            'status' => 'close',
-            'judul' => 'Keputusan TR',
-            'deskripsi' => 'Kipas diganti baru dan berfungsi normal.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 2,
-            'waktu' => Carbon::now()->subDays(4)
-        ]);
-
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 4,
-            'status' => 'close',
-            'judul' => 'Feedback Penghuni',
-            'deskripsi' => 'Penghuni merasa puas dengan hasil perbaikan.',
-            'lampiran' => null,
-            'penanggung_jawab_id' => 5,
-            'waktu' => Carbon::now()->subDays(3)
+            'waktu' => now()->subHours(1),
         ]);
     }
 }

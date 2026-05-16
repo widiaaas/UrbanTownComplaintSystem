@@ -469,7 +469,10 @@
                     <select class="w-full border rounded px-3 py-1" x-model="woForm.dept">
                         <option value="">Pilih</option>
                         <template x-for="d in departemenList" :key="d">
-                            <option :value="d" x-text="d"></option>
+                            <option
+                                :value="d.id"
+                                x-text="d.nama_departemen">
+                            </option>
                         </template>
                     </select>
                 </div>
@@ -550,7 +553,7 @@ function detailKeluhanApp() {
             const data = window.detailKeluhan;
             this.keluhan = {
                 id: data.id,
-                tiket: data.ticket,
+                tiket: data.nomor_tiket,
                 unit: data.unit,
                 tower: data.tower ?? '-',
                 lantai: data.lantai ?? '-',
@@ -763,35 +766,137 @@ function detailKeluhanApp() {
 
         /* ================= KEPUTUSAN AKHIR ================= */
         simpanKeputusanAkhir() {
-            if (!this.keputusanAkhir.keputusan) {
-                Swal.fire('Oops!', 'Lengkapi data keputusan', 'warning');
-                return;
-            }
+        // VALIDASI
+        if (!this.keputusanAkhir.keputusan.trim()) {
+
+            Swal.fire(
+                'Oops!',
+                'Lengkapi data keputusan',
+                'warning'
+            );
+
+            return;
+        }
+
+        // KONFIRMASI
+        Swal.fire({
+
+            title: 'Kirim Keputusan?',
+
+            text:
+                'Keputusan akan dikirim ke penghuni dan keluhan akan ditutup',
+
+            icon: 'question',
+
+            showCancelButton: true,
+
+            confirmButtonText: 'Ya, kirim',
+
+            cancelButtonText: 'Batal',
+
+            confirmButtonColor: '#16a34a'
+
+        }).then((result) => {
+
+            if (!result.isConfirmed) return;
+
             let formData = new FormData();
 
-            formData.append('keputusan', this.keputusanAkhir.keputusan);
+            formData.append(
+                'keputusan',
+                this.keputusanAkhir.keputusan
+            );
+
             let files = this.$refs.fileKeputusan.files;
-            for (let i = 0; i < files.length; i++) formData.append('lampiran[]', files[i]);
-            fetch(`/keluhan/${this.keluhan.id}/keputusan-akhir`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: formData
+
+            for (let i = 0; i < files.length; i++) {
+
+                formData.append(
+                    'lampiran[]',
+                    files[i]
+                );
+            }
+
+            fetch(
+                `/keluhan/${this.keluhan.id}/keputusan-akhir`,
+                {
+
+                    method: 'POST',
+
+                    headers: {
+
+                        'X-CSRF-TOKEN':
+                            document.querySelector(
+                                'meta[name="csrf-token"]'
+                            ).content
+                    },
+
+                    body: formData
+                }
+            )
+
+            .then(async res => {
+
+                const data = await res.json();
+
+                if (!res.ok) throw data;
+
+                return data;
             })
-            .then(async res => { const data = await res.json(); if (!res.ok) throw data; return data; })
+
             .then(res => {
-                Swal.fire('Berhasil!', res.message, 'success');
+
+                Swal.fire(
+                    'Berhasil!',
+                    res.message,
+                    'success'
+                );
+
+                this.keluhan.status = 'close';
+
+                this.keluhan.keputusan =
+                    this.keputusanAkhir.keputusan;
+
+                this.keluhan.tanggalKeputusan =
+                    res.data.tanggal_keputusan;
+
+                this.keluhan.lampiranKeputusan =
+                    res.data.lampiran_keputusan;
+
                 this.riwayat.push({
-                    deskripsi: this.keputusanAkhir.keputusan,
+
+                    deskripsi:
+                        this.keputusanAkhir.keputusan,
+
                     waktu: this.now(),
+
                     status: 'close',
+
                     lampiran: []
                 });
-                this.keputusanAkhir = {keputusan: '' };
+
+                this.keputusanAkhir = {
+                    keputusan: ''
+                };
+
+                this.previewFiles = [];
+
                 this.$refs.fileKeputusan.value = null;
             })
+
             .catch(err => {
-                Swal.fire('Error!', err.message || 'Gagal menyimpan keputusan', 'error');
+
+                Swal.fire(
+
+                    'Error!',
+
+                    err?.message ||
+                    'Gagal menyimpan keputusan',
+
+                    'error'
+                );
             });
+        });
         },
 
         /* ================= WORK ORDER ================= */
@@ -828,8 +933,14 @@ function detailKeluhanApp() {
                 Swal.fire('Berhasil!', res.message, 'success');
             })
             .catch(err => {
-                Swal.fire('Error!', err.message || 'Gagal membuat WO', 'error');
-            });
+                let msg =err?.message ||'Gagal membuat WO';
+                if (err?.errors) {
+                    msg = Object.values(err.errors)
+                        .flat()
+                        .join('\n');
+                }
+                Swal.fire('Error!', msg,'error');
+                });
         },
 
         bukaLaporanWO(wo) {

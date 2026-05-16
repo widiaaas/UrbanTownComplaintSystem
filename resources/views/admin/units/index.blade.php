@@ -94,7 +94,7 @@
                     <td class="px-4 py-2" x-text="index + 1"></td>
 
                     <!-- NO UNIT -->
-                    <td class="px-4 py-2" x-text="unit.no_unit"></td>
+                    <td class="px-4 py-2" x-text="unit.nomor_unit"></td>
 
                     <!-- GEDUNG -->
                     <td class="px-4 py-2" x-text="unit.gedung"></td>
@@ -106,7 +106,7 @@
                     <td class="px-4 py-2" x-text="unit.nomor_kamar"></td>
 
                     <!-- PENGHUNI -->
-                    <td class="px-4 py-2" x-text="unit.current_penghuni || '-'"></td>
+                    <td class="px-4 py-2" x-text="unit.penghuni_aktif?.penghuni?.nama || '-'"></td>
 
                     <!-- STATUS -->
                     <td class="px-4 py-2">
@@ -172,10 +172,6 @@
                                         </button>
                                     </template>
 
-                                    <button @click="confirmDelete()" class="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50">
-                                        🗑️ Hapus
-                                    </button>
-
                                 </div>
                             </div>
                         </td>
@@ -196,7 +192,7 @@
             <form @submit.prevent="saveUnit" novalidate class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Nomor Unit</label>
-                    <input type="text" x-model="newUnit.no_unit" placeholder="Contoh: A-101" class="w-full mt-1 border rounded-lg px-3 py-2" required>
+                    <input type="text" x-model="newUnit.nomor_unit" placeholder="Contoh: A-101" class="w-full mt-1 border rounded-lg px-3 py-2" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Gedung</label>
@@ -239,7 +235,7 @@
                 <template x-if="createdUnit">
                     <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
                         <p class="font-semibold text-yellow-800">Akun Unit Berhasil Dibuat</p>
-                        <p><strong>Username Login:</strong> <span x-text="createdUnit.no_unit"></span></p>
+                        <p><strong>Username Login:</strong> <span x-text="createdUnit.nomor_unit"></span></p>
                         <p>Password Sementara</p>
                         <div class="bg-white border rounded px-3 py-2 font-mono text-center" x-text="createdUnit.password"></div>
                         <p class="text-xs text-gray-600">Berikan password ini kepada penghuni unit untuk login pertama.</p>
@@ -257,14 +253,14 @@
     {{-- ================= MODAL EDIT UNIT ================= --}}
     <div x-show="openEdit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div @click.self="openEdit = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
-            <h2 class="font-semibold text-lg">Edit Unit (<span x-text="selectedUnit.no_unit"></span>)</h2>
+            <h2 class="font-semibold text-lg">Edit Unit (<span x-text="selectedUnit.nomor_unit"></span>)</h2>
             
             <div class="space-y-3">
                 <div>
                     <label class="text-sm">No Unit</label>
                     <input 
                         type="text" 
-                        x-model="editForm.no_unit"
+                        x-model="editForm.nomor_unit"
                         class="w-full mt-1 border rounded-lg px-3 py-2"
                         placeholder="Contoh: A-101"
                         required
@@ -318,7 +314,7 @@
     <div x-show="openEditPenghuni" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div @click.outside="openEditPenghuni = false" class="bg-white w-full max-w-lg rounded-xl shadow-lg max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Pergantian Penghuni Unit <span class="text-blue-600" x-text="selectedUnit.no_unit"></span></h2>
+                <h2 class="text-lg font-semibold text-gray-800">Pergantian Penghuni Unit <span class="text-blue-600" x-text="selectedUnit.nomor_unit"></span></h2>
             </div>
             <div class="px-6 py-4 space-y-5 overflow-visible">
                 <div class="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
@@ -400,24 +396,11 @@
         </div>
     </div>
 
-    {{-- ================= MODAL HAPUS UNIT ================= --}}
-    <div x-show="openDelete" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div @click.outside="openDelete = false" class="bg-white w-full max-w-sm rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-red-600">Hapus Unit</h2>
-            <p class="text-sm text-gray-600 mt-2">Apakah Anda yakin ingin menghapus unit <strong x-text="selectedUnit.no_unit"></strong>?</p>
-            <p class="text-xs text-gray-500 mt-1">Data unit dan relasinya akan dihapus dari sistem.</p>
-            <div class="flex justify-end gap-2 mt-6">
-                <button @click="openDelete = false" class="px-4 py-2 border rounded-lg">Batal</button>
-                <button @click="deleteUnit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
-            </div>
-        </div>
-    </div>
-
     {{-- ================= MODAL NONAKTIFKAN/AKTIFKAN ================= --}}
     <div x-show="openToggle" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div @click.outside="openToggle = false" class="bg-white w-full max-w-sm rounded-lg p-6">
             <h2 class="text-lg font-semibold text-red-600" x-text="toggleAction == 'nonaktif' ? 'Nonaktifkan Unit' : 'Aktifkan Unit'"></h2>
-            <p class="text-sm text-gray-600 mt-2">Unit <strong x-text="selectedUnit.no_unit"></strong> akan <span x-text="toggleAction == 'nonaktif' ? 'dinonaktifkan' : 'diaktifkan'"></span>.</p>
+            <p class="text-sm text-gray-600 mt-2">Unit <strong x-text="selectedUnit.nomor_unit"></strong> akan <span x-text="toggleAction == 'nonaktif' ? 'dinonaktifkan' : 'diaktifkan'"></span>.</p>
             <div class="flex justify-end gap-2 mt-6">
                 <button @click="openToggle = false" class="px-4 py-2 border rounded-lg">Batal</button>
                 <button @click="submitToggle" class="px-4 py-2 text-white rounded-lg" :class="toggleAction == 'aktif' ? 'bg-green-600' : 'bg-red-600'">Konfirmasi</button>
@@ -429,7 +412,7 @@
     <div x-show="openReset" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div @click.outside="openReset = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
             <h2 class="text-lg font-semibold text-gray-800">Reset Password Unit</h2>
-            <p class="text-sm text-gray-600">Password login untuk unit <strong x-text="selectedUnit.no_unit"></strong> akan direset.</p>
+            <p class="text-sm text-gray-600">Password login untuk unit <strong x-text="selectedUnit.nomor_unit"></strong> akan direset.</p>
             <p class="text-xs text-gray-500">
                 Pengguna wajib mengganti password saat login berikutnya.
             </p>
@@ -507,12 +490,12 @@ function unitManager() {
         openReset: false,
         openCredential: false,
 
-        selectedUnit: { id: null, no_unit: '', gedung: '', lantai: '', currentPenghuni: '' },
+        selectedUnit: { id: null, nomor_unit: '', gedung: '', lantai: '', currentPenghuni: '' },
 
-        newUnit: { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
+        newUnit: { nomor_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
 
-        // 🔥 FIX: tambah no_unit
-        editForm: { no_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
+        // 🔥 FIX: tambah nomor_unit
+        editForm: { nomor_unit: '', gedung: '', lantai: '', nomor_kamar: '' },
 
         createdUnit: null,
         credentialData: {
@@ -543,10 +526,10 @@ function unitManager() {
             this.fetchPenghuniList();
 
             window.addEventListener('edit-unit', e => this.editUnit(e.detail.id, e.detail.gedung, e.detail.lantai, e.detail.nomor_kamar));
-            window.addEventListener('ganti-penghuni', e => this.openGantiPenghuni(e.detail.id, e.detail.no_unit, e.detail.currentPenghuni));
-            window.addEventListener('reset-password', e => this.openResetPassword(e.detail.id, e.detail.no_unit));
-            window.addEventListener('toggle-status', e => this.toggleStatus(e.detail.id, e.detail.no_unit, e.detail.action));
-            window.addEventListener('confirm-delete', e => this.confirmDelete(e.detail.id, e.detail.no_unit));
+            window.addEventListener('ganti-penghuni', e => this.openGantiPenghuni(e.detail.id, e.detail.nomor_unit, e.detail.currentPenghuni));
+            window.addEventListener('reset-password', e => this.openResetPassword(e.detail.id, e.detail.nomor_unit));
+            window.addEventListener('toggle-status', e => this.toggleStatus(e.detail.id, e.detail.nomor_unit, e.detail.action));
+            window.addEventListener('confirm-delete', e => this.confirmDelete(e.detail.id, e.detail.nomor_unit));
         },
 
         applyFilter() {
@@ -554,7 +537,7 @@ function unitManager() {
                 let match = true;
 
                 if (this.search) {
-                    match = unit.no_unit.toLowerCase().includes(this.search.toLowerCase()) ||
+                    match = unit.nomor_unit.toLowerCase().includes(this.search.toLowerCase()) ||
                             unit.gedung.toLowerCase().includes(this.search.toLowerCase());
                 }
 
@@ -586,31 +569,31 @@ function unitManager() {
             this.selectedPenghuniDetail = this.penghuniList.find(p => p.id == this.selectedPenghuniId) || null;
         },
 
-        openGantiPenghuni(id, no_unit, currentPenghuni) {
+        openGantiPenghuni(id, nomor_unit, currentPenghuni) {
             this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
-            this.selectedUnit.no_unit = no_unit;
+            this.selectedUnit.nomor_unit = nomor_unit;
             this.selectedUnit.currentPenghuni = currentPenghuni;
             this.openEditPenghuni = true;
         },
 
-        openResetPassword(id, no_unit) {
+        openResetPassword(id, nomor_unit) {
             this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
-            this.selectedUnit.no_unit = no_unit;
+            this.selectedUnit.nomor_unit = nomor_unit;
             this.resetPasswordGenerated = false;
             this.newPassword = '';
             this.openReset = true;
         },
 
-        toggleStatus(id, no_unit, action) {
+        toggleStatus(id, nomor_unit, action) {
             this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
-            this.selectedUnit.no_unit = no_unit;
+            this.selectedUnit.nomor_unit = nomor_unit;
             this.toggleAction = action;
             this.openToggle = true;
         },
 
-        confirmDelete(id, no_unit) {
+        confirmDelete(id, nomor_unit) {
             this.selectedUnit = this.unitsData.find(u => u.id === id) || {};
-            this.selectedUnit.no_unit = no_unit;
+            this.selectedUnit.nomor_unit = nomor_unit;
             this.openDelete = true;
         },
 
@@ -641,7 +624,7 @@ function unitManager() {
 
                 // reset form
                 this.newUnit = {
-                    no_unit: '',
+                    nomor_unit: '',
                     gedung: '',
                     lantai: '',
                     nomor_kamar: ''
@@ -657,7 +640,7 @@ function unitManager() {
                     'Berikan password ini kepada penghuni unit untuk login pertama.';
 
                 this.credentialData = {
-                    username: data.unit.no_unit,
+                    username: data.unit.nomor_unit,
                     password: data.password
                 };
 
@@ -687,7 +670,7 @@ function unitManager() {
             this.selectedUnit.id = id;
 
             this.editForm = {
-                no_unit: this.unitsData.find(u => u.id === id)?.no_unit || '',
+                nomor_unit: this.unitsData.find(u => u.id === id)?.nomor_unit || '',
                 gedung,
                 lantai,
                 nomor_kamar
@@ -753,50 +736,6 @@ function unitManager() {
                     icon: 'error',
                     title: 'Error',
                     text: message
-                });
-            });
-        },
-
-        // ================= DELETE =================
-        deleteUnit() {
-            fetch(`/units/${this.selectedUnit.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(async res => {
-
-                const data = await res.json();
-
-                if (!res.ok) throw data;
-
-                return data;
-            })
-            .then(data => {
-
-                this.unitsData = this.unitsData.filter(
-                    u => u.id !== this.selectedUnit.id
-                );
-
-                this.applyFilter();
-
-                this.openDelete = false;
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: data.message
-                });
-            })
-            .catch(err => {
-
-                console.error(err);
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: err.message || 'Gagal menghapus unit'
                 });
             });
         },
@@ -920,7 +859,7 @@ function unitManager() {
                     u.id === this.selectedUnit.id
                         ? {
                             ...u,
-                            currentPenghuni:
+                            current_penghuni:
                                 this.penghuniList.find(
                                     p => p.id == this.selectedPenghuniId
                                 )?.nama || '-'
@@ -984,7 +923,7 @@ function dropdownMenu(data) {
         gedung: data.gedung,
         lantai: data.lantai,
         nomor_kamar: data.nomor_kamar,
-        no_unit: data.no_unit,
+        nomor_unit: data.nomor_unit,
         currentPenghuni: data.currentPenghuni,
 
         editUnit() {
@@ -1003,8 +942,8 @@ function dropdownMenu(data) {
             window.dispatchEvent(new CustomEvent('ganti-penghuni', {
                 detail: {
                     id: this.id,
-                    no_unit: this.no_unit,
-                    currentPenghuni: this.currentPenghuni
+                    nomor_unit: this.nomor_unit,
+                    currentPenghuni: data.current_penghuni,
                 }
             }));
             this.open = false;
@@ -1014,7 +953,7 @@ function dropdownMenu(data) {
             window.dispatchEvent(new CustomEvent('reset-password', {
                 detail: {
                     id: this.id,
-                    no_unit: this.no_unit
+                    nomor_unit: this.nomor_unit
                 }
             }));
             this.open = false;
@@ -1024,7 +963,7 @@ function dropdownMenu(data) {
             window.dispatchEvent(new CustomEvent('toggle-status', {
                 detail: {
                     id: this.id,
-                    no_unit: this.no_unit,
+                    nomor_unit: this.nomor_unit,
                     action
                 }
             }));
@@ -1035,7 +974,7 @@ function dropdownMenu(data) {
             window.dispatchEvent(new CustomEvent('confirm-delete', {
                 detail: {
                     id: this.id,
-                    no_unit: this.no_unit
+                    nomor_unit: this.nomor_unit
                 }
             }));
             this.open = false;

@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Daftar alias middleware kustom
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'active' => \App\Http\Middleware\CheckUserActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -12,12 +12,11 @@ class RiwayatPenangananKeluhan extends Model
     protected $table = 'riwayat_penanganan_keluhans';
 
     protected $fillable = [
-        'keluhan_id',
+        'keluhan_id', 
         'status',
         'judul',
         'deskripsi',
         'lampiran',
-        'penanggung_jawab_id',
         'waktu'
     ];
 
@@ -31,8 +30,4 @@ class RiwayatPenangananKeluhan extends Model
         return $this->belongsTo(Keluhan::class);
     }
 
-    public function penanggungJawab()
-    {
-        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
-    }
 }

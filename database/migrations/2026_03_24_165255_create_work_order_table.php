@@ -10,15 +10,14 @@ return new class extends Migration
     {
         Schema::create('work_orders', function (Blueprint $table) {
             $table->id();
-            $table->string('nomor_wo', 20)->unique();
+            $table->string('nomor_tiket', 20)->unique();
             $table->foreignId('keluhan_id')->constrained('keluhans')->onDelete('cascade');
-            $table->enum('departemen_tujuan', ['Operational', 'Engineering', 'Finance', 'Legal', 'Developer']);
+            $table->foreignId('departemen_id')->constrained('departemens')->onDelete('cascade');
             $table->text('instruksi');
             $table->string('lokasi');
             $table->enum('status', ['unassigned', 'open', 'on_progress', 'waiting', 'close'])->default('open');
-            $table->foreignId('penanggung_jawab_id')->nullable()->constrained('penggunas')->nullOnDelete();
+            $table->foreignId('penanggung_jawab_id')->nullable()->constrained('karyawans')->nullOnDelete();
             $table->timestamp('taken_at')->nullable();
-            $table->text('laporan')->nullable();
             $table->json('lampiran')->nullable();
             $table->timestamp('tanggal_dibuat')->useCurrent();
             $table->timestamp('tanggal_selesai')->nullable();

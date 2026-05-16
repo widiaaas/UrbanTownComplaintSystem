@@ -32,33 +32,53 @@
                     class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
             </div>
 
-            {{-- Kategori --}}
+            {{-- ROLE--}}
             <div>
-                <label for="kategori" class="text-sm font-medium text-gray-700">Kategori Karyawan</label>
-                <select 
-                    id="kategori"
-                    name="kategori"
-                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+            <label for="kategori"
+                class="text-sm font-medium text-gray-700">
+                TR/Departemen
+            </label>
 
-                    <option value="">Semua</option>
+            <select
+                id="kategori"
+                name="kategori"
+                class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"
+            >
 
-                    <optgroup label="Tenant Relation">
-                        <option value="tenant_relation"
-                            {{ request('kategori') == 'tenant_relation' ? 'selected' : '' }}>
-                            Tenant Relation
+                <option value="">Semua</option>
+
+                <optgroup label="Tenant Relation">
+
+                    <option
+                        value="tenant_relation"
+                        {{ request('kategori') == 'tenant_relation'
+                            ? 'selected'
+                            : '' }}
+                    >
+                        Tenant Relation
+                    </option>
+
+                </optgroup>
+
+                <optgroup label="Departemen">
+
+                    @foreach($departemens as $dept)
+
+                        <option
+                            value="dept_{{ $dept->id }}"
+                            {{ request('kategori') == 'dept_'.$dept->id
+                                ? 'selected'
+                                : '' }}
+                        >
+                            {{ $dept->nama_departemen }}
                         </option>
-                    </optgroup>
 
-                    <optgroup label="Departemen">
-                        @foreach($departemens as $dept)
-                            <option value="dept:{{ $dept }}"
-                                {{ request('kategori') == 'dept:'.$dept ? 'selected' : '' }}>
-                                {{ $dept }}
-                            </option>
-                        @endforeach
-                    </optgroup>
-                </select>
-            </div>
+                    @endforeach
+
+                </optgroup>
+
+            </select>
+        </div>
             
             {{-- Button --}}
             <div class="flex gap-2">
@@ -92,118 +112,123 @@
 
             <tbody class="bg-white divide-y divide-gray-200">
 
-                <template x-for="(emp, index) in employees" :key="emp.id">
+            {{-- DATA TIDAK ADA --}}
+            <template x-if="employees.length === 0">
+
+                <tr>
+                    <td
+                        colspan="6"
+                        class="px-4 py-4 text-center text-gray-400 italic">
+                            Data karyawan tidak tersedia
+                    </td>
+                </tr>
+
+            </template>
+
+            {{-- DATA ADA --}}
+            <template
+                x-for="(emp, index) in employees"
+                :key="emp.id"
+            >
 
                 <tr class="hover:bg-gray-50 text-center">
+
                     <td class="px-4 py-2" x-text="index + 1"></td>
 
                     <td class="px-4 py-2" x-text="emp.id_pegawai"></td>
 
                     <td class="px-4 py-2" x-text="emp.nama"></td>
 
-                    <td class="px-4 py-2" x-text="
-                        emp.role === 'admin'
-                            ? 'Admin'
-                            : emp.role === 'tenant_relation'
+                    <td
+                        class="px-4 py-2"
+                        x-text="
+                            emp.role === 'tenant_relation'
                                 ? 'Tenant Relation'
-                                : emp.departemen
-                    ">
-                </td>
+                                : emp.departemen?.nama_departemen
+                        "
+                    ></td>
 
-                    <!-- STATUS -->
+                    {{-- STATUS --}}
                     <td class="px-4 py-2">
 
                         <span
                             x-show="emp.status === 'Aktif'"
-                            class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                            class="px-2 py-1 text-xs rounded bg-green-100 text-green-700"
+                        >
                             Aktif
                         </span>
 
                         <span
                             x-show="emp.status === 'Nonaktif'"
-                            class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                            class="px-2 py-1 text-xs rounded bg-red-100 text-red-700"
+                        >
                             Nonaktif
                         </span>
 
                     </td>
 
-                    <!-- AKSI DROPDOWN -->
+                    {{-- AKSI --}}
                     <td class="px-4 py-2 relative">
 
-                        <div x-data="dropdownMenu(emp)" class="relative inline-block text-left">
-
-                        <button 
-                            @click="toggle($event)"
-                            class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
-                            Aksi <span class="text-xs">▼</span>
-                        </button>
-
                         <div
-                        x-show="open"
-                        x-cloak
-                        x-transition
-                        @click.outside="open = false"
-                        x-ref="menu"
-                        class="fixed w-44 bg-white border rounded-lg shadow-xl z-[9999]"
-                        x-init="
-                            $watch('open', value => {
-                                if (value) {
-                                    let rect = this.button.getBoundingClientRect();
-                                    let dropdownHeight = 180;
+                            x-data="dropdownMenu(emp)"
+                            class="relative inline-block text-left"
+                        >
 
-                                    if ((rect.bottom + dropdownHeight) > window.innerHeight) {
-                                        $el.style.top = (rect.top - dropdownHeight) + 'px';
-                                    } else {
-                                        $el.style.top = rect.bottom + 'px';
-                                    }
+                            <button 
+                                @click="toggle($event)"
+                                class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1"
+                            >
+                                Aksi
+                                <span class="text-xs">▼</span>
+                            </button>
 
-                                    $el.style.left = (rect.right - 176) + 'px';
-                                }
-                            })
-                        "
-                    >
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition
+                                @click.outside="open = false"
+                                x-ref="menu"
+                                class="fixed w-44 bg-white border rounded-lg shadow-xl z-[9999]"
+                            >
 
-                                <!-- DETAIL -->
+                                {{-- DETAIL --}}
                                 <button
                                     @click="
                                         openDetail=true;
                                         selectedEmployee = emp;
                                         open=false
                                     "
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+                                >
                                     👁 Detail
                                 </button>
 
-                                <!-- EDIT -->
+                                {{-- EDIT --}}
                                 <button
                                     @click="
                                         openEdit=true;
                                         selectedEmployee = {...emp};
                                         open=false
                                     "
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+                                >
                                     ✏ Edit
                                 </button>
 
+                                {{-- RESET --}}
                                 <button
                                     @click="
                                         openResetPassword=true;
                                         selectedEmployee = emp;
                                         open=false
                                     "
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100">
+                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+                                >
                                     🔑 Reset Password
                                 </button>
 
-                                <div class="border-t my-1"></div>
-
-                                <!-- DELETE -->
-                                <button
-                                    @click="hapus(emp)"
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    🗑 Hapus
-                                </button>
-
+                              
                             </div>
 
                         </div>
@@ -212,9 +237,9 @@
 
                 </tr>
 
-                </template>
+            </template>
 
-            </tbody>
+        </tbody>
 
         </table>
         </div>
@@ -250,7 +275,7 @@
                 <div>
                     <label class="text-sm font-medium">No. Telepon</label>
                     <input type="text" 
-                        x-model="newEmployee.telp"
+                        x-model="newEmployee.no_telepon"
                         class="w-full border rounded-lg px-3 py-2">
                 </div>
 
@@ -265,7 +290,7 @@
                     <label class="text-sm font-medium">Role</label>
                     <select 
                         x-model="newEmployee.role"
-                        @change="newEmployee.departemen = ''"
+                        @change="newEmployee.departemen_id = ''"
                         class="w-full border rounded-lg px-3 py-2">
 
                         <option value="">Pilih Role</option>
@@ -278,12 +303,12 @@
                 <div x-show="newEmployee.role === 'departemen'" x-transition.opacity.duration.200ms>
                     <label class="text-sm font-medium">Departemen</label>
                     <select 
-                        x-model="newEmployee.departemen"
+                        x-model="newEmployee.departemen_id"
                         class="w-full border rounded-lg px-3 py-2">
 
                         <option value="">Pilih Departemen</option>
                         @foreach($departemens as $dept)
-                            <option value="{{ $dept }}">{{ $dept }}</option>
+                            <option value="{{ $dept->id }}">{{ $dept->nama_departemen }}</option>
                         @endforeach
 
                     </select>
@@ -292,7 +317,7 @@
                 <div>
                     <label class="text-sm font-medium">Jenis Kelamin</label>
                     <select 
-                        x-model="newEmployee.gender"
+                        x-model="newEmployee.jenis_kelamin"
                         class="w-full border rounded-lg px-3 py-2">
 
                         <option value="">Pilih Jenis Kelamin</option>
@@ -349,7 +374,7 @@
 
                 <div>
                     <label class="text-sm">No. Telepon</label>
-                    <input type="text" x-model="selectedEmployee.telp"
+                    <input type="text" x-model="selectedEmployee.no_telepon"
                         class="w-full border rounded-lg px-3 py-2">
                 </div>
 
@@ -364,7 +389,7 @@
                     <label class="text-sm">Role</label>
                     <select 
                         x-model="selectedEmployee.role"
-                        @change="selectedEmployee.departemen = ''"
+                        @change="selectedEmployee.departemen_id = ''"
                         class="w-full border rounded-lg px-3 py-2">
 
                         <option value="">Pilih Role</option>
@@ -375,18 +400,18 @@
 
                 <div x-show="selectedEmployee.role === 'departemen'" x-transition.opacity.duration.200ms>
                     <label class="text-sm">Departemen</label>
-                    <select x-model="selectedEmployee.departemen"
+                    <select x-model="selectedEmployee.departemen_id"
                         class="w-full border rounded-lg px-3 py-2">
                         <option value="">Pilih Departemen</option>
                         @foreach($departemens as $dept)
-                            <option value="{{ $dept }}">{{ $dept }}</option>
+                            <option value="{{ $dept->id }}">{{ $dept->nama_departemen }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div>
                     <label class="text-sm">Jenis Kelamin</label>
-                    <select x-model="selectedEmployee.gender"
+                    <select x-model="selectedEmployee.jenis_kelamin"
                         class="w-full border rounded-lg px-3 py-2">
                         <option>Laki-laki</option>
                         <option>Perempuan</option>
@@ -429,21 +454,19 @@
 
             <p><strong>Nama:</strong> <span x-text="selectedEmployee.nama"></span></p>
             <p><strong>ID Pegawai:</strong> <span x-text="selectedEmployee.id_pegawai"></span></p>
-            <p><strong>No. Telp:</strong> <span x-text="selectedEmployee.telp"></span></p>
+            <p><strong>No. Telp:</strong> <span x-text="selectedEmployee.no_telepon"></span></p>
             <p><strong>Email:</strong> <span x-text="selectedEmployee.email"></span></p>
             <p><strong>Jabatan:</strong>
 
             <span
                 x-text="
-                    selectedEmployee.role === 'admin'
-                        ? 'Admin'
-                        : selectedEmployee.role === 'tenant_relation'
+                    selectedEmployee.role === 'tenant_relation'
                             ? 'Tenant Relation'
-                            : selectedEmployee.departemen
+                            : selectedEmployee.departemen?.nama_departemen
                 ">
             </span>
         </p>
-            <p><strong>Jenis Kelamin:</strong> <span x-text="selectedEmployee.gender"></span></p>
+            <p><strong>Jenis Kelamin:</strong> <span x-text="selectedEmployee.jenis_kelamin"></span></p>
             <p><strong>Status:</strong> <span x-text="selectedEmployee.status"></span></p>
 
             <div class="flex justify-end pt-4">
@@ -521,11 +544,11 @@ function karyawanManager(){
         newEmployee:{
             id_pegawai:'',
             nama:'', 
-            telp:'', 
+            no_telepon:'', 
             email:'', 
-            departemen:'',
+            departemen_id:'',
             role:'',
-            gender:'', 
+            jenis_kelamin:'', 
             status:'Aktif'
         },
 
@@ -535,8 +558,10 @@ function karyawanManager(){
             this.employees = data.map(e => ({
                 ...e,
                 id_pegawai: e.nip,
-                departemen: e.departemen, // ✅ FIX
-                gender: e.jenis_kelamin
+                role: e.pengguna?.role,
+                departemen: e.departemen??null,
+                departemen_id: e.departemen_id,
+                jenis_kelamin: e.jenis_kelamin
             }));
         },
         showError(msg){
@@ -565,11 +590,11 @@ function karyawanManager(){
             this.newEmployee = {
                 id_pegawai:'',
                 nama:'',
-                telp:'',
+                no_telepon:'',
                 email:'',
-                departemen:'',
+                departemen_id:'',
                 role:'',
-                gender:'',
+                jenis_kelamin:'',
                 status:'Aktif'
             };
 
@@ -594,7 +619,7 @@ function karyawanManager(){
                 return;
             }
 
-            if(!this.newEmployee.telp){
+            if(!this.newEmployee.no_telepon){
                 this.showError('No. Telepon wajib diisi');
                 return;
             }
@@ -609,12 +634,12 @@ function karyawanManager(){
                 return;
             }
 
-            if(this.newEmployee.role === 'departemen' && !this.newEmployee.departemen){
+            if(this.newEmployee.role === 'departemen' && !this.newEmployee.departemen_id){
                 this.showError('Departemen wajib dipilih');
                 return;
             }
 
-            if(!this.newEmployee.gender){
+            if(!this.newEmployee.jenis_kelamin){
                 this.showError('Jenis kelamin wajib dipilih');
                 return;
             }
@@ -629,11 +654,11 @@ function karyawanManager(){
                 body:JSON.stringify({
                     nip: this.newEmployee.id_pegawai,
                     nama: this.newEmployee.nama,
-                    telp: this.newEmployee.telp,
+                    no_telepon: this.newEmployee.no_telepon,
                     email: this.newEmployee.email,
-                    departemen: this.newEmployee.departemen,
+                    departemen_id: this.newEmployee.departemen_id,
                     role: this.newEmployee.role,
-                    jenis_kelamin: this.newEmployee.gender
+                    jenis_kelamin: this.newEmployee.jenis_kelamin
                 })
             })
             .then(async res => {
@@ -669,11 +694,11 @@ function karyawanManager(){
                     this.newEmployee = {
                         id_pegawai:'',
                         nama:'',
-                        telp:'',
+                        no_telepon:'',
                         email:'',
                         role:'',
                         departemen:'',
-                        gender:'',
+                        jenis_kelamin:'',
                         status:'Aktif'
                     };
 
@@ -688,9 +713,9 @@ function karyawanManager(){
                     let fieldNames = {
                         nip: 'ID Pegawai',
                         nama: 'Nama',
-                        telp: 'No. Telepon',
+                        no_telepon: 'No. Telepon',
                         email: 'Email',
-                        departemen: 'Departemen',
+                        departemen_id: 'Departemen',
                         jenis_kelamin: 'Jenis Kelamin'
                     };
 
@@ -725,11 +750,11 @@ function karyawanManager(){
                 body:JSON.stringify({
                     nip: this.selectedEmployee.id_pegawai,
                     nama: this.selectedEmployee.nama,
-                    telp: this.selectedEmployee.telp,
+                    no_telepon: this.selectedEmployee.no_telepon,
                     email: this.selectedEmployee.email,
-                    departemen: this.selectedEmployee.departemen,
+                    departemen_id: this.selectedEmployee.departemen_id,
                     role: this.selectedEmployee.role,
-                    jenis_kelamin: this.selectedEmployee.gender,
+                    jenis_kelamin: this.selectedEmployee.jenis_kelamin,
                     status: this.selectedEmployee.status
                 })
             })
@@ -761,9 +786,9 @@ function karyawanManager(){
                 let fieldNames = {
                     nip: 'ID Pegawai',
                     nama: 'Nama',
-                    telp: 'No. Telepon',
+                    no_telepon: 'No. Telepon',
                     email: 'Email',
-                    departemen: 'Departemen',
+                    departemen_id: 'Departemen',
                     jenis_kelamin: 'Jenis Kelamin'
                 };
 

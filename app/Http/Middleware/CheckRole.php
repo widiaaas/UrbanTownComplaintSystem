@@ -6,47 +6,80 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
 class CheckRole
 {
-    public function handle(Request $request, Closure $next, ...$roles)
-    {
+    public function handle(
+        Request $request,
+        Closure $next,
+        ...$roles
+    ) {
+
+        /**
+         * =====================================================
+         * BELUM LOGIN
+         * =====================================================
+         */
         if (!Auth::check()) {
+
             return redirect()->route('login');
         }
 
         $user = Auth::user();
 
-        // =====================
-        // ROLE UNIT
-        // =====================
-        if ($user->role === 'unit') {
-            if (in_array('unit', $roles)) {
-                return $next($request);
+        /**
+         * =====================================================
+         * VALIDASI ROLE
+         * =====================================================
+         */
+        if (!in_array($user->role, $roles)) {
+
+            abort(403, 'Unauthorized');
+        }
+
+        /**
+         * =====================================================
+         * VALIDASI DATA KARYAWAN
+         * =====================================================
+         * Khusus:
+         * admin
+         * tenant_relation
+         * departemen
+         */
+        if (
+            in_array(
+                $user->role,
+                ['admin', 'tenant_relation', 'departemen']
+            )
+        ) {
+
+            if (!$user->karyawan) {
+
+                abort(
+                    403,
+                    'Data karyawan tidak ditemukan'
+                );
             }
         }
 
-        // =====================
-        // ROLE KARYAWAN
-        // =====================
-        if ($user->role === 'karyawan') {
+        /**
+         * =====================================================
+         * VALIDASI DEPARTEMEN
+         * =====================================================
+         * Role departemen wajib memiliki departemen
+         */
+        if ($user->role === 'departemen') {
 
-            $karyawan = $user->karyawan;
+            if (
+                !$user->karyawan->departemen_id
+            ) {
 
-            if (!$karyawan) {
-                abort(403, 'Data karyawan tidak ditemukan');
-            }
-
-            if (in_array($karyawan->role, $roles)) {
-                return $next($request);
+                abort(
+                    403,
+                    'Departemen tidak ditemukan'
+                );
             }
         }
 
-        abort(403, 'Unauthorized');
+        return $next($request);
     }
 }

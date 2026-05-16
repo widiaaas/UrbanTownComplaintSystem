@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Karyawan;
 
 class WorkOrder extends Model
 {
@@ -12,15 +13,14 @@ class WorkOrder extends Model
     protected $table = 'work_orders'; 
 
     protected $fillable = [
-        'nomor_wo',
+        'nomor_tiket',
         'keluhan_id',
-        'departemen_tujuan',
+        'departemen_id', 
         'instruksi',
         'status',
         'lokasi',
         'penanggung_jawab_id',
         'taken_at',
-        'laporan',
         'lampiran',
         'tanggal_dibuat',
         'tanggal_selesai',
@@ -48,5 +48,9 @@ class WorkOrder extends Model
     {
         return $this->hasMany(RiwayatPenangananWorkOrder::class, 'work_order_id')
             ->latest('waktu');
+    }
+    public function departemen()
+    {
+        return $this->belongsTo(Departemen::class, 'departemen_id');
     }
 }

@@ -98,7 +98,7 @@
                     <template x-if="filteredWO.length === 0">
                         <tr>
                             <td colspan="6" class="text-center py-4 text-gray-500 italic">
-                                Data Work Order tidak ditemukan
+                                Data Work Order tidak ada
                             </td>
                         </tr>
                     </template>

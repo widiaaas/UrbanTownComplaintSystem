@@ -10,13 +10,12 @@ return new class extends Migration
     {
         Schema::create('riwayat_penanganan_keluhans', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('keluhan_id')->constrained('keluhans')->onDelete('cascade');
             $table->enum('status', ['open', 'on_progress', 'close']);
-            $table->string('judul', 50);
+            $table->string('judul', 100);
             $table->text('deskripsi');
             $table->json('lampiran')->nullable();
             $table->timestamp('waktu');
-            $table->foreignId('keluhan_id')->constrained('keluhans')->onDelete('cascade');
-            $table->foreignId('penanggung_jawab_id')->nullable()->constrained('penggunas')->nullOnDelete();
             $table->timestamps();
 
         });

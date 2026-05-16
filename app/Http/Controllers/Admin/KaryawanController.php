@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
 use App\Models\Pengguna;
+use App\Models\Departemen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -15,19 +16,23 @@ use Illuminate\Support\Facades\Validator;
 
 class KaryawanController extends Controller
 {
-    private array $departemenList = [
-        'Operational',
-        'Engineering',
-        'Finance',
-        'Legal',
-        'Developer'
-    ];
+    
     /**
      * ================== INDEX ==================
      */
     public function index(Request $request)
     {
-        $query = Karyawan::with('user');
+        $query = Karyawan::with([
+            'pengguna',
+            'departemen'
+        ])
+        ->whereHas('pengguna', function ($q) {
+    
+            $q->whereIn('role', [
+                'tenant_relation',
+                'departemen'
+            ]);
+        });
 
         // ================= FILTER NAMA =================
         if ($request->filled('nama')) {
@@ -36,23 +41,44 @@ class KaryawanController extends Controller
 
         // ================= FILTER KATEGORI =================
         if ($request->filled('kategori')) {
+
             $kategori = $request->kategori;
-
+        
+            // TR
             if ($kategori === 'tenant_relation') {
-                $query->where('role', 'tenant_relation');
-            } elseif (str_starts_with($kategori, 'dept:')) {
-                $dept = str_replace('dept:', '', $kategori);
-
-                $query->where('role', 'departemen')
-                    ->where('departemen', $dept);
+        
+                $query->whereHas(
+                    'pengguna',
+                    function ($q) {
+        
+                        $q->where(
+                            'role',
+                            'tenant_relation'
+                        );
+                    }
+                );
+            }
+        
+            // Departemen
+            elseif (str_starts_with($kategori, 'dept_')) {
+        
+                $departemenId = str_replace(
+                    'dept_',
+                    '',
+                    $kategori
+                );
+        
+                $query->where(
+                    'departemen_id',
+                    $departemenId
+                );
             }
         }
-
         // ================= DATA =================
         $karyawans = $query->latest()->get();
 
         // ================= LIST DEPARTEMEN =================
-        $departemens = $this->departemenList;
+        $departemens = Departemen::orderBy('nama_departemen')->get();
 
         return view('admin.karyawan.index', compact('karyawans', 'departemens'));
     }
@@ -62,27 +88,27 @@ class KaryawanController extends Controller
      */
     public function store(Request $request)
     {   
-        $departemenList = $this->departemenList;
+        
 
         $validator = Validator::make($request->all(), [
             'nip' => 'required|string|max:20|unique:karyawans,nip|unique:penggunas,username',
-            'telp' => ['required','regex:/^08[0-9]{8,11}$/'],
-            'nama' => ['required','string','max:100','regex:/^[A-Za-z\s]+$/'],
+            'no_telepon' => ['required','regex:/^08[0-9]{8,11}$/'],
+            'nama' => ['required','string','max:100','regex:/^[A-Za-z\s\.\']+$/'],
             'email' => 'required|email|max:100|unique:karyawans,email|unique:penggunas,username',
 
             // 🔥 ROLE
             'role' => 'required|in:tenant_relation,departemen',
 
             // 🔥 DEPARTEMEN (tidak selalu wajib)
-            'departemen' => [
+            'departemen_id' => [
                 'nullable',
-                Rule::in($departemenList)
+                'exists:departemens_id'
             ],
 
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
         ], [
             'nama.regex' => 'Nama hanya boleh huruf dan spasi.',
-            'telp.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
+            'no_telepon.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
             'email.email' => 'Format email tidak valid.',
         ]);
 
@@ -100,11 +126,11 @@ class KaryawanController extends Controller
             $validated = $validator->validated();
 
             // 🔥 VALIDASI TAMBAHAN (LOGIC BISNIS)
-            if ($validated['role'] === 'departemen' && empty($validated['departemen'])) {
+            if ($validated['role'] === 'departemen' && empty($validated['departemen_id'] ?? null)) {
                 return response()->json([
                     'success' => false,
                     'errors' => [
-                        'departemen' => ['Departemen wajib dipilih']
+                        'departemen_id' => ['Departemen wajib dipilih']
                     ]
                 ], 422);
             }
@@ -115,26 +141,26 @@ class KaryawanController extends Controller
            
 
             // ================= CREATE USER =================
-            $user = Pengguna::create([
+            $pengguna = Pengguna::create([
                 'username' => $username,
                 'password' => Hash::make($password),
-                'role' => 'karyawan',
+                'role' => $validated['role'],
                 'is_active' => true,
                 'must_change_password' => true,
             ]);
 
             // ================= CREATE KARYAWAN =================
             $karyawan = Karyawan::create([
-                'user_id' => $user->id,
+                'pengguna_id' => $pengguna->id,
                 'nip' => $validated['nip'],
                 'nama' => $validated['nama'],
-                'telp' => $validated['telp'],
+                'no_telepon' => $validated['no_telepon'],
                 'email' => $validated['email'],
-                'role' => $validated['role'],
+                
 
                 // 🔥 LOGIC UTAMA
-                'departemen' => $validated['role'] === 'departemen'
-                    ? $validated['departemen']
+                'departemen_id' => $validated['role'] === 'departemen'
+                    ? $validated['departemen_id']
                     : null,
 
                 'jenis_kelamin' => $validated['jenis_kelamin'],
@@ -167,7 +193,15 @@ class KaryawanController extends Controller
      * ================== UPDATE ==================
      */
     public function update(Request $request, Karyawan $karyawan)
-    {
+    {   
+
+        if (
+            $karyawan->pengguna->role === 'admin'
+        ) {
+        
+            abort(403);
+        }
+
         DB::beginTransaction();
 
         try {
@@ -178,17 +212,17 @@ class KaryawanController extends Controller
                     'string',
                     'max:20',
                     Rule::unique('karyawans', 'nip')->ignore($karyawan->id),
-                    Rule::unique('penggunas', 'username')->ignore($karyawan->user_id),
+                    Rule::unique('penggunas', 'username')->ignore($karyawan->pengguna_id),
                 ],
             
                 'nama' => [
                     'required',
                     'string',
                     'max:100',
-                    'regex:/^[A-Za-z\s]+$/'
+                    'regex:/^[A-Za-z\s\.\']+$/'
                 ],
             
-                'telp' => [
+                'no_telepon' => [
                     'required',
                     'regex:/^08[0-9]{8,11}$/'
                 ],
@@ -202,9 +236,8 @@ class KaryawanController extends Controller
             
                 'role' => 'required|in:tenant_relation,departemen',
             
-                'departemen' => [
-                    'nullable',
-                    Rule::in($this->departemenList)
+                'departemen_id' => [
+                    'nullable', 'exists:departemens,id'
                 ],
             
                 'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
@@ -213,11 +246,20 @@ class KaryawanController extends Controller
             
             ], [
                 'nama.regex' => 'Nama hanya boleh huruf dan spasi.',
-                'telp.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
+                'no_telepon.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
             ]);
 
-            $karyawan->user->update([
-                'username' => $validated['nip']
+            if (
+                $validated['role'] !== 'departemen'
+            ) {
+            
+                $validated['departemen_id'] = null;
+            }
+
+            $karyawan->pengguna->update([
+                'username' => $validated['nip'],
+                'role' => $validated['role'],
+                'is_active' => $validated['status'] === 'Aktif'
             ]);
             
             $karyawan->update($validated);
@@ -248,50 +290,65 @@ class KaryawanController extends Controller
         }
     }
 
-    /**
-     * ================== DELETE ==================
-     */
-    public function destroy(Karyawan $karyawan)
-    {
-        DB::beginTransaction();
+    // /**
+    //  * ================== DELETE ==================
+    //  */
+    // public function destroy(Karyawan $karyawan)
+    // {
+    //     if (
+    //         $karyawan->pengguna->role === 'admin'
+    //     ) {
+        
+    //         abort(403);
+    //     }
 
-        try {
-            // hapus akun login
-            $karyawan->user()->delete();
+    //     DB::beginTransaction();
 
-            // hapus karyawan
-            $karyawan->delete();
+    //     try {
+    //         // hapus akun login
+    //         $karyawan->pengguna()->delete();
 
-            DB::commit();
+    //         // hapus karyawan
+    //         $karyawan->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Karyawan berhasil dihapus'
-            ]);
+    //         DB::commit();
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Karyawan berhasil dihapus'
+    //         ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * ================== RESET PASSWORD ==================
      */
     public function resetPassword(Karyawan $karyawan)
     {
+        if (
+            $karyawan->pengguna->role === 'admin'
+        ) {
+        
+            abort(403);
+        }
+
         DB::beginTransaction();
 
         try {
             $newPassword = 'Tmp-' . strtoupper(Str::random(5));
 
-            $karyawan->user->update([
+            $karyawan->pengguna->update([
                 'password' => Hash::make($newPassword),
-                'must_change_password' => true
+                'must_change_password' => true,
+                'remember_token' => Str::random(60)
             ]);
 
             DB::commit();

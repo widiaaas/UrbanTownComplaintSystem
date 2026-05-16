@@ -73,31 +73,69 @@
                     <th class="px-4 py-2">No</th>
                     <th class="px-4 py-2">Nama</th>
                     <th class="px-4 py-2">Unit</th>
-                    <th class="px-4 py-2">Email</th>
-                    <th class="px-4 py-2">Telepon</th>
                     <th class="px-4 py-2">Status</th>
                     <th class="px-4 py-2">Aksi</th>
                 </tr>
             </thead>
 
             <tbody>
-                <template x-for="(p, index) in penghuni" :key="p.id">
-                <tr class="border-t hover:bg-gray-50 transition">
-                    <td class="px-4 py-3" x-text="index+1"></td>
-                    <td class="px-4 py-3" x-text="p.nama"></td>
-                    <td class="px-4 py-3" x-text="p.unit?.no_unit ?? '-'"></td>
-                    <td class="px-4 py-3" x-text="p.email"></td>
-                    <td class="px-4 py-3" x-text="p.telepon"></td>
-                    <td class="px-4 py-3">
-                        <span x-show="p.status=='Aktif'" class="text-green-600 font-medium">Aktif</span>
-                        <span x-show="p.status=='Nonaktif'" class="text-red-600 font-medium">Nonaktif</span>
-                    </td>
+                {{-- DATA TIDAK ADA --}}
+                <template x-if="!penghuni.length">
 
-                    <td class="space-x-2">
-                        <button @click="edit(p)" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Edit</button>
-                        <button @click="hapus(p)" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Hapus</button>
-                    </td>
-                </tr>
+                    <tr>
+                        <td
+                            colspan="7"
+                            class="px-4 py-4 text-center text-gray-400 italic"
+                        >
+                            Data penghuni tidak tersedia
+                        </td>
+                    </tr>
+
+                </template>
+
+                {{-- DATA ADA --}}
+                <template
+                    x-for="(p, index) in penghuni"
+                    :key="p.id"
+                >
+
+                    <tr class="border-t hover:bg-gray-50 transition">
+                        <td class="px-4 py-3" x-text="index+1"></td>
+                        <td class="px-4 py-3" x-text="p.nama"></td>
+                        <td class="px-4 py-3" x-text=" p.riwayat_hunian?.find( r => r.status === 'Aktif')?.unit?.nomor_unit ?? '-'" ></td>
+                        <td class="px-4 py-3">
+                            <span
+                            x-show="
+                                p.riwayat_hunian?.some(
+                                    r => r.status === 'Aktif'
+                                )
+                            "
+                                class="text-green-600 font-medium">
+                                Aktif
+                            </span>
+                            <span
+                            x-show="
+                                    !p.riwayat_hunian?.some(
+                                        r => r.status === 'Aktif'
+                                    )
+                                "
+                                class="text-red-600 font-medium">
+                                Nonaktif
+                            </span>
+                        </td>
+
+                        <td class="space-x-2">
+
+                            <button @click="detail(p)" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">
+                                Detail
+                            </button>
+
+                            <button @click="edit(p)"  class="px-2 py-1 bg-blue-500 text-white rounded text-xs">
+                                Edit
+                            </button>
+
+                        </td>
+                    </tr>
                 </template>
             </tbody>
         </table>
@@ -133,14 +171,6 @@
                         @foreach($jenisKelamin as $jk)
                             <option value="{{ $jk }}">{{ $jk }}</option>
                         @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Status</label>
-                    <select x-model="newPenghuni.status" class="w-full border px-3 py-2 rounded">
-                        <option value="Aktif">Aktif</option>
-                        <option value="Nonaktif">Nonaktif</option>
                     </select>
                 </div>
 
@@ -186,15 +216,6 @@
                         @endforeach
                     </select>
                 </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Status</label>
-                    <select x-model="selected.status" class="w-full border px-3 py-2 rounded">
-                        <option value="Aktif">Aktif</option>
-                        <option value="Nonaktif">Nonaktif</option>
-                    </select>
-                </div>
-
             </div>
 
             <div class="flex justify-end gap-2 mt-4">
@@ -205,6 +226,62 @@
         </div>
     </div>
 
+    {{-- MODAL DETAIL --}}
+    <div
+        x-show="openDetail"
+        x-cloak
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+
+            <h2 class="text-lg font-semibold mb-4">
+                Detail Penghuni
+            </h2>
+
+            <div class="space-y-3 text-sm">
+
+                <div>
+                    <p class="text-gray-500">Nama</p>
+                    <p class="font-medium" x-text="selected.nama"></p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Email</p>
+                    <p class="font-medium" x-text="selected.email || '-'"></p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Telepon</p>
+                    <p class="font-medium" x-text="selected.telepon"></p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Jenis Kelamin</p>
+                    <p class="font-medium" x-text="selected.jenis_kelamin"></p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Status</p>
+                    <p class="font-medium" x-text="selected.status"></p>
+                </div>
+
+            </div>
+
+            <div class="flex justify-end mt-6">
+
+                <button
+                    @click="openDetail = false"
+                    class="px-4 py-2 border rounded"
+                >
+                    Tutup
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -213,6 +290,7 @@ function penghuniManager(){
         penghuni:[],
         openCreate:false,
         openEdit:false,
+        openDetail:false,
 
         newPenghuni:{
             nama:'',
@@ -265,6 +343,11 @@ function penghuniManager(){
 
             });
             },
+
+        detail(p){
+            this.selected = p;
+            this.openDetail = true;
+        },
 
         // ================= STORE =================
         store(){
@@ -378,7 +461,7 @@ function penghuniManager(){
 
             this.errors = {};
 
-            fetch(`/penghuni/update/${this.selected.id}`,{
+            fetch(`/admin/penghuni/update/${this.selected.id}`,{
                 method:'PUT',
                 headers:{
                     'Content-Type':'application/json',
@@ -418,35 +501,6 @@ function penghuniManager(){
             });
         },
 
-        // ================= DELETE =================
-        hapus(p){
-            Swal.fire({
-                title: 'Hapus?',
-                text: 'Data tidak bisa dikembalikan!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            }).then(result=>{
-                if(!result.isConfirmed) return;
-
-                fetch(`/penghuni/delete/${p.id}`,{
-                    method:'DELETE',
-                    headers:{
-                        'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
-                    }
-                })
-                .then(res=>res.json())
-                .then(res=>{
-                    if(res.success){
-                        Swal.fire('Berhasil','Data dihapus','success')
-                        .then(()=> location.reload());
-                    } else {
-                        Swal.fire('Error','Gagal hapus','error');
-                    }
-                });
-            });
-        }
     }
 }
 </script>

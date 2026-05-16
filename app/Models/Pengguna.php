@@ -9,8 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\Karyawan;
 use App\Models\Unit;
 use App\Models\Keluhan;
-use App\Models\WorkOrder;
-use App\Models\KnowledgeBase;
+use App\Models\WorkOrder; 
 
 class Pengguna extends Authenticatable 
 {
@@ -51,12 +50,12 @@ class Pengguna extends Authenticatable
     // Relationships
     public function karyawan()
     {
-        return $this->hasOne(Karyawan::class, 'user_id');
+        return $this->hasOne(Karyawan::class, 'pengguna_id');
     }
 
     public function unit()
     {
-        return $this->hasOne(Unit::class, 'user_id');
+        return $this->hasOne(Unit::class, 'pengguna_id');
     }
 
     public function keluhanDiambil()

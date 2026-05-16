@@ -10,15 +10,16 @@ return new class extends Migration
     {
         Schema::create('keluhans', function (Blueprint $table) {
             $table->id();
-            $table->string('ticket', 20)->unique();
+            $table->string('nomor_tiket', 20)->unique();
             $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
             $table->foreignId('penghuni_id')->constrained('penghunis')->onDelete('cascade');
-            $table->string('judul', 50);
+            $table->string('judul', 100);
             $table->text('deskripsi');
             $table->enum('status', ['unassigned', 'open', 'on_progress', 'close'])->default('unassigned');
-            $table->foreignId('penanggung_jawab_id')->nullable()->constrained('penggunas')->nullOnDelete();
+            $table->foreignId('penanggung_jawab_id')->nullable()->constrained('karyawans')->nullOnDelete();
             $table->timestamp('taken_at')->nullable();
             $table->text('keputusan')->nullable();
+            $table->timestamp('tanggal_pengajuan')->nullable();
             $table->timestamp('tanggal_keputusan')->nullable();
             $table->json('lampiran_pengajuan')->nullable();
             $table->json('lampiran_keputusan')->nullable();

@@ -191,6 +191,23 @@ function keluhanForm() {
 
         // ================= SUBMIT =================
         async submitForm() {
+            const confirm = await Swal.fire({
+                icon: 'question',
+                title: 'Kirim Keluhan?',
+                text:
+                    'Pastikan data keluhan sudah benar',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Kirim',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+                });
+
+                if (!confirm.isConfirmed) {
+
+                    return;
+                }
+
+                this.submitting = true;
             this.submitting = true;
 
             let formData = new FormData();

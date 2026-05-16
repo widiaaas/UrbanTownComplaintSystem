@@ -17,6 +17,7 @@
             <thead class="bg-gray-100 text-gray-700">
                 <tr>
                     <th class="px-5 py-3 text-center">No</th>
+                    <th class="px-5 py-3 text-center">Nomor WO</th>
                     <th class="px-5 py-3 text-center">Unit</th>
                     <th class="px-5 py-3 text-center">Tanggal</th>
                     <th class="px-5 py-3 text-center">Instruksi</th>
@@ -26,14 +27,15 @@
             <tbody>
                 <template x-for="wo in dataWOMasuk" :key="wo.id">
                     <tr class="border-t hover:bg-gray-50">
-                        <td class="px-5 py-3" x-text="wo.no"></td>
+                        <td class="px-5 py-3 text-center"x-text="dataWOMasuk.indexOf(wo) + 1"></td>
+                        <td class="px-5 py-3 font-medium"x-text="wo.no"></td>
                         <td class="px-5 py-3 font-medium" x-text="wo.unit"></td>
                         <td class="px-5 py-3" x-text="wo.tanggal"></td>
                         <td class="px-5 py-3" x-text="wo.instruksi"></td>
                         <td class="px-5 py-3 text-center space-x-1">
                             {{-- Tombol Ambil WO --}}
                             <button 
-                                x-show="!wo.penanggungJawab" 
+                                x-show="!wo.diambil" 
                                 @click="ambilWO(wo)"
                                 class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
                                 Ambil WO
@@ -51,7 +53,7 @@
 
                 <template x-if="dataWOMasuk.length === 0">
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-gray-500 italic">
+                        <td colspan="6" class="text-center py-4 text-gray-500 italic">
                             Tidak ada Work Order baru
                         </td>
                     </tr>
@@ -77,7 +79,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 rounded-lg p-4">
                     <div class="space-y-2">
                         <p><strong>No. Unit:</strong> <span x-text="selected.unit"></span></p>
-                        <p><strong>No. WO / Tiket:</strong> <span x-text="selected.id"></span></p>
+                        <p><strong>No. WO / Tiket:</strong> <span x-text="selected.no"></span></p>
                         <p><strong>Requestor / Penghuni:</strong> <span x-text="selected.requestor ?? selected.penghuni"></span></p>
                     </div>
                     <div class="space-y-2">
@@ -169,7 +171,7 @@ function workOrderApp(){
 
         Swal.fire({
             title: 'Ambil Work Order?',
-            text: `Work Order ${wo.id} akan menjadi tanggung jawab Anda`,
+            text: `Work Order ${wo.no} akan menjadi tanggung jawab Anda`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#16a34a',
@@ -192,14 +194,34 @@ function workOrderApp(){
                 fetch(`/work-order/${wo.id}/ambil`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Accept': 'application/json',
+
+                        'X-CSRF-TOKEN':
+                            document.querySelector(
+                                'meta[name="csrf-token"]'
+                            ).content
                     }
                 })
                 .then(async res => {
-                    const data = await res.json();
-                    if (!res.ok) throw data;
+                    const text = await res.text();
+                    let data = {};
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        console.error(text);
+                        throw {
+                            message:
+                                'Terjadi error pada server'
+                        };
+                    }
+
+                    if (!res.ok) {
+
+                        throw data;
+                    }
+
                     return data;
-                })
+                    })
                 .then(res => {
 
                     Swal.close();

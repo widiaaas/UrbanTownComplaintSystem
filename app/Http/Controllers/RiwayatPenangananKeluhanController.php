@@ -2,79 +2,238 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Keluhan;
 use App\Models\RiwayatPenangananKeluhan;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class RiwayatPenangananKeluhanController extends Controller
 {
-    public function simpanPenanganan(Request $request, $id)
-    {
+    public function simpanPenanganan(
+        Request $request,
+        $id
+    ) {
         try {
-            // 🔥 VALIDASI
-            $validator = Validator::make($request->all(), [
-                'judul' => 'required|string',
-                'deskripsi' => 'required|string',
-            ]);
 
+            /**
+             * ============================================
+             * VALIDASI
+             * ============================================
+             */
+            $validator = Validator::make(
+                $request->all(),
+
+                [
+
+                    'judul' => [
+                        'required',
+                        'string',
+                        'max:100'
+                    ],
+
+                    'deskripsi' => [
+                        'required',
+                        'string',
+                        'min:5'
+                    ],
+
+                    'lampiran' => [
+                        'nullable',
+                        'array'
+                    ],
+
+                    'lampiran.*' => [
+                        'file',
+                        'mimes:jpg,jpeg,png,pdf',
+                        'max:1024'
+                    ]
+
+                ],
+
+                [
+
+                    'judul.required' =>
+                        'Judul wajib diisi',
+
+                    'judul.max' =>
+                        'Judul maksimal 100 karakter',
+
+                    'deskripsi.required' =>
+                        'Deskripsi wajib diisi',
+
+                    'deskripsi.min' =>
+                        'Deskripsi minimal 5 karakter',
+
+                    'lampiran.*.mimes' =>
+                        'Lampiran hanya boleh JPG, PNG, atau PDF',
+
+                    'lampiran.*.max' =>
+                        'Ukuran file maksimal 1MB',
+                ]
+            );
+
+            // VALIDATION ERROR
             if ($validator->fails()) {
+
                 return response()->json([
-                    'message' => $validator->errors()->first()
+
+                    'errors' =>
+                        $validator->errors()
+
                 ], 422);
             }
 
-            // 🔥 AUTH
+            /**
+             * ============================================
+             * AUTH
+             * ============================================
+             */
             $user = auth()->user();
+
             if (!$user) {
+
                 return response()->json([
-                    'message' => 'User tidak login'
+
+                    'message' =>
+                        'User tidak login'
+
                 ], 401);
             }
 
-            // 🔥 AMBIL KELUHAN
+            $karyawan = $user->karyawan;
+
+            if (!$karyawan) {
+
+                return response()->json([
+
+                    'message' =>
+                        'Data karyawan tidak ditemukan'
+
+                ], 404);
+            }
+
+            /**
+             * ============================================
+             * AMBIL KELUHAN
+             * ============================================
+             */
             $keluhan = Keluhan::findOrFail($id);
 
+            /**
+             * ============================================
+             * VALIDASI PENANGGUNG JAWAB
+             * ============================================
+             */
+            if (
+                $keluhan->penanggung_jawab_id !==
+                $karyawan->id
+            ) {
+
+                return response()->json([
+
+                    'message' =>
+                        'Anda tidak memiliki akses ke keluhan ini'
+
+                ], 403);
+            }
+
+            /**
+             * ============================================
+             * UPLOAD FILE
+             * ============================================
+             */
             $lampiran = [];
 
             if ($request->hasFile('lampiran')) {
-                foreach ($request->file('lampiran') as $file) {
+
+                foreach (
+                    $request->file('lampiran')
+                    as $file
+                ) {
+
                     if ($file->isValid()) {
-                        $lampiran[] = $file->store('keluhan_lampiran', 'public');
+
+                        $lampiran[] = $file->store(
+                            'keluhan_lampiran',
+                            'public'
+                        );
                     }
                 }
             }
 
-            // 🔥 SIMPAN RIWAYAT (SAMA KAYAK WO)
-            $riwayat = RiwayatPenangananKeluhan::create([
-                'keluhan_id' => $keluhan->id,
-                'status' => $keluhan->status, // 🔥 ambil dari keluhan
-                'judul' => $request->judul,
-                'deskripsi' => $request->deskripsi,
-                'lampiran' => $lampiran,
-                'penanggung_jawab_id' => $user->id,
-                'waktu' => now()
-            ]);
+            /**
+             * ============================================
+             * SIMPAN RIWAYAT
+             * ============================================
+             */
+            $riwayat =
+                RiwayatPenangananKeluhan::create([
 
+                    'keluhan_id' =>
+                        $keluhan->id,
+
+                    'status' =>
+                        $keluhan->status,
+
+                    'judul' =>
+                        trim($request->judul),
+
+                    'deskripsi' =>
+                        trim($request->deskripsi),
+
+                    'lampiran' =>
+                        $lampiran,
+
+                    'waktu' =>
+                        now(),
+                ]);
+
+            /**
+             * ============================================
+             * RESPONSE
+             * ============================================
+             */
             return response()->json([
+
                 'success' => true,
-                'message' => 'Penanganan berhasil disimpan',
+
+                'message' =>
+                    'Penanganan berhasil disimpan',
+
                 'data' => [
-                    'id' => $riwayat->id,
-                    'judul' => $riwayat->judul,
-                    'deskripsi' => $riwayat->deskripsi,
-                    'status' => $riwayat->status,
-                    'waktu' => $riwayat->waktu->format('d-m-Y H:i'),
-                    'lampiran' => $riwayat->lampiran,
-                    'penanggung_jawab' => $user->nama ?? null
+
+                    'id' =>
+                        $riwayat->id,
+
+                    'judul' =>
+                        $riwayat->judul,
+
+                    'deskripsi' =>
+                        $riwayat->deskripsi,
+
+                    'status' =>
+                        $riwayat->status,
+
+                    'waktu' =>
+                        optional(
+                            $riwayat->waktu
+                        )->format('d-m-Y H:i'),
+
+                    'lampiran' =>
+                        $riwayat->lampiran ?? [],
+
+                    'penanggung_jawab' =>
+                        $karyawan->nama
                 ],
-                
             ]);
 
         } catch (\Throwable $e) {
+
             return response()->json([
-                'error' => $e->getMessage(),
-                'line' => $e->getLine()
+
+                'message' =>
+                    $e->getMessage()
+
             ], 500);
         }
     }

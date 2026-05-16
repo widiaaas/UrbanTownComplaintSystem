@@ -68,7 +68,7 @@
                     <template x-for="(k, index) in filteredKeluhan" :key="k.id">
                         <tr class="border-t hover:bg-gray-50">
                             <td class="px-5 py-3 text-center" x-text="index + 1"></td>
-                            <td class="px-5 py-3 text-center font-medium" x-text="k.ticket"></td>
+                            <td class="px-5 py-3 text-center font-medium" x-text="k.nomor_tiket"></td>
                             <td class="px-5 py-3 text-center" x-text="k.unit"></td>
                             <td class="px-5 py-3 text-center" x-text="k.waktu"></td>
                             <td class="px-5 py-3 text-center" x-text="k.penghuni"></td>
@@ -128,7 +128,7 @@ function penangananApp() {
                 const search = this.search.toLowerCase();
 
                 const matchSearch =
-                    k.ticket.toLowerCase().includes(search) ||
+                    k.nomor_tiket.toLowerCase().includes(search) ||
                     k.unit.toLowerCase().includes(search) ||
                     k.penghuni.toLowerCase().includes(search);
 

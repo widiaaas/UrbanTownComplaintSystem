@@ -3,69 +3,83 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use App\Models\Pengguna;
+use Illuminate\Support\Facades\Hash;
 
 class PenggunaSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        // Karyawan
+        /**
+         * =====================================================
+         * ADMIN
+         * =====================================================
+         */
         Pengguna::create([
-            'username' => 'admin',
-            'password' => Hash::make('password123'),
-            'role' => 'karyawan',
+
+            'username' => 'ADM001',
+
+            'password' => Hash::make('password'),
+
+            'role' => 'admin',
+
             'is_active' => true,
-            'must_change_password' => false
+
+            'must_change_password' => false,
         ]);
 
+        /**
+         * =====================================================
+         * TENANT RELATION
+         * =====================================================
+         */
         Pengguna::create([
-            'username' => 'tr1',
-            'password' => Hash::make('password123'),
-            'role' => 'karyawan',
+
+            'username' => 'TR001',
+
+            'password' => Hash::make('password'),
+
+            'role' => 'tenant_relation',
+
             'is_active' => true,
-            'must_change_password' => false
+
+            'must_change_password' => false,
         ]);
 
+        /**
+         * =====================================================
+         * STAFF DEPARTEMEN ENGINEERING
+         * =====================================================
+         */
         Pengguna::create([
-            'username' => 'eng1',
-            'password' => Hash::make('password123'),
-            'role' => 'karyawan',
+
+            'username' => 'ENG001',
+
+            'password' => Hash::make('password'),
+
+            'role' => 'departemen',
+
             'is_active' => true,
-            'must_change_password' => false
+
+            'must_change_password' => false,
         ]);
 
+        /**
+         * =====================================================
+         * UNIT
+         * =====================================================
+         */
         Pengguna::create([
-            'username' => 'ops1',
-            'password' => Hash::make('password123'),
-            'role' => 'karyawan',
-            'is_active' => true,
-            'must_change_password' => false
-        ]);
 
-        // Unit
-        Pengguna::create([
-            'username' => 'A-101',
-            'password' => Hash::make('password123'),
+            'username' => 'A-1201',
+
+            'password' => Hash::make('password'),
+
             'role' => 'unit',
-            'is_active' => true,
-            'must_change_password' => false
-        ]);
 
-        Pengguna::create([
-            'username' => 'B-205',
-            'password' => Hash::make('password123'),
-            'role' => 'unit',
             'is_active' => true,
-            'must_change_password' => false
-        ]);
 
-        Pengguna::create([
-            'username' => 'C-310',
-            'password' => Hash::make('password123'),
-            'role' => 'unit',
-            'is_active' => true,
-            'must_change_password' => false
+            'must_change_password' => false,
         ]);
     }
 }
