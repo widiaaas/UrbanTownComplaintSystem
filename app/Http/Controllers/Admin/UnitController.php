@@ -16,10 +16,23 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class UnitController extends Controller
-{
-    /**
-     * ================= INDEX =================
-     */
+{   
+
+    // GENERATE PASSWORD
+    private function generatePassword()
+    {
+        $chars =
+            'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $random = '';
+
+        for ($i = 0; $i < 6; $i++) {
+            $random .=$chars[rand(0, strlen($chars) - 1)];
+        }
+        return 'APT-' . $random;
+    }
+    
+
+    // INDEX
     public function index(Request $request)
     {
         $query = Unit::with([
@@ -27,21 +40,15 @@ class UnitController extends Controller
             'pengguna'
         ]);
 
-        /**
-         * ================= SEARCH =================
-         */
+        // SEARCH
         if ($request->filled('search')) {
-
             $search = trim($request->search);
-
             $query->where(function ($q) use ($search) {
-
                 $q->where(
                     'nomor_unit',
                     'LIKE',
                     "%{$search}%"
                 )
-
                 ->orWhere(
                     'gedung',
                     'LIKE',
@@ -50,38 +57,29 @@ class UnitController extends Controller
             });
         }
 
-        /**
-         * ================= FILTER LANTAI =================
-         */
+        // FILTER LANTAI 
         if ($request->filled('lantai')) {
-
             $query->where(
                 'lantai',
                 $request->lantai
             );
         }
-
         $units = $query
             ->latest()
             ->get();
 
-        /**
-         * ================= AJAX =================
-         */
+        // AJAX
         if ($request->ajax()) {
-
             return response()->json($units);
         }
-
         return view(
             'admin.units.index',
             compact('units')
         );
     }
 
-    /**
-     * ================= GET AVAILABLE PENGHUNI =================
-     */
+    
+    // GET AVAILABLE PENGHUNI 
     public function getAvailablePenghuni()
     {
         return Penghuni::whereDoesntHave('riwayatHunian',
@@ -95,88 +93,44 @@ class UnitController extends Controller
             ->get();
     }
 
-    /**
-     * ================= STORE =================
-     */
+
+    // STORE
     public function store(Request $request)
     {
         try {
-
             $validated = $request->validate([
-
-                'nomor_unit' => [
-
-                    'required',
-
-                    'string',
-
-                    'max:15',
-
+                'nomor_unit' => ['required','string','max:15',
                     Rule::unique(
                         'units',
                         'nomor_unit'
-                    )->whereNull('deleted_at')
-                ],
-
-                'gedung' => [
-                    'required',
-                    'string',
-                    'regex:/^Tower\s[A-Z]$/'
-                ],
-
-                'lantai' => [
-                    'required',
-                    'integer',
-                    'min:1',
-                    'max:30'
-                ],
-
-                'nomor_kamar' => [
-                    'required',
-                    'integer',
-                    'min:1',
-                    'max:9999'
-                ],
+                    )->whereNull('deleted_at')],
+                'gedung' => ['required','string','regex:/^Tower\s[A-Z]$/'],
+                'lantai' => [ 'required','integer', 'min:1','max:30'],
+                'nomor_kamar' => ['required', 'integer','min:1', 'max:9999'],
 
             ], [
 
-                'nomor_unit.unique' =>
-                    'Nomor unit sudah terdaftar.',
-
-                'gedung.regex' =>
-                    'Format gedung harus seperti Tower A.',
-
-                'lantai.min' =>
-                    'Lantai minimal 1.',
-
-                'lantai.max' =>
-                    'Lantai maksimal 30.',
-
-                'nomor_kamar.min' =>
-                    'Nomor kamar minimal 1.',
+                'nomor_unit.unique' => 'Nomor unit sudah terdaftar.',
+                'gedung.regex' =>'Format gedung harus seperti Tower A.',
+                'lantai.min' =>'Lantai minimal 1.',
+                'lantai.max' =>'Lantai maksimal 30.',
+                'nomor_kamar.min' => 'Nomor kamar minimal 1.',
             ]);
 
-            /**
-             * =====================================================
-             * VALIDASI GEDUNG DARI NOMOR UNIT
-             * =====================================================
-             */
+
+            //validasi gedung dr nomor unit
             $nomorUnit = strtoupper(
                 trim($validated['nomor_unit'])
             );
 
             if (!preg_match('/^[A-Z]/', $nomorUnit)) {
-
                 throw ValidationException::withMessages([
-
-                    'nomor_unit' => [
-                        'Nomor unit harus diawali huruf.'
+                    'nomor_unit' => ['Nomor unit harus diawali huruf.'
                     ]
                 ]);
             }
 
             $prefix = substr($nomorUnit, 0, 1);
-
             $expectedGedung =
                 'Tower ' . $prefix;
 
@@ -184,21 +138,15 @@ class UnitController extends Controller
                 $validated['gedung'] !==
                 $expectedGedung
             ) {
-
                 throw ValidationException::withMessages([
-
-                    'gedung' => [
-                        "Gedung harus sesuai dengan nomor unit ({$expectedGedung})."
+                    'gedung' => ["Gedung harus sesuai dengan nomor unit ({$expectedGedung})."
                     ]
                 ]);
             }
 
         } catch (ValidationException $e) {
-
             return response()->json([
-
                 'success' => false,
-
                 'errors' => $e->errors()
 
             ], 422);
@@ -207,83 +155,39 @@ class UnitController extends Controller
         try {
 
             return DB::transaction(function () use ($validated) {
+                $password = $this->generatePassword();
 
-                /**
-                 * =================================================
-                 * PASSWORD RANDOM
-                 * =================================================
-                 */
-                $password = Str::random(8);
-
-                /**
-                 * =================================================
-                 * CREATE PENGGUNA
-                 * =================================================
-                 */
+                // buat pengguna
                 $pengguna = Pengguna::create([
-
-                    'username' =>
-                        $validated['nomor_unit'],
-
-                    'password' =>
-                        Hash::make($password),
-
+                    'username' =>$validated['nomor_unit'],
+                    'password' =>Hash::make($password),
                     'role' => 'unit',
-
                     'is_active' => true,
-
                     'must_change_password' => true,
                 ]);
 
-                /**
-                 * =================================================
-                 * CREATE UNIT
-                 * =================================================
-                 */
+                // Buat unit
                 $unit = Unit::create([
-
-                    'pengguna_id' =>
-                        $pengguna->id,
-
-                    'nomor_unit' =>
-                        strtoupper(
-                            $validated['nomor_unit']
-                        ),
-
-                    'gedung' =>
-                        $validated['gedung'],
-
-                    'lantai' =>
-                        $validated['lantai'],
-
-                    'nomor_kamar' =>
-                        $validated['nomor_kamar'],
-
+                    'pengguna_id' =>$pengguna->id,
+                    'nomor_unit' =>strtoupper($validated['nomor_unit']),
+                    'gedung' =>$validated['gedung'],
+                    'lantai' =>$validated['lantai'],
+                    'nomor_kamar' => $validated['nomor_kamar'],
                     'status' => 'Aktif',
                 ]);
 
                 return response()->json([
-
                     'success' => true,
-
-                    'message' =>
-                        'Unit berhasil ditambahkan',
-
-                    'unit' =>
-                        $unit->load('pengguna'),
-
+                    'message' =>'Unit berhasil ditambahkan',
+                    'unit' =>$unit->load('pengguna'),
                     'password' => $password,
                 ]);
             });
 
         } catch (\Throwable $e) {
-
             return response()->json([
-
                 'success' => false,
-
                 'message' => $e->getMessage()
-
             ], 500);
         }
     }
@@ -458,7 +362,7 @@ class UnitController extends Controller
     {
         return DB::transaction(function () use ($unit) {
 
-            $newPassword = Str::random(8);
+            $newPassword = $this->generatePassword();
 
             $unit->pengguna->update([
 
@@ -566,7 +470,7 @@ class UnitController extends Controller
              * RESET PASSWORD LOGIN UNIT
              * =================================================
              */
-            $passwordBaru = Str::random(8);
+            $passwordBaru = $this->generatePassword();
 
             $unit->pengguna->update([
 

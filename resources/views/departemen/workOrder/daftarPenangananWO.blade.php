@@ -22,7 +22,7 @@
             <input 
                 type="text"
                 x-model="search"
-                placeholder="Cari no WO / unit..."
+                placeholder="Cari nomor_tiket WO / unit..."
                 class="w-full mt-1 border rounded-lg px-3 py-2">
         </div>
 
@@ -67,7 +67,7 @@
                     <template x-for="(wo, index) in filteredWO" :key="wo.id">
                         <tr class="border-t hover:bg-gray-50">
                         <td class="px-5 py-3 text-center" x-text="index + 1"></td>
-                            <td class="px-5 py-3 text-center font-medium" x-text="wo.no"></td>
+                            <td class="px-5 py-3 text-center font-medium" x-text="wo.nomor_tiket"></td>
                             <td class="px-5 py-3 text-center" x-text="wo.unit"></td>
                             <td class="px-5 py-3 text-center" x-text="wo.tanggal"></td>
                             <td class="px-5 py-3 text-center">
@@ -127,7 +127,7 @@ function penangananWOApp() {
                 const search = this.search.toLowerCase();
 
                 const matchSearch =
-                    (wo.no || '').toLowerCase().includes(search) ||
+                    (wo.nomor_tiket || '').toLowerCase().includes(search) ||
                     (wo.unit || '').toLowerCase().includes(search);
 
                 const matchStatus =

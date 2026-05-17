@@ -80,25 +80,24 @@ class KeluhanController extends Controller
         }
 
         // ================= GENERATE TICKET =================
-        $noUnit = $unit->nomor_unit;
+        $tahun = date('Y');
 
-        $lastKeluhan = Keluhan::where('unit_id', $unit->id)
+        //hps spasi
+        $kodeUnit = strtoupper(str_replace(' ', '', $unit->nomor_unit));
+        // ambil tahun
+        $lastKeluhan = Keluhan::whereYear('created_at',$tahun)
             ->latest()
             ->first();
 
-        if ($lastKeluhan && $lastKeluhan->nomor_tiket) {
-            // ambil angka terakhir dari nomor_tiket (4 digit terakhir)
-            $lastNumber = (int) substr($lastKeluhan->nomor_tiket, -4);
-            $newNumber = $lastNumber + 1;
+        if ($lastKeluhan && preg_match('/(\d+)$/',$lastKeluhan->nomor_tiket,$matches)) {
+            $newNumber =(int) $matches[1] + 1;
         } else {
             $newNumber = 1;
         }
 
-        // format jadi 0001
-        $urutan = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        $urutan = str_pad( $newNumber,4,'0',STR_PAD_LEFT);
+        $nomor_tiket ='KEL-' .$tahun .'-' .$kodeUnit .'-' .$urutan;
 
-        // hasil nomor_tiket
-        $nomor_tiket = 'KEL/' . $noUnit . '/' . $urutan;
 
         // ================= SIMPAN =================
         $keluhan = Keluhan::create([
@@ -122,69 +121,49 @@ class KeluhanController extends Controller
     public function riwayat()
     {
         $user = auth()->user();
-
         $unit = $user->unit;
 
         if (!$unit) {
-
             abort(404, 'Unit tidak ditemukan');
         }
 
-        /**
-         * ============================================
-         * RIWAYAT HUNIAN AKTIF
-         * ============================================
-         */
-        $riwayatAktif = $unit->penghuniAktif;
+        // ambil penghuni aktif
+        $riwayatAktif = $unit->riwayatHunian()
+            ->with('penghuni')
+            ->where('status', 'Aktif')
+            ->latest()
+            ->first();
 
-        if (
-            !$riwayatAktif ||
-            !$riwayatAktif->penghuni
-        ) {
-
+        // kalo gd penghuni
+        if (!$riwayatAktif ||!$riwayatAktif->penghuni) {
             $keluhan = collect();
-
             return view(
                 'penghuni.riwayatKeluhan',
                 compact('keluhan')
             );
         }
 
-        /**
-         * ============================================
-         * PENGHUNI AKTIF
-         * ============================================
-         */
+        // penghuni saat ini 
         $penghuni = $riwayatAktif->penghuni;
 
-        /**
-         * ============================================
-         * KELUHAN MILIK PENGHUNI
-         * PADA UNIT INI
-         * ============================================
-         */
+        // utuk keluha unit ini dan penghuni skrg
         $keluhan = Keluhan::with([
                 'riwayatPenanganan',
                 'penghuni',
                 'workOrders.departemen'
             ])
-
             ->where('unit_id', $unit->id)
-
             ->where(
                 'penghuni_id',
                 $penghuni->id
             )
-
             ->whereIn('status', [
                 'unassigned',
                 'open',
                 'on_progress',
                 'close'
             ])
-
             ->latest()
-
             ->get();
 
         return view(
@@ -371,13 +350,22 @@ class KeluhanController extends Controller
             'workOrders.riwayat'
         ])->findOrFail($id);
 
-        // 🔥 SECURITY (WAJIB)
-        if (
-            $keluhan->penanggung_jawab_id !==
-            $user->id
-        ) {
-            abort(403, 'Tidak punya akses ke keluhan ini');
+        $readonly = false;
+
+        // JIKA TENANT RELATION
+        if ($user->role === 'tenant_relation') {
+
+            $karyawan = $user->karyawan;
+
+            // BUKAN PENANGGUNG JAWAB
+            if (
+                $keluhan->penanggung_jawab_id !==
+                $karyawan->id
+            ) {
+                $readonly = true;
+            }
         }
+
         $departemen = Departemen::select(
             'id',
             'nama_departemen'
@@ -427,7 +415,7 @@ class KeluhanController extends Controller
                 $pj = $wo->penanggungJawab;
                 return [
                     'id' => $wo->id,
-                    'no' => $wo->nomor_wo,
+                    'nomor_tiket' => $wo->nomor_tiket,
                     'dept' =>
                             $wo->departemen?->nama_departemen ?? '-',
                             'status' => $wo->status ?? 'pending',
@@ -462,7 +450,7 @@ class KeluhanController extends Controller
         ];
 
 
-        return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen'));
+        return view('tenantrelation.keluhan.detailKeluhan', compact('data','departemen','readonly'));
     }
 
     public function keputusanAkhir(Request $request, $id)
@@ -538,4 +526,75 @@ class KeluhanController extends Controller
         ]);
     }
 
+
+    public function riwayatUnit(Request $request)
+    {
+        $query = Keluhan::with([
+                'unit',
+                'penghuni',
+                'penanggungJawab',
+                'workOrders.departemen',
+                'riwayatPenanganan'
+
+            ])
+
+            ->latest();
+
+        // FILTER UNIT
+        if ($request->filled('unit')) {
+
+            $query->whereHas('unit', function ($q) use ($request) {
+
+                $q->where(
+                    'nomor_unit',
+                    'like',
+                    '%' . $request->unit . '%'
+                );
+            });
+        }
+
+        $keluhan = $query
+            ->get()
+            ->map(function ($item) {
+
+                return [
+
+                    'id' => $item->id,
+
+                    'nomor_tiket' =>
+                        $item->nomor_tiket,
+
+                    'unit' =>
+                        $item->unit
+                            ?->nomor_unit ?? '-',
+
+                    'penghuni' =>
+                        $item->penghuni
+                            ?->nama ?? '-',
+
+                    'judul' =>
+                        $item->judul,
+
+                    'status' =>
+                        $item->status,
+
+                    'tanggal' =>
+                        optional(
+                            $item->created_at
+                        )->format('d-m-Y H:i'),
+
+                    'work_orders' =>
+                        $item->workOrders ?? [],
+                        
+                    'tr' =>
+                        $item->penanggungJawab
+                    ?->nama ?? '-',
+                    ];
+            });
+
+        return view(
+            'tenantrelation.riwayatUnit',
+            compact('keluhan')
+        );
+    }
 }

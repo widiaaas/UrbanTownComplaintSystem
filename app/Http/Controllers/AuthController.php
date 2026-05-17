@@ -18,17 +18,17 @@ class AuthController extends Controller
     // ================= LOGIN =================
     public function login(Request $request)
     {
-        // VALIDASI
+        // alidasi 
         $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        // CARI USER
+        // cari
         $user = Pengguna::where('username', $request->username)->first();
 
         
-        // USER TIDAK DITEMUKAN
+        // user ga ditemukan
         if (!$user) {
             return back()
                 ->withErrors([
@@ -37,7 +37,7 @@ class AuthController extends Controller
                 ->withInput();
         }
 
-        // AKUN NONAKTIF
+        // akun nonaktif
         if (!$user->is_active) {
             return back()
                 ->withErrors([
@@ -45,7 +45,7 @@ class AuthController extends Controller
                 ]);
         }
 
-        // PASSWORD SALAH
+        // password salah
         if (!Hash::check($request->password, $user->password)) {
             return back()
                 ->withErrors([
@@ -54,10 +54,10 @@ class AuthController extends Controller
                 ->withInput();
         }
 
-        // LOGIN
+        // login
         Auth::login($user, $request->remember ?? false);
 
-        // REGENERATE SESSION
+        // regenerate session
         $request->session()->regenerate();
         session([
             'password_hash' => $user->password
@@ -68,7 +68,7 @@ class AuthController extends Controller
             return redirect()->route('password.change');
         }
 
-        // VALIDASI KARYAWAN
+        //valiasi karywan
         if (in_array($user->role, [
             'admin',
             'tenant_relation',
@@ -76,9 +76,7 @@ class AuthController extends Controller
         ])) {
 
             if (!$user->karyawan) {
-
                 Auth::logout();
-
                 return back()->withErrors([
                     'username' => 'Data karyawan tidak ditemukan'
                 ]);

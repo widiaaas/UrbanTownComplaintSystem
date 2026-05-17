@@ -41,7 +41,7 @@ class WorkOrder extends Model
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pengguna::class, 'penanggung_jawab_id');
+        return $this->belongsTo(Karyawan::class, 'penanggung_jawab_id');
     }
 
     public function riwayat()

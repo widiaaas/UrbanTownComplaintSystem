@@ -137,7 +137,7 @@ class KaryawanController extends Controller
 
             // 🔑 Generate username & password
             $username = $validated['nip'];
-            $password = Str::random(8);
+            $newPassword = $this->generatePassword();
            
 
             // ================= CREATE USER =================

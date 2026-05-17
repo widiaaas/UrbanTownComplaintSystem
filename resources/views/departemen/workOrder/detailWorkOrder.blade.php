@@ -9,7 +9,7 @@
     <div class="flex justify-between items-start">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Detail Work Order</h1>
-            <p class="text-sm text-gray-500">No WO: <span x-text="wo.no"></span></p>
+            <p class="text-sm text-gray-500">No WO: <span x-text="wo.nomor_tiket"></span></p>
         </div>
         <a href="/daftar-work-order" class="text-sm text-blue-600 hover:underline">← Kembali</a>
     </div>
@@ -27,6 +27,114 @@
         </p>
     </div>
 
+    {{-- ================= PENGAJUAN PENGHUNI ================= --}}
+    <div class="bg-white p-6 rounded-xl shadow space-y-5">
+
+        <h3 class="font-semibold">
+            Pengajuan Penghuni
+        </h3>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+
+            <div>
+                <p class="font-medium mb-1">
+                    Nomor Unit
+                </p>
+
+                <div
+                    class="bg-gray-100 rounded-lg p-3 text-gray-700"
+                    x-text="wo.unit || '-'">
+                </div>
+            </div>
+
+            <div>
+                <p class="font-medium mb-1">
+                    Penghuni
+                </p>
+
+                <div
+                    class="bg-gray-100 rounded-lg p-3 text-gray-700"
+                    x-text="wo.penghuni || '-'">
+                </div>
+            </div>
+
+        </div>
+
+        <div>
+            <p class="text-sm font-medium mb-1">
+                Judul Keluhan
+            </p>
+
+            <div
+                class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700"
+                x-text="wo.judul_keluhan || '-'">
+            </div>
+        </div>
+
+        <div>
+            <p class="text-sm font-medium mb-1">
+                Deskripsi Keluhan
+            </p>
+
+            <div
+                class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700 whitespace-pre-line"
+                x-text="wo.deskripsi || '-'">
+            </div>
+        </div>
+
+        {{-- LAMPIRAN --}}
+        <div>
+
+            <p class="text-sm font-medium mb-2">
+                Lampiran Penghuni
+            </p>
+
+            <template
+                x-if="
+                    wo.lampiran_pengajuan &&
+                    wo.lampiran_pengajuan.length
+                ">
+
+                <div class="flex flex-wrap gap-2">
+
+                    <template
+                        x-for="(file, i) in wo.lampiran_pengajuan"
+                        :key="i">
+
+                        <button
+                            @click="openPreviewFile(file)"
+                            class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+
+                            📎
+
+                            <span
+                                x-text="file.split('/').pop()">
+                            </span>
+
+                        </button>
+
+                    </template>
+
+                </div>
+
+            </template>
+
+            <template
+                x-if="
+                    !wo.lampiran_pengajuan ||
+                    !wo.lampiran_pengajuan.length
+                ">
+
+                <p class="text-xs text-gray-400 italic">
+                    Tidak ada lampiran
+                </p>
+
+            </template>
+
+        </div>
+
+    </div>
+
     {{-- ================= INSTRUKSI PEKERJAAN ================= --}}
     <div class="bg-white p-6 rounded-xl shadow space-y-5">
         <h3 class="font-semibold">Instruksi Pekerjaan</h3>
@@ -38,7 +146,56 @@
             <p class="text-sm font-medium mb-1">Lokasi</p>
             <div class="bg-gray-100 rounded-lg p-3 text-sm text-gray-700" x-text="wo.lokasi || '-'"></div>
         </div>
+        <div>
+            <p class="text-sm font-medium mb-2">
+                Lampiran Work Order
+            </p>
+
+            <template
+                x-if="
+                    wo.lampiran &&
+                    wo.lampiran.length
+                ">
+
+                <div class="flex flex-wrap gap-2">
+
+                    <template
+                        x-for="(file, i) in wo.lampiran"
+                        :key="i">
+
+                        <button
+                            @click="openPreviewFile(file)"
+                            class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+
+                            📎
+
+                            <span
+                                x-text="file.split('/').pop()">
+                            </span>
+
+                        </button>
+
+                    </template>
+
+                </div>
+
+            </template>
+
+            <template
+                x-if="
+                    !wo.lampiran ||
+                    !wo.lampiran.length
+                ">
+
+                <p class="text-xs text-gray-400 italic">
+                    Tidak ada lampiran
+                </p>
+
+            </template>
+
+        </div>
     </div>
+
 
     {{-- ================= RIWAYAT PENANGANAN ================= --}}
     <div class="bg-white p-6 rounded-xl shadow space-y-4">

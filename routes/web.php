@@ -216,13 +216,8 @@ Route::middleware(['auth','active'])->group(function () {
         // WORK ORDER
         Route::post('/keluhan/{id}/work-order', [WorkOrderController::class, 'store']);
         
-
-        // 🔥 LAPORAN
-        Route::get('/rekap-penanganan', [LaporanController::class, 'index']);
-        Route::get('/rekap-penanganan/departemen', [LaporanController::class, 'getDepartemen']);
-        Route::get('/rekap-penanganan/status', [LaporanController::class, 'getStatus']);
-        Route::get('/rekap-penanganan/data', [LaporanController::class, 'rekapData']);
-        Route::get('/rekap-penanganan/pdf', [LaporanController::class, 'exportPdf']);
+        // riwayat unit
+        Route::get('/riwayat-unit',[KeluhanController::class, 'riwayatUnit']);
         
        
     });

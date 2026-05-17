@@ -32,7 +32,7 @@ class Unit extends Model
     }   
     public function riwayatHunian()
     {
-        return $this->hasMany(RiwayatHunian::class);
+        return $this->hasMany(RiwayatHunian::class,'unit_id');
     }
     public function penghunis()
     {

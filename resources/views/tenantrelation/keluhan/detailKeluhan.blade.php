@@ -16,6 +16,19 @@
         <a href="/daftar-penanganan" class="text-sm text-blue-600 hover:underline">← Kembali</a>
     </div>
 
+    <template x-if="readonly">
+
+        <div
+            class="bg-yellow-50 border border-red-200
+            text-red-700 px-4 py-3 rounded-xl text-sm">
+
+            Anda hanya dapat melihat detail keluhan
+            karena bukan penanggung jawab keluhan ini.
+
+        </div>
+
+    </template>
+
     {{-- ================= INFO ================= --}}
     <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
         <p><b>No Unit</b><br><span x-text="keluhan.unit"></span></p>
@@ -44,7 +57,8 @@
                 <p class="text-sm font-medium mb-1">Deskripsi Keluhan</p>
                 <p class="text-gray-600" x-text="keluhan.deskripsi"></p>
             </div>
-            <div class="flex gap-2 flex-wrap">
+            <div >
+                <p class="text-sm font-medium mb-1">Lampiran Keluhan</p>
                 <template x-for="file in keluhan.lampiranKeluhan" :key="file">
                     <button
                         @click="previewFile = file; openPreview = true" 
@@ -65,7 +79,7 @@
         <select
             x-model="keputusan.status"
             @change="confirmUpdateStatus"
-            :disabled="normalizeStatus(keluhan.status) === 'close'"
+            :disabled="readonly || normalizeStatus(keluhan.status) === 'close'"
             class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
             <option value="open">Open</option>
             <option value="on_progress">On Progress</option>
@@ -84,7 +98,7 @@
         <div class="flex justify-between items-center">
             <h3 class="font-semibold">Work Order</h3>
             <button
-                x-show="normalizeStatus(keluhan.status) !== 'close' && !sudahAdaWO"
+                x-show="!readonly && normalizeStatus(keluhan.status) !== 'close' && !sudahAdaWO"
                 @click="openWO = true"
                 class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
                 + Buat Work Order
@@ -94,7 +108,7 @@
             <template x-for="(wo, index) in workOrdersByTiket" :key="wo.id">
                 <div class="border rounded-lg p-4 space-y-3">
                     <div class="flex justify-between items-center">
-                        <p class="text-sm font-medium text-gray-700"><span x-text="wo.no"></span></p>
+                        <p class="text-sm font-medium text-gray-700"><span x-text="wo.nomor_tiket"></span></p>
                         <span class="text-xs px-2 py-1 rounded capitalize"
                             :class="statusClass(wo.status)"
                             x-text="formatStatus(wo.status)">
@@ -145,7 +159,7 @@
             </div>
         </template>
 
-        <template x-if="normalizeStatus(keluhan.status) !== 'close'">
+        <template x-if="!readonly && normalizeStatus(keluhan.status) !== 'close'">
             <div class="pl-4 space-y-4">
                 <div>
                     <label class="text-sm font-medium mb-1 block">Judul Penanganan</label>
@@ -200,7 +214,7 @@
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
         <h3 class="font-semibold text-gray-800">Keputusan / Solusi untuk Penghuni</h3>
 
-        <template x-if="normalizeStatus(keluhan.status) !== 'close'">
+        <template x-if=" !readonly && normalizeStatus(keluhan.status) !== 'close'">
             <div class="pl-4 space-y-4">
                 <div>
                     <label class="text-sm font-medium mb-1 block">Deskripsi Keputusan</label>
@@ -390,8 +404,8 @@
         <div class="bg-white w-full max-w-4xl rounded-xl p-6 space-y-5 overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h3 class="text-lg font-semibold">Work Order Report</h3>
-                    <p class="text-xs text-gray-500">No WO: <span x-text="selectedWO.no"></span></p>
+                    <h3 class="text-lg font-semibold">Laporan Work Order</h3>
+                    <p class="text-xs text-gray-500">No WO: <span x-text="selectedWO.nomor_tiket"></span></p>
                 </div>
                 <button @click="openLaporan=false" class="text-xl">✕</button>
             </div>
@@ -415,6 +429,53 @@
                 <p class="font-medium text-sm">Instruksi Detail</p>
                 <div class="bg-gray-100 rounded-lg p-3 text-sm" x-text="selectedWO.instruksi"></div>
             </div>
+            <div class="space-y-1">
+                <p class="font-medium text-sm">
+                    Lampiran Work Order
+                </p>
+                <template
+                    x-if="
+                        selectedWO.lampiran &&
+                        selectedWO.lampiran.length
+                    ">
+
+                    <div class="flex flex-wrap gap-2">
+
+                        <template
+                            x-for="(file, i) in selectedWO.lampiran"
+                            :key="i">
+
+                            <button
+                                @click="openPreviewFile(file)"
+                                class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+
+                                📎
+
+                                <span
+                                    x-text="file.split('/').pop()">
+                                </span>
+
+                            </button>
+                        </template>
+
+                    </div>
+
+                </template>
+
+                <template
+                    x-if="
+                        !selectedWO.lampiran ||
+                        !selectedWO.lampiran.length
+                    ">
+
+                    <p class="text-xs text-gray-400 italic">
+                        Tidak ada lampiran
+                    </p>
+
+                </template>
+
+            </div>
+
             <div class="bg-white rounded-xl p-4 space-y-4">
                 <p class="font-medium text-sm">Riwayat Penanganan Pekerjaan</p>
                 <template x-if="selectedWO.laporan && selectedWO.laporan.length">
@@ -489,6 +550,53 @@
                     class="w-full border rounded px-3 py-2 text-sm"
                     placeholder="Instruksi pekerjaan untuk departemen"></textarea>
             </div>
+
+            <div>
+                <label class="font-medium text-sm">
+                    Lampiran Work Order
+                </label>
+
+                <input
+                    type="file"
+                    multiple
+                    @change="handleUploadWO($event)"
+                    class="text-sm">
+
+                <div class="flex flex-wrap gap-2 mt-2">
+
+                    <template
+                        x-for="(file, index) in woForm.lampiran"
+                        :key="index">
+
+                        <div
+                            class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
+
+                            <span x-text="file.name"></span>
+
+                            {{-- PREVIEW --}}
+                            <button
+                                @click="openPreviewFile(file)"
+                                class="text-blue-600 hover:underline">
+
+                                Preview
+
+                            </button>
+
+                            {{-- DELETE --}}
+                            <button
+                                @click="hapusLampiranWO(index)"
+                                class="text-red-500 hover:text-red-700">
+
+                                ✕
+
+                            </button>
+
+                        </div>
+
+                    </template>
+
+                </div>
+            </div>
             <div class="flex justify-end gap-2 pt-3">
                 <button @click="openWO=false"
                     class="border px-4 py-2 rounded text-gray-700 hover:bg-gray-50">Batal</button>
@@ -526,15 +634,14 @@ function detailKeluhanApp() {
         selectedWO: {},
         departemenList: [],
         previewFiles: [],
-        kbDuplicates: [],
-        knowledgeBase: [],
-
+        readonly: @json($readonly ?? false),
 
         workOrders: [],
         woForm: {
             dept: '',
             instruction: '',
-            lokasi: ''
+            lokasi: '',
+            lampiran: []
         },
 
         keputusan: {
@@ -763,6 +870,19 @@ function detailKeluhanApp() {
         hapusLampiranKeputusan(index) {
             this.keputusan.lampiran.splice(index, 1);
         },
+        
+        handleUploadWO(event) {
+
+            for (let i = 0;i < event.target.files.length;i++) {
+                this.woForm.lampiran.push(event.target.files[i]);
+                }
+            },
+
+
+            hapusLampiranWO(index) {
+                this.woForm.lampiran.splice(index, 1);
+            },
+
 
         /* ================= KEPUTUSAN AKHIR ================= */
         simpanKeputusanAkhir() {
@@ -901,47 +1021,114 @@ function detailKeluhanApp() {
 
         /* ================= WORK ORDER ================= */
         kirimWO() {
+
+            // CEK WO
             if (this.sudahAdaWO) {
-                Swal.fire('Info', 'Work Order sudah dibuat untuk keluhan ini', 'info');
+                Swal.fire(
+                    'Info',
+                    'Work Order sudah dibuat untuk keluhan ini',
+                    'info'
+                );
                 return;
             }
-            if (!this.woForm.dept || !this.woForm.instruction) {
-                Swal.fire('Oops!', 'Lengkapi data WO', 'warning');
+
+            // VALIDASI
+            if (!this.woForm.dept ||!this.woForm.instruction
+            ) {
+                Swal.fire(
+                    'Oops!',
+                    'Lengkapi data WO',
+                    'warning'
+                );
                 return;
             }
+
+            //validasi lokasi
             if (!this.woForm.lokasi.trim()) {
-                Swal.fire('Oops!', 'Lokasi wajib diisi', 'warning');
+                Swal.fire(
+                    'Oops!',
+                    'Lokasi wajib diisi',
+                    'warning'
+                );
                 return;
             }
-            fetch(`/keluhan/${this.keluhan.id}/work-order`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    departemen: this.woForm.dept,
-                    instruksi: this.woForm.instruction,
-                    lokasi: this.woForm.lokasi
-                })
-            })
-            .then(async res => { const data = await res.json(); if (!res.ok) throw data; return data; })
-            .then(res => {
-                this.workOrders.push(res.data);
-                this.woForm = { dept: '', instruction: '', lokasi: '' };
-                this.openWO = false;
-                Swal.fire('Berhasil!', res.message, 'success');
-            })
-            .catch(err => {
-                let msg =err?.message ||'Gagal membuat WO';
-                if (err?.errors) {
-                    msg = Object.values(err.errors)
-                        .flat()
-                        .join('\n');
-                }
-                Swal.fire('Error!', msg,'error');
+
+            // Konfir
+            Swal.fire({
+                title: 'Buat Work Order?',
+                text:'Work Order akan dikirim ke departemen terkait',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, buat',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#16a34a'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                let formData = new FormData();
+                formData.append('departemen',this.woForm.dept);
+                formData.append('instruksi',this.woForm.instruction);
+                formData.append( 'lokasi',this.woForm.lokasi);
+                //lampiran
+                this.woForm.lampiran.forEach(file => {
+                    formData.append('lampiran[]',file);
                 });
-        },
+
+                // LOADING
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Sedang membuat Work Order',
+                    allowOutsideClick: false,
+                    didOpen: () => {Swal.showLoading();
+                    }
+                });
+                fetch(
+                    `/keluhan/${this.keluhan.id}/work-order`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN':
+                                document.querySelector(
+                                    'meta[name="csrf-token"]'
+                                ).content
+                        },
+                        body: formData
+                    }
+                )
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw data;
+                    return data;
+                })
+
+                .then(res => {
+                    this.workOrders.push(res.data);
+                    this.woForm = {
+                        dept: '',
+                        instruction: '',
+                        lokasi: '',
+                        lampiran: []
+                    };
+                    this.openWO = false;
+                    Swal.fire('Berhasil!',
+                    res.message,'success'
+                    );
+                })
+
+                .catch(err => {
+                    let msg =
+                        err?.message ||
+                        'Gagal membuat WO';
+                    if (err?.errors) {
+                        msg = Object.values(err.errors)
+                            .flat()
+                            .join('\n');
+                    }
+                    Swal.fire('Error!',
+                        msg,'error'
+                    );
+                });
+            });
+            },
 
         bukaLaporanWO(wo) {
             const laporan = (wo.laporan || []).map(item => ({
@@ -951,7 +1138,7 @@ function detailKeluhanApp() {
                 status: item.status,
                 lampiran: item.lampiran || []
             }));
-            this.selectedWO = { ...wo, laporan };
+            this.selectedWO = {...wo,nomor_tiket: wo.nomor_tiket || '-',lampiran:wo.lampiran || [],laporan};
             this.openLaporan = true;
         }
     }

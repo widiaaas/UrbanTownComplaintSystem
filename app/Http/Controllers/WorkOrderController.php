@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Keluhan;
 use App\Models\WorkOrder;
 use App\Models\Karyawan;
+use App\Models\Departemen;
 use App\Models\RiwayatPenangananWorkOrder;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,21 +16,21 @@ class WorkOrderController extends Controller
     {
         $keluhan = Keluhan::findOrFail($keluhan_id);
 
-        // VALIDASI: hanya 1 WO
+        // hanya 1 WO
         if ($keluhan->workOrders()->exists()) {
-
             return response()->json([
                 'message' => 'Work Order sudah ada'
             ], 400);
         }
 
-        // VALIDASI INPUT
+        // validasi inputt
         $validator = Validator::make($request->all(), [
 
             'departemen' => ['required','exists:departemens,id'],
             'instruksi' => ['required','string','min:5'],
-            'lokasi' => ['required','string','max:255'
-            ]
+            'lokasi' => ['required','string','max:255'],
+            'lampiran' => ['nullable','array'],
+            'lampiran.*' => ['file', 'mimes:jpg,jpeg,png,pdf','max:1024']
 
         ], [
             'departemen.required' =>'Departemen wajib dipilih',
@@ -37,6 +38,8 @@ class WorkOrderController extends Controller
             'instruksi.required' =>'Instruksi wajib diisi',
             'instruksi.min' =>'Instruksi minimal 5 karakter',
             'lokasi.required' =>'Lokasi wajib diisi',
+            'lampiran.*.mimes' =>'Lampiran hanya boleh JPG, PNG, atau PDF',
+            'lampiran.*.max' =>'Ukuran file maksimal 1MB',
         ]);
 
         if ($validator->fails()) {
@@ -46,46 +49,72 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
-        // GENERATE NOMOR WO
-        $lastWO = WorkOrder::latest()->first();
+        // upload file 
+        $lampiran = [];
+            if ($request->hasFile('lampiran')) {
+                foreach (
+                    $request->file('lampiran')
+                    as $file
+                ) {
+                    if ($file->isValid()) {
+                        $lampiran[] = $file->store('work_order','public');
+                    }
+                }
+        }
 
-        if ($lastWO && $lastWO->nomor_tiket) {
-            $lastNumber =
-                (int) substr($lastWO->nomor_tiket, -4);
-            $newNumber = $lastNumber + 1;
+        // generate nomor wo
+        $tahun = date('Y');
+        $departemen = Departemen::findOrFail($request->departemen);
+        $words = explode(' ', strtoupper($departemen->nama_departemen));
+        $kodeDept = '';
 
+        foreach ($words as $word) {
+            $kodeDept .= substr($word, 0, 1);
+        }
+
+        if (strlen($kodeDept) < 2) {
+            $kodeDept = strtoupper(
+                substr(
+                    preg_replace(
+                        '/\s+/','',$departemen->nama_departemen),0,3)
+            );
+        }
+
+        $lastWO = WorkOrder::whereYear('created_at',$tahun)
+            ->latest()
+            ->first();
+        if ($lastWO &&preg_match('/(\d+)$/',$lastWO->nomor_tiket,$matches)) {
+            $newNumber =(int) $matches[1] + 1;
         } else {
             $newNumber = 1;
         }
 
-        $urutan = str_pad(
-            $newNumber,4,'0',STR_PAD_LEFT
-        );
-
-        $nomorWO ='WO/' .date('Y') .'/' .$urutan;
+        $urutan = str_pad($newNumber, 4,'0', STR_PAD_LEFT);
+        $nomor_tiket ='WO-' .$tahun . '-' . $kodeDept .'-' .$urutan;
 
         // SIMPAN WO
         $wo = WorkOrder::create([
-            'nomor_tiket' => $nomorWO,
+            'nomor_tiket' => $nomor_tiket,
             'keluhan_id' => $keluhan->id,
             'departemen_id' =>$request->departemen,
             'lokasi' =>trim($request->lokasi),
             'instruksi' => trim($request->instruksi),
+            'lampiran' => $lampiran,
         ]);
 
         $wo->load('departemen');
 
-        // UPDATE STATUS KELUHAN
-        $keluhan->update([
-            'status' => 'on_progress'
-        ]);
+        // // UPDATE STATUS KELUHAN
+        // $keluhan->update([
+        //     'status' => 'on_progress'
+        // ]);
 
         return response()->json([
 
             'message' =>'Work Order berhasil dibuat',
             'data' => [
                 'id' => $wo->id,
-                'no' => $wo->nomor_tiket,
+                'nomor_tiket' => $wo->nomor_tiket,
                 'dept' =>
                     $wo->departemen
                         ?->nama_departemen ?? '-',
@@ -99,7 +128,8 @@ class WorkOrderController extends Controller
                 'lokasi' =>
                     $wo->lokasi,
 
-                'laporan' => []
+                'lampiran' => $wo->lampiran ?? [],
+                'laporan' => [],
             ]
         ]);
     }
@@ -118,6 +148,7 @@ class WorkOrderController extends Controller
             'keluhan.penanggungJawab'
         ])
         ->whereNull('penanggung_jawab_id')
+        ->where('status', 'unassigned')
         ->where('departemen_id', $karyawan->departemen_id)
         ->latest()
         ->get()
@@ -129,22 +160,24 @@ class WorkOrderController extends Controller
             $petugas = $item->penanggungJawab;
 
             return [
-                'no' => $index + 1,
+                
                 'id' => $item->id,
-                'no' => $item->nomor_tiket,
+                'nomor_tiket' => $item->nomor_tiket,
                 'unit' => $keluhan?->unit?->nomor_unit ?? '-',
                 'tanggal' => optional($item->created_at)->format('d-m-Y H:i'),
-
                 'penghuni' => $keluhan?->penghuni?->nama ?? '-',
                 'telepon' => $keluhan?->penghuni?->telepon ?? '-',
-
                 'instruksi' => $item->instruksi,
                 'lampiran' => $item->lampiran ?? [],
 
-                // 🔥 TR (dari keluhan)
-                'tr' => $pj?->nama ?? '-',
+                // Pengajuan penghuuni 
+                'judul_keluhan' =>$keluhan?->judul ?? '-',
+                'deskripsi_keluhan' =>$keluhan?->deskripsi ?? '-',
+                'lampiran_pengajuan' =>$keluhan?->lampiran_pengajuan ?? [],
 
-                // 🔥 Petugas WO
+                //  TR (dari keluhan)
+                'tr' => $pj?->nama ?? '-',
+                // Petugas WO
                 'petugas' => $petugas?->nama ?? '-',
             ];
         })
@@ -189,7 +222,7 @@ class WorkOrderController extends Controller
             $pj = $item->penanggungJawab;
             return [
                 'id' => $item->id,
-                'no' => $item->nomor_tiket,
+                'nomor_tiket' => $item->nomor_tiket,
                 'unit' => $item->keluhan->unit->nomor_unit ?? '-',
                 'tanggal' => optional($item->created_at)->format('d M Y H:i'),
                 
@@ -254,7 +287,7 @@ class WorkOrderController extends Controller
      
         $data = [
             'id' => $wo->id,
-            'no' => $wo->nomor_tiket,
+            'nomor_tiket' => $wo->nomor_tiket,
             'deskripsi' => $wo->keluhan->deskripsi ?? '-',
             'departemen' => $wo->departemen,
             'instruksi' => $wo->instruksi,
@@ -267,7 +300,13 @@ class WorkOrderController extends Controller
             'lampiran' => $wo->lampiran ?? [],
             'lokasi' => $wo->lokasi,
 
-            // 🔥 RIWAYAT
+            // Pengajuan penghuni
+            'judul_keluhan' => $wo->keluhan->judul ?? '-',
+            'penghuni' =>$wo->keluhan->penghuni->nama ?? '-',
+            'unit' => $wo->keluhan->unit->nomor_unit ?? '-',
+            'lampiran_pengajuan' =>$wo->keluhan->lampiran_pengajuan ?? [],
+            
+            // Riwayat penanganann
             'laporan' => $wo->riwayat()
                 ->orderBy('waktu','asc')
                 ->get()

@@ -82,7 +82,7 @@
             <div class="flex justify-between border-b pb-2">
                 <div>
                     <h2 class="font-semibold text-lg" x-text="selected.judul"></h2>
-                    <p class="text-xs text-gray-500">Ticket <span x-text="selected.ticket"></span></p>
+                    <p class="text-xs text-gray-500">Nomor Tiket <span x-text="selected.nomor_tiket"></span></p>
                 </div>
                 <button @click="closeModal()">✕</button>
             </div>

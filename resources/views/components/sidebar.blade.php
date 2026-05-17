@@ -239,6 +239,19 @@
 
             </a>
 
+            {{--=====RIwayat Unit======--}}
+
+            <a href="/riwayat-unit"
+             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-unit*', $currentPath) }}">
+
+                @include('components.icons.building-fill')
+
+                <span>
+                    Riwayat Unit
+                </span>
+
+            </a>
+
             {{-- PROFILE --}}
             <a
                 href="/profile"
@@ -251,6 +264,7 @@
 
             </a>
 
+            
         {{-- ================= DEPARTEMEN ================= --}}
         @elseif($isDepartemen)
 
@@ -287,7 +301,7 @@
 
             </a>
 
-            {{-- KHUSUS ENGINEERING --}}
+            <!-- {{-- KHUSUS ENGINEERING --}}
             @if($departemen === 'Engineering')
 
                 <a
@@ -299,7 +313,7 @@
 
                     <span>Knowledge Base</span>
 
-                </a>
+                </a> -->
 
             @endif
 

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('departemen_id')->constrained('departemens')->onDelete('cascade');
             $table->text('instruksi');
             $table->string('lokasi');
-            $table->enum('status', ['unassigned', 'open', 'on_progress', 'waiting', 'close'])->default('open');
+            $table->enum('status', ['unassigned', 'open', 'on_progress', 'waiting', 'close'])->default('unassigned');
             $table->foreignId('penanggung_jawab_id')->nullable()->constrained('karyawans')->nullOnDelete();
             $table->timestamp('taken_at')->nullable();
             $table->json('lampiran')->nullable();

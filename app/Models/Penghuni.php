@@ -37,7 +37,7 @@ class Penghuni extends Model
     }
     public function riwayatHunian()
     {
-        return $this->hasMany(RiwayatHunian::class);
+        return $this->hasMany(RiwayatHunian::class,'penghuni_id');
     }
 
     public function keluhans()
