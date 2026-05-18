@@ -17,36 +17,6 @@ class PenghuniController extends Controller
     {
         $query = Penghuni::with('riwayatHunian.unit');
 
-        // FILTER NAMA / NOMOR UNIT
-        if ($request->filled('nama')) {
-
-            $nama = trim($request->nama);
-
-            $query->where(function ($q) use ($nama) {
-
-                $q->where('nama', 'LIKE', "%{$nama}%")
-
-                ->orWhereHas(
-                    'riwayatHunian.unit',
-                    function ($q2) use ($nama) {
-
-                      $q2->where(
-                          'nomor_unit',
-                          'LIKE',
-                          "%{$nama}%"
-                      );
-                  });
-            });
-        }
-
-        // // FILTER STATUS
-        // if ($request->filled('status')) {
-
-        //     $query->where(
-        //         'status',
-        //         $request->status
-        //     );
-        // }
 
         // DATA
         $penghunis = $query

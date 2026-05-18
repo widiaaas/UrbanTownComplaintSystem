@@ -15,7 +15,20 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
 class KaryawanController extends Controller
-{
+{   
+
+    // GENERATE PASSWORD
+    private function generatePassword()
+    {
+        $chars =
+            'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $random = '';
+
+        for ($i = 0; $i < 6; $i++) {
+            $random .=$chars[rand(0, strlen($chars) - 1)];
+        }
+        return 'APT-' . $random;
+    }
     
     /**
      * ================== INDEX ==================
@@ -102,7 +115,7 @@ class KaryawanController extends Controller
             // 🔥 DEPARTEMEN (tidak selalu wajib)
             'departemen_id' => [
                 'nullable',
-                'exists:departemens_id'
+                'exists:departemens,id'
             ],
 
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
@@ -143,7 +156,7 @@ class KaryawanController extends Controller
             // ================= CREATE USER =================
             $pengguna = Pengguna::create([
                 'username' => $username,
-                'password' => Hash::make($password),
+                'password' => Hash::make($newPassword),
                 'role' => $validated['role'],
                 'is_active' => true,
                 'must_change_password' => true,
@@ -175,7 +188,7 @@ class KaryawanController extends Controller
                 'data' => $karyawan,
                 'akun' => [
                     'username' => $username,
-                    'password' => $password
+                    'password' => $newPassword
                 ]
             ]);
 

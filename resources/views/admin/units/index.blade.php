@@ -18,59 +18,63 @@
     </div>
 
     {{-- ================= FILTER ================= --}}
-    <form method="GET" action="{{ route('admin.units.index') }}">
-        <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4">
-            
-            {{-- Cari Unit / Gedung --}}
-            <div class="flex-1">
-                <label for="search" class="text-sm font-medium">Cari Unit / Gedung</label>
-                <input 
-                    id="search"
-                    type="text"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Masukkan nomor unit atau nama gedung..."
-                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-            </div>
+    <div
+        class="bg-white rounded-lg shadow p-4
+        flex flex-col md:flex-row gap-4">
 
-            {{-- Status --}}
-            <div>
-                <label for="status" class="text-sm font-medium">Status</label>
+        {{-- SEARCH --}}
+        <div class="flex-1">
 
-                <select 
-                    id="status"
-                    name="status"
-                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+            <label
+                class="text-sm font-medium text-gray-700">
 
-                    <option value="">Semua</option>
+                Cari Unit
 
-                    <option value="Aktif"
-                        {{ request('status') == 'Aktif' ? 'selected' : '' }}>
-                        Aktif
-                    </option>
+            </label>
 
-                    <option value="Nonaktif"
-                        {{ request('status') == 'Nonaktif' ? 'selected' : '' }}>
-                        Nonaktif
-                    </option>
+            <input
+                type="text"
+                x-model="search"
+                @input="applyFilter"
+                placeholder="Cari nomor unit atau nama gedung..."
+                class="w-full mt-1 border rounded-lg px-3 py-2
+                focus:ring focus:ring-blue-200">
 
-                </select>
-            </div>
-
-            {{-- Button --}}
-            <div class="flex gap-2 items-end">
-                <button type="submit"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Filter
-                </button>
-
-                <a href="{{ route('admin.units.index') }}"
-                    class="px-4 py-2 border rounded-lg hover:bg-gray-100 text-center">
-                    Reset
-                </a>
-            </div>
         </div>
-    </form>
+
+        {{-- FILTER STATUS --}}
+        <div class="md:w-60">
+
+            <label
+                class="text-sm font-medium text-gray-700">
+
+                Status
+
+            </label>
+
+            <select
+                x-model="statusFilter"
+                @change="applyFilter"
+                class="w-full mt-1 border rounded-lg px-3 py-2
+                bg-white focus:ring focus:ring-blue-200">
+
+                <option value="">
+                    Semua
+                </option>
+
+                <option value="Aktif">
+                    Aktif
+                </option>
+
+                <option value="Nonaktif">
+                    Nonaktif
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
 
     {{-- ================= TABLE ================= --}}
     <div class="bg-white rounded-lg shadow overflow-x-auto overflow-y-visible">
@@ -127,50 +131,121 @@
                                 </button>
 
                                 <!-- DROPDOWN -->
-                                <div x-show="open"
-                                    @click.outside="open = false"
-                                    x-transition
-                                    x-ref="menu"
-                                    class="fixed w-44 bg-white border rounded-lg shadow-xl z-[9999]"
+                                <div
+                                    x-show="open"
                                     x-cloak
+                                    x-transition
+                                    @click.outside="open = false"
+                                    x-ref="menu"
+
+                                    class="fixed w-52 bg-white border border-gray-200
+                                    rounded-xl shadow-xl z-[9999] overflow-hidden"
+
                                     x-init="
                                         $watch('open', value => {
+
                                             if (value) {
-                                                let rect = $el.previousElementSibling.getBoundingClientRect();
-                                                $el.style.top = (rect.bottom + window.scrollY) + 'px';
-                                                $el.style.left = (rect.right - 176) + 'px';
+
+                                                const rect =
+                                                    $el.previousElementSibling
+                                                        .getBoundingClientRect();
+
+                                                // posisi vertical
+                                                $el.style.top =
+                                                    (rect.bottom + window.scrollY + 6) + 'px';
+
+                                                // posisi horizontal
+                                                $el.style.left =
+                                                    (rect.left + window.scrollX - 50) + 'px';
                                             }
                                         })
                                     ">
 
-                                    <button @click="editUnit()" class="w-full text-left px-3 py-2 hover:bg-gray-100">
-                                        ✏️ Edit Unit
-                                    </button>
+                                    {{-- ================= MENU UTAMA ================= --}}
+                                    <div class="py-1">
 
-                                    <template x-if="status == 'Aktif'">
-                                        <div>
-                                            <button @click="gantiPenghuni()" class="w-full text-left px-3 py-2 hover:bg-gray-100">
-                                                👥 Ganti Penghuni
-                                            </button>
-                                            <button @click="resetPassword()" class="w-full text-left px-3 py-2 hover:bg-gray-100">
-                                                🔑 Reset Kata Sandi
-                                            </button>
-                                        </div>
-                                    </template>
+                                        <button
+                                            @click="editUnit()"
+                                            class="w-full flex items-center gap-3
+                                            px-4 py-2.5 text-sm text-gray-700
+                                            hover:bg-gray-100 transition">
 
-                                    <div class="border-t my-1"></div>
+                                            <span>✏️</span>
 
-                                    <template x-if="unit.status == 'Aktif'">
-                                        <button @click="toggleStatus('nonaktif')" class="w-full text-left px-3 py-2 text-orange-600 hover:bg-orange-50">
-                                            ⛔ Nonaktifkan
+                                            <span>Edit Unit</span>
+
                                         </button>
-                                    </template>
 
-                                    <template x-if="unit.status == 'Nonaktif'">
-                                        <button @click="toggleStatus('aktif')" class="w-full text-left px-3 py-2 text-green-600 hover:bg-green-50">
-                                            ✅ Aktifkan
-                                        </button>
-                                    </template>
+                                        <template x-if="status == 'Aktif'">
+
+                                            <div>
+
+                                                <button
+                                                    @click="gantiPenghuni()"
+                                                    class="w-full flex items-center gap-3
+                                                    px-4 py-2.5 text-sm text-gray-700
+                                                    hover:bg-gray-100 transition">
+
+                                                    <span>👥</span>
+
+                                                    <span>Perbarui Penghuni</span>
+
+                                                </button>
+
+                                                <button
+                                                    @click="resetPassword()"
+                                                    class="w-full flex items-center gap-3
+                                                    px-4 py-2.5 text-sm text-gray-700
+                                                    hover:bg-gray-100 transition">
+
+                                                    <span>🔑</span>
+
+                                                    <span>Reset Kata Sandi</span>
+
+                                                </button>
+
+                                            </div>
+
+                                        </template>
+
+                                    </div>
+
+                                    {{-- ================= STATUS ACTION ================= --}}
+                                    <div class="border-t border-gray-100 py-1">
+
+                                        <template x-if="unit.status == 'Aktif'">
+
+                                            <button
+                                                @click="toggleStatus('nonaktif')"
+                                                class="w-full flex items-center gap-3
+                                                px-4 py-2.5 text-sm text-orange-600
+                                                hover:bg-orange-50 transition">
+
+                                                <span>⛔</span>
+
+                                                <span>Nonaktifkan Unit</span>
+
+                                            </button>
+
+                                        </template>
+
+                                        <template x-if="unit.status == 'Nonaktif'">
+
+                                            <button
+                                                @click="toggleStatus('aktif')"
+                                                class="w-full flex items-center gap-3
+                                                px-4 py-2.5 text-sm text-green-600
+                                                hover:bg-green-50 transition">
+
+                                                <span>✅</span>
+
+                                                <span>Aktifkan Unit</span>
+
+                                            </button>
+
+                                        </template>
+
+                                    </div>
 
                                 </div>
                             </div>
@@ -253,7 +328,7 @@
     {{-- ================= MODAL EDIT UNIT ================= --}}
     <div x-show="openEdit" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div @click.self="openEdit = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
-            <h2 class="font-semibold text-lg">Edit Unit (<span x-text="selectedUnit.nomor_unit"></span>)</h2>
+            <h2 class="font-semibold text-lg">Edit Unit </h2>
             
             <div class="space-y-3">
                 <div>
@@ -505,7 +580,7 @@ function unitManager() {
         credentialTitle: '',
         credentialDescription: '',
         search: '',
-        floorFilter: '',
+        statusFilter: '',
 
         unitsData: [],
         filteredUnits: [],
@@ -534,25 +609,34 @@ function unitManager() {
 
         applyFilter() {
             this.filteredUnits = this.unitsData.filter(unit => {
-                let match = true;
 
-                if (this.search) {
-                    match = unit.nomor_unit.toLowerCase().includes(this.search.toLowerCase()) ||
-                            unit.gedung.toLowerCase().includes(this.search.toLowerCase());
-                }
+                // ================= SEARCH =================
 
-                if (this.floorFilter && unit.lantai != this.floorFilter) {
-                    match = false;
-                }
+                const keyword =
+                    this.search.toLowerCase();
 
-                return match;
+                const matchSearch =
+
+                    (unit.nomor_unit || '')
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
+                    (unit.gedung || '')
+                        .toLowerCase()
+                        .includes(keyword);
+
+                // ================= STATUS =================
+
+                const matchStatus =
+
+                    !this.statusFilter ||
+
+                    unit.status === this.statusFilter;
+
+                return matchSearch && matchStatus;
             });
-        },
-
-        resetFilter() {
-            this.search = '';
-            this.floorFilter = '';
-            this.applyFilter();
         },
 
         fetchPenghuniList() {

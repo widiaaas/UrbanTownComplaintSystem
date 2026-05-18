@@ -9,28 +9,28 @@ class RiwayatPenangananKeluhanSeeder extends Seeder
 {
     public function run(): void
     {
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 1,
+        // RiwayatPenangananKeluhan::create([
+        //     'keluhan_id' => 1,
 
-            'status' => 'open',
+        //     'status' => 'open',
 
-            'judul' => 'Keluhan Dibuat',
+        //     'judul' => 'Keluhan Dibuat',
 
-            'deskripsi' => 'Penghuni membuat laporan keluhan AC tidak dingin.',
+        //     'deskripsi' => 'Penghuni membuat laporan keluhan AC tidak dingin.',
 
-            'waktu' => now()->subHours(3),
-        ]);
+        //     'waktu' => now()->subHours(3),
+        // ]);
 
-        RiwayatPenangananKeluhan::create([
-            'keluhan_id' => 1,
+        // RiwayatPenangananKeluhan::create([
+        //     'keluhan_id' => 1,
 
-            'status' => 'on_progress',
+        //     'status' => 'on_progress',
 
-            'judul' => 'Keluhan Diproses',
+        //     'judul' => 'Keluhan Diproses',
 
-            'deskripsi' => 'Tenant relation telah mengambil keluhan.',
+        //     'deskripsi' => 'Tenant relation telah mengambil keluhan.',
 
-            'waktu' => now()->subHours(1),
-        ]);
+        //     'waktu' => now()->subHours(1),
+        // ]);
     }
 }

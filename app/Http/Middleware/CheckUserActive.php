@@ -13,23 +13,44 @@ class CheckUserActive
         Closure $next
     ) {
 
-       // user login tapi dah nonaktif
-        if (
-            Auth::check() &&
-            !Auth::user()->is_active
-        ) {
+        if (Auth::check()) {
 
-            Auth::logout();
+            $user = Auth::user();
 
-            $request->session()->invalidate();
+            // ================= AKUN NONAKTIF =================
+            if (!$user->is_active) {
 
-            $request->session()->regenerateToken();
+                Auth::logout();
 
-            return redirect('/')
-                ->withErrors([
-                    'username' =>
-                        'Akun sudah tidak aktif'
-                ]);
+                $request->session()->invalidate();
+
+                $request->session()->regenerateToken();
+
+                return redirect('/')
+                    ->withErrors([
+                        'username' =>
+                            'Akun sudah tidak aktif'
+                    ]);
+            }
+
+            // ================= PASSWORD DIRESET =================
+            if (
+                session('password_hash') !==
+                $user->password
+            ) {
+
+                Auth::logout();
+
+                $request->session()->invalidate();
+
+                $request->session()->regenerateToken();
+
+                return redirect('/')
+                    ->withErrors([
+                        'username' =>
+                            'Password telah direset, silakan login kembali'
+                    ]);
+            }
         }
 
         return $next($request);

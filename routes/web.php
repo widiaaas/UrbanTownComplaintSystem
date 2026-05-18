@@ -175,7 +175,7 @@ Route::middleware(['auth','active'])->group(function () {
         // ================= PENGHUNI =================
         Route::get('/IndexPenghuni', [PenghuniController::class, 'index'])->name('admin.penghuni.index');
         Route::post('/penghuni/store', [PenghuniController::class, 'store'])->name('admin.penghuni.store');
-        Route::put('/penghuni/update/{penghuni}', [PenghuniController::class, 'update'])->name('admin.penghuni.update');
+        Route::put('/penghuni/{penghuni}', [PenghuniController::class, 'update'])->name('admin.penghuni.update');
         // Route::delete('/penghuni/delete/{penghuni}', [PenghuniController::class, 'destroy'])->name('admin.penghuni.destroy');
         Route::get('/penghuni/{penghuni}/show', [PenghuniController::class, 'show'])->name('admin.penghuni.show');
         Route::patch('/keluar-unit/{penghuni}',[PenghuniController::class, 'keluarUnit']);
@@ -191,7 +191,7 @@ Route::middleware(['auth','active'])->group(function () {
     // ================= TENANT RELATION =================
     Route::middleware(['role:tenant_relation'])->group(function () {
 
-        Route::get('/dashboardTenantRelation', [DashboardController::class, 'tenantRelation']);
+        // Route::get('/dashboardTenantRelation', [DashboardController::class, 'tenantRelation']);
 
         // 🔥 KELUHAN
         Route::get('/keluhan-masuk', [KeluhanController::class, 'keluhanMasuk'])->name('tr.keluhan.masuk');
@@ -217,21 +217,21 @@ Route::middleware(['auth','active'])->group(function () {
         Route::post('/keluhan/{id}/work-order', [WorkOrderController::class, 'store']);
         
         // riwayat unit
-        Route::get('/riwayat-unit',[KeluhanController::class, 'riwayatUnit']);
+        Route::get('/riwayat-keluhan',[KeluhanController::class, 'riwayatKeluhan']);
         
        
     });
 
     // ================= DEPARTEMEN =================
     Route::middleware(['role:departemen'])->group(function () {
-        Route::get('/dashboardDepartemen', fn() => view('departemen.dashboard'));
+        // Route::get('/dashboardDepartemen',[DashboardController::class, 'index']);
         Route::get('/work-order-masuk', [WorkOrderController::class, 'woMasuk']);
         Route::post('/work-order/{id}/ambil', [WorkOrderController::class, 'ambilWO']);
         Route::get('/daftar-work-order', [WorkOrderController::class, 'daftarPenanganan']);
         Route::get('/detailWorkOrder/{id}', [WorkOrderController::class, 'detail']);
         Route::post('/work-order/{id}/status', [WorkOrderController::class, 'updateStatus']);
-
         Route::post('/work-order/{id}/penanganan', [RiwayatPenangananWOController::class, 'simpanPenanganan']);
+        Route::get('/riwayat-work-order',[WorkOrderController::class, 'riwayatWO']);
     });
 
     

@@ -198,6 +198,15 @@ class WorkOrderController extends Controller
             'taken_at' => now()
         ]);
 
+        RiwayatPenangananWO::create([
+            'work_order_id' => $wo->id,
+            'judul' => 'Work Order Diambil Alih',
+            'deskripsi' =>'Work Order telah diambil dan mulai diproses oleh departemen',
+            'status' => 'open',
+            'waktu' => now(),
+            'lampiran' => []
+        ]);
+
         return response()->json([
             'message' => 'WO berhasil diambil'
         ]);
@@ -274,59 +283,154 @@ class WorkOrderController extends Controller
     {
         $id = $request->id;
 
-        $wo = WorkOrder::with([
-            'keluhan.unit',
-            'keluhan.penghuni',
-            'penanggungJawab',
-            'keluhan.penanggungJawab',
-            'riwayat'
-        ])->findOrFail($id);
-        
-        $pj = $wo->penanggungJawab;
-        $tr = $wo->keluhan->penanggungJawab;
-     
-        $data = [
-            'id' => $wo->id,
-            'nomor_tiket' => $wo->nomor_tiket,
-            'deskripsi' => $wo->keluhan->deskripsi ?? '-',
-            'departemen' => $wo->departemen,
-            'instruksi' => $wo->instruksi,
-            'status' => ucwords(str_replace('_', ' ', $wo->status)),
-            'petugas' => $pj 
-                ? ($pj->nama ?? $pj->username) 
-                : '-',
-            'tr' => $tr?->nama ?? '-',
-            'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
-            'lampiran' => $wo->lampiran ?? [],
-            'lokasi' => $wo->lokasi,
+        $user = auth()->user();
 
-            // Pengajuan penghuni
-            'judul_keluhan' => $wo->keluhan->judul ?? '-',
-            'penghuni' =>$wo->keluhan->penghuni->nama ?? '-',
-            'unit' => $wo->keluhan->unit->nomor_unit ?? '-',
-            'lampiran_pengajuan' =>$wo->keluhan->lampiran_pengajuan ?? [],
-            
-            // Riwayat penanganann
+        $karyawan = $user->karyawan;
+
+        $wo = WorkOrder::with([
+
+            'keluhan.unit',
+
+            'keluhan.penghuni',
+
+            'departemen',
+
+            'penanggungJawab',
+
+            'keluhan.penanggungJawab',
+
+            'riwayat'
+
+        ])->findOrFail($id);
+
+        // ================= READONLY =================
+
+        $readonly = false;
+
+        // BUKAN PETUGAS WO
+        if (
+            $wo->penanggung_jawab_id !==
+            $karyawan->id
+        ) {
+
+            $readonly = true;
+        }
+
+        $pj = $wo->penanggungJawab;
+
+        $tr = $wo->keluhan->penanggungJawab;
+
+        $data = [
+
+            'id' => $wo->id,
+
+            'nomor_tiket' =>
+                $wo->nomor_tiket,
+
+            'deskripsi' =>
+                $wo->keluhan->deskripsi ?? '-',
+
+            'departemen' =>
+                $wo->departemen,
+
+            'instruksi' =>
+                $wo->instruksi,
+
+            'status' =>
+                ucwords(
+                    str_replace(
+                        '_',
+                        ' ',
+                        $wo->status
+                    )
+                ),
+
+            'petugas' => $pj
+                ? ($pj->nama ?? '-')
+                : 'Belum ada petugas',
+
+            'tr' =>
+                $tr?->nama
+                ?? 'Belum ada penanggung jawab',
+
+            'tanggal' =>
+                optional($wo->created_at)
+                    ->format('d M Y H:i'),
+
+            'lampiran' =>
+                $wo->lampiran ?? [],
+
+            'lokasi' =>
+                $wo->lokasi,
+
+            // ================= PENGAJUAN =================
+
+            'judul_keluhan' =>
+                $wo->keluhan->judul ?? '-',
+
+            'penghuni' =>
+                $wo->keluhan
+                    ->penghuni
+                    ->nama ?? '-',
+
+            'unit' =>
+                $wo->keluhan
+                    ->unit
+                    ->nomor_unit ?? '-',
+
+            'lampiran_pengajuan' =>
+                $wo->keluhan
+                    ->lampiran_pengajuan ?? [],
+
+            // ================= RIWAYAT =================
+
             'laporan' => $wo->riwayat()
-                ->orderBy('waktu','asc')
+                ->orderBy('waktu', 'asc')
                 ->get()
                 ->map(function ($r) {
+
                     return [
-                        'status' => $r->status,
-                        'judul' => $r->judul,
-                        'deskripsi' => $r->deskripsi,
+
+                        'status' =>
+                            $r->status,
+
+                        'judul' =>
+                            $r->judul,
+
+                        'deskripsi' =>
+                            $r->deskripsi,
+
                         'waktu' => $r->waktu
-                        ? \Carbon\Carbon::parse($r->waktu)->format('d M Y H:i')
-                        : ($r->created_at 
-                            ? $r->created_at->format('d M Y H:i') 
-                            : '-'),
-                        'lampiran' => $r->lampiran ?? []
+
+                            ? \Carbon\Carbon::parse(
+                                $r->waktu
+                            )->format('d M Y H:i')
+
+                            : (
+
+                                $r->created_at
+
+                                ? $r->created_at
+                                    ->format('d M Y H:i')
+
+                                : '-'
+                            ),
+
+                        'lampiran' =>
+                            $r->lampiran ?? []
                     ];
                 })->values()
         ];
 
-        return view('departemen.workOrder.detailWorkOrder', [
-            'wo' => $data]);
+        return view(
+            'departemen.workOrder.detailWorkOrder',
+            [
+
+                'wo' => $data,
+
+                'readonly' => $readonly
+            ]
+        );
     }
 
     public function updateStatus(Request $request, $id)
@@ -356,6 +460,96 @@ class WorkOrderController extends Controller
         return response()->json([
             'message' => 'Status berhasil diperbarui'
         ]);
+
+    }
+
+    public function riwayatWO(Request $request)
+    {
+        $user = auth()->user();
+
+        $karyawan = $user->karyawan;
+
+        if (!$karyawan) {
+
+            abort(403, 'Karyawan tidak ditemukan');
+        }
+
+        $query = WorkOrder::with([
+
+                'keluhan.unit',
+
+                'keluhan.penghuni',
+
+                'departemen',
+
+                'penanggungJawab',
+
+                'riwayat'
+
+            ])
+
+            // 🔥 HANYA DEPARTEMENNYA
+            ->where(
+                'departemen_id',
+                $karyawan->departemen_id
+            )
+
+            ->latest();
+
+        // ================= FILTER STATUS =================
+
+        if ($request->filled('status')) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+        $wo = $query
+            ->get()
+            ->map(function ($item) {
+
+                return [
+
+                    'id' =>
+                        $item->id,
+
+                    'nomor_tiket' =>
+                        $item->nomor_tiket,
+
+                    'unit' =>
+                        $item->keluhan
+                            ?->unit
+                            ?->nomor_unit ?? '-',
+
+                    'penghuni' =>
+                        $item->keluhan
+                            ?->penghuni
+                            ?->nama ?? '-',
+
+                    'instruksi' =>
+                        $item->instruksi,
+
+                    'status' =>
+                        $item->status,
+
+                    'tanggal' =>
+                        optional(
+                            $item->created_at
+                        )->format('d-m-Y H:i'),
+
+                    'petugas' =>
+                        $item->penanggungJawab
+                            ?->nama
+                            ?? 'Belum ada petugas',
+                ];
+            });
+
+        return view(
+            'departemen.workOrder.riwayatWO',
+            compact('wo')
+        );
     }
 
 }

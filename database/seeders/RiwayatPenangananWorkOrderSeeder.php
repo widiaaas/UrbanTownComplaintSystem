@@ -9,28 +9,28 @@ class RiwayatPenangananWorkOrderSeeder extends Seeder
 {
     public function run(): void
     {
-        RiwayatPenangananWorkOrder::create([
-            'work_order_id' => 1,
+        // RiwayatPenangananWorkOrder::create([
+        //     'work_order_id' => 1,
 
-            'status' => 'open',
+        //     'status' => 'open',
 
-            'judul' => 'Work Order Dibuat',
+        //     'judul' => 'Work Order Dibuat',
 
-            'deskripsi' => 'Work order berhasil dibuat dan dikirim ke Engineering.',
+        //     'deskripsi' => 'Work order berhasil dibuat dan dikirim ke Engineering.',
 
-            'waktu' => now()->subHours(2),
-        ]);
+        //     'waktu' => now()->subHours(2),
+        // ]);
 
-        RiwayatPenangananWorkOrder::create([
-            'work_order_id' => 1,
+        // RiwayatPenangananWorkOrder::create([
+        //     'work_order_id' => 1,
 
-            'status' => 'on_progress',
+        //     'status' => 'on_progress',
 
-            'judul' => 'Pemeriksaan AC',
+        //     'judul' => 'Pemeriksaan AC',
 
-            'deskripsi' => 'Teknisi sedang melakukan pemeriksaan AC.',
+        //     'deskripsi' => 'Teknisi sedang melakukan pemeriksaan AC.',
 
-            'waktu' => now()->subMinutes(30),
-        ]);
+        //     'waktu' => now()->subMinutes(30),
+        // ]);
     }
 }

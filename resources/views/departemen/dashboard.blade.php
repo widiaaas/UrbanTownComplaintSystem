@@ -125,7 +125,7 @@
 
                 <div>
                     <p class="font-semibold text-gray-900">
-                        {{ $wo->nomor_wo ?? 'WO-' . $wo->id }}
+                        {{ $wo->nomor_tiket?? 'WO-' . $wo->id }}
                     </p>
 
                     <!-- <p class="text-sm text-gray-700">

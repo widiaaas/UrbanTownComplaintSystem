@@ -14,6 +14,15 @@
         <a href="/daftar-work-order" class="text-sm text-blue-600 hover:underline">← Kembali</a>
     </div>
 
+    <template x-if="readonly">
+        <div
+            class="bg-yellow-50 border border-yellow-200
+            text-yellow-700 px-4 py-3 rounded-xl text-sm">
+            Anda hanya dapat melihat detail work order
+            karena bukan petugas penanggung jawab.
+        </div>
+    </template>
+
     {{-- ================= INFO UTAMA WO ================= --}}
     <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
         <p><b>Departemen</b><br><span x-text="wo.departemen?.nama_departemen"></span></p>
@@ -252,7 +261,6 @@
             x-text="typeof previewFile === 'object' ? previewFile.name : previewFile">
             </p>
 
-            <!-- 🔥 IMAGE -->
             <template x-if="(typeof previewFile === 'object' && previewFile.type.startsWith('image/')) || isImage(previewFile)">
                 <img 
                     :src="typeof previewFile === 'object' ? URL.createObjectURL(previewFile) : '/storage/' + previewFile"
@@ -281,7 +289,7 @@
     <div class="bg-white p-4 rounded-xl border space-y-2">
         <h3 class="font-semibold text-sm">Status Work Order</h3>
         <select x-model="newStatus" @change="ubahStatus"
-            :disabled="normalizeStatus(wo.status) === 'close'"
+            :disabled="readonly || normalizeStatus(wo.status) === 'close'"
             class="w-full border rounded-lg px-3 py-2">
             <option value="Open">Open</option>
             <option value="On Progress">On Progress</option>
@@ -291,7 +299,7 @@
     </div>
 
     {{-- ================= FORM PENANGANAN ================= --}}
-    <template x-if="normalizeStatus(wo.status) !== 'close'">
+    <template x-if=" !readonly && normalizeStatus(wo.status) !== 'close'">
         <div class="bg-white p-6 rounded-xl shadow space-y-4">
             <h3 class="font-semibold">Form Penanganan WO</h3>
             <div>
@@ -354,6 +362,7 @@ function detailWOApp() {
         openPreview: false,
         previewFile: null,
         newStatus: '',
+        readonly: @json($readonly ?? false),
 
         /* ===== INIT ===== */
         init() {

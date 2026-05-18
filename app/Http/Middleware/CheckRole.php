@@ -8,43 +8,24 @@ use Illuminate\Support\Facades\Auth;
 
 class CheckRole
 {
-    public function handle(
-        Request $request,
-        Closure $next,
-        ...$roles
-    ) {
+    public function handle( Request $request, Closure $next,...$roles ) {
 
-        /**
-         * =====================================================
-         * BELUM LOGIN
-         * =====================================================
-         */
+       // Belum login
         if (!Auth::check()) {
 
             return redirect()->route('login');
         }
 
         $user = Auth::user();
+        
 
-        /**
-         * =====================================================
-         * VALIDASI ROLE
-         * =====================================================
-         */
+        // validasi role
         if (!in_array($user->role, $roles)) {
 
             abort(403, 'Unauthorized');
         }
 
-        /**
-         * =====================================================
-         * VALIDASI DATA KARYAWAN
-         * =====================================================
-         * Khusus:
-         * admin
-         * tenant_relation
-         * departemen
-         */
+       // Validasi karyawan
         if (
             in_array(
                 $user->role,
@@ -61,12 +42,7 @@ class CheckRole
             }
         }
 
-        /**
-         * =====================================================
-         * VALIDASI DEPARTEMEN
-         * =====================================================
-         * Role departemen wajib memiliki departemen
-         */
+        // validasi departemen
         if ($user->role === 'departemen') {
 
             if (

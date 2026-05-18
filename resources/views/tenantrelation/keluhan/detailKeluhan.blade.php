@@ -26,7 +26,6 @@
             karena bukan penanggung jawab keluhan ini.
 
         </div>
-
     </template>
 
     {{-- ================= INFO ================= --}}
@@ -34,6 +33,7 @@
         <p><b>No Unit</b><br><span x-text="keluhan.unit"></span></p>
         <p><b>Nama Penghuni</b><br><span x-text="keluhan.nama"></span></p>
         <p><b>No Telepon</b><br><span x-text="keluhan.telepon"></span></p>
+        <p> <b>TR Penanggung Jawab</b><br><span x-text="keluhan.tr"></span></p>
         <p><b>Waktu</b><br><span x-text="keluhan.waktu"></span></p>
         <p><b>Status Keluhan</b><br>
             <span class="inline-block text-xs px-2 py-1 rounded"
@@ -666,6 +666,7 @@ function detailKeluhanApp() {
                 lantai: data.lantai ?? '-',
                 nama: data.penghuni,
                 telepon: data.telepon,
+                tr: data.tr,
                 waktu: data.waktu,
                 judul: data.pengajuan.judul,
                 deskripsi: data.pengajuan.deskripsi,

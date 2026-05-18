@@ -28,17 +28,9 @@
                 <template x-for="(k, index) in dataKeluhanMasuk" :key="k.id">
                     <tr class="border-t hover:bg-gray-50">
                         <td class="px-5 py-3 text-center" x-text="index + 1"></td>
-                        <td class="px-5 py-3 text-center font-medium" 
-                            x-text="k.unit?.nomor_unit ?? '-'">
-                        </td>
-
-                        <td class="px-5 py-3 text-center" 
-                            x-text="k.tanggal">
-                        </td>
-
-                        <td class="px-5 py-3 text-center" 
-                            x-text="k.penghuni?.nama ?? '-'">
-                        </td>
+                        <td class="px-5 py-3 text-center font-medium"  x-text="k.unit?.nomor_unit ?? '-'"></td>
+                        <td class="px-5 py-3 text-center" x-text="k.tanggal"></td>
+                        <td class="px-5 py-3 text-center"  x-text="k.penghuni?.nama ?? '-'"></td>
                         <td class="px-5 py-3 text-center" x-text="k.judul"></td>
                         <td class="px-5 py-3 text-center space-x-1">
                             

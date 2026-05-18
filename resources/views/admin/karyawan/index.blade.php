@@ -17,83 +17,68 @@
     </div>
 
     {{-- ================= FILTER ================= --}}
-    <form method="GET" action="{{ route('admin.karyawan.index') }}">
-        <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
-            
-            {{-- Cari Nama --}}
-            <div class="flex-1">
-                <label for="nama" class="text-sm font-medium text-gray-700">Cari Nama</label>
-                <input 
-                    id="nama"
-                    type="text"
-                    name="nama"
-                    value="{{ request('nama') }}"
-                    placeholder="Masukkan nama karyawan..."
-                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-            </div>
+    <div
+        class="bg-white rounded-lg shadow p-4
+        flex flex-col md:flex-row gap-4">
 
-            {{-- ROLE--}}
-            <div>
-            <label for="kategori"
+        {{-- SEARCH --}}
+        <div class="flex-1">
+
+            <label
                 class="text-sm font-medium text-gray-700">
-                TR/Departemen
+
+                Cari Karyawan
+
+            </label>
+
+            <input
+                type="text"
+                x-model="search"
+                placeholder="Cari nama atau ID pegawai..."
+                class="w-full mt-1 border rounded-lg px-3 py-2
+                focus:ring focus:ring-blue-200">
+
+        </div>
+
+        {{-- FILTER ROLE --}}
+        <div class="md:w-72">
+
+            <label
+                class="text-sm font-medium text-gray-700">
+
+                Peran
+
             </label>
 
             <select
-                id="kategori"
-                name="kategori"
-                class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"
-            >
+                x-model="roleFilter"
+                class="w-full mt-1 border rounded-lg px-3 py-2
+                bg-white focus:ring focus:ring-blue-200">
 
-                <option value="">Semua</option>
+                <option value="">
+                    Semua
+                </option>
 
-                <optgroup label="Tenant Relation">
+                <option value="tenant_relation">
+                    Tenant Relation
+                </option>
 
-                    <option
-                        value="tenant_relation"
-                        {{ request('kategori') == 'tenant_relation'
-                            ? 'selected'
-                            : '' }}
-                    >
-                        Tenant Relation
+                @foreach($departemens as $dept)
+
+                    <option value="{{ $dept->nama_departemen }}">
+
+                        {{ $dept->nama_departemen }}
+
                     </option>
 
-                </optgroup>
-
-                <optgroup label="Departemen">
-
-                    @foreach($departemens as $dept)
-
-                        <option
-                            value="dept_{{ $dept->id }}"
-                            {{ request('kategori') == 'dept_'.$dept->id
-                                ? 'selected'
-                                : '' }}
-                        >
-                            {{ $dept->nama_departemen }}
-                        </option>
-
-                    @endforeach
-
-                </optgroup>
+                @endforeach
 
             </select>
-        </div>
-            
-            {{-- Button --}}
-            <div class="flex gap-2">
-                <button type="submit"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Filter
-                </button>
-
-                <a href="{{ route('admin.karyawan.index') }}"
-                    class="px-4 py-2 border rounded-lg hover:bg-gray-100 text-center">
-                    Reset
-                </a>
-            </div>
 
         </div>
+
+    </div>
+
     </form>
     {{-- ================= TABLE ================= --}}
     <div class="overflow-x-auto">
@@ -104,7 +89,7 @@
                     <th class="px-4 py-2 border">No</th>
                     <th class="px-4 py-2 border">ID Pegawai</th>
                     <th class="px-4 py-2 border">Nama</th>
-                    <th class="px-4 py-2 border">Jabatan</th>
+                    <th class="px-4 py-2 border">Role</th>
                     <th class="px-4 py-2 border">Status</th>
                     <th class="px-4 py-2 border">Aksi</th>
                 </tr>
@@ -127,7 +112,7 @@
 
             {{-- DATA ADA --}}
             <template
-                x-for="(emp, index) in employees"
+                x-for="(emp, index) in filteredEmployees"
                 :key="emp.id"
             >
 
@@ -183,53 +168,65 @@
                                 <span class="text-xs">▼</span>
                             </button>
 
+                            <!-- Dropdown -->
                             <div
                                 x-show="open"
                                 x-cloak
                                 x-transition
                                 @click.outside="open = false"
                                 x-ref="menu"
-                                class="fixed w-44 bg-white border rounded-lg shadow-xl z-[9999]"
-                            >
+                                class="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] overflow-hidden">
 
-                                {{-- DETAIL --}}
-                                <button
-                                    @click="
-                                        openDetail=true;
-                                        selectedEmployee = emp;
-                                        open=false
-                                    "
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
-                                >
-                                    👁 Detail
-                                </button>
+                                <div class="py-1">
 
-                                {{-- EDIT --}}
-                                <button
-                                    @click="
-                                        openEdit=true;
-                                        selectedEmployee = {...emp};
-                                        open=false
-                                    "
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
-                                >
-                                    ✏ Edit
-                                </button>
+                                    {{-- DETAIL --}}
+                                    <button
+                                        @click="
+                                            openDetail = true;
+                                            selectedEmployee = emp;
+                                            open = false
+                                        "
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">
 
-                                {{-- RESET --}}
-                                <button
-                                    @click="
-                                        openResetPassword=true;
-                                        selectedEmployee = emp;
-                                        open=false
-                                    "
-                                    class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
-                                >
-                                    🔑 Reset Password
-                                </button>
+                                        <span>👁️</span>
 
-                              
-                            </div>
+                                        <span>Detail Karyawan</span>
+
+                                    </button>
+
+                                    {{-- EDIT --}}
+                                    <button
+                                        @click="
+                                            openEdit = true;
+                                            selectedEmployee = {...emp};
+                                            open = false
+                                        "
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">
+
+                                        <span>✏️</span>
+
+                                        <span>Edit Karyawan</span>
+
+                                    </button>
+
+                                    {{-- RESET PASSWORD --}}
+                                    <button
+                                        @click="
+                                            openResetPassword = true;
+                                            selectedEmployee = emp;
+                                            open = false
+                                        "
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">
+
+                                        <span>🔑</span>
+
+                                        <span>Reset Kata Sandi</span>
+
+                                    </button>
+
+                                </div>
+
+                            </div>  
 
                         </div>
 
@@ -456,13 +453,13 @@
             <p><strong>ID Pegawai:</strong> <span x-text="selectedEmployee.id_pegawai"></span></p>
             <p><strong>No. Telp:</strong> <span x-text="selectedEmployee.no_telepon"></span></p>
             <p><strong>Email:</strong> <span x-text="selectedEmployee.email"></span></p>
-            <p><strong>Jabatan:</strong>
+            <p><strong>Role:</strong>
 
             <span
                 x-text="
                     selectedEmployee.role === 'tenant_relation'
                             ? 'Tenant Relation'
-                            : selectedEmployee.departemen?.nama_departemen
+                            : selectedEmployee.departemen_id?.nama_departemen
                 ">
             </span>
         </p>
@@ -527,8 +524,9 @@ function karyawanManager(){
         openEdit:false,
         openDetail:false,
         openResetPassword:false,
-
         openCredential:false,
+        search:'',
+        roleFilter:'',
 
         credentialData:{
             username:'',
@@ -564,6 +562,56 @@ function karyawanManager(){
                 jenis_kelamin: e.jenis_kelamin
             }));
         },
+        
+        get filteredEmployees(){
+
+            return this.employees.filter(emp => {
+
+                // Searcg
+                const keyword =
+                    this.search.toLowerCase();
+
+                const matchSearch =
+
+                    (emp.nama || '')
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
+                    (emp.id_pegawai || '')
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
+                    (emp.email || '')
+                        .toLowerCase()
+                        .includes(keyword);
+
+                
+                 // Filter role 
+                let roleName = '';
+
+                if(emp.role === 'tenant_relation') { roleName = 'tenant_relation';
+
+                } else {
+
+                    roleName =
+                        emp.departemen
+                            ?.nama_departemen || '';
+                }
+
+                const matchRole =
+
+                    !this.roleFilter ||
+
+                    roleName === this.roleFilter;
+
+                return matchSearch && matchRole;
+            });
+            },
+
         showError(msg){
             this.openCreate = true;
 
@@ -697,7 +745,7 @@ function karyawanManager(){
                         no_telepon:'',
                         email:'',
                         role:'',
-                        departemen:'',
+                        departemen_id:'',
                         jenis_kelamin:'',
                         status:'Aktif'
                     };

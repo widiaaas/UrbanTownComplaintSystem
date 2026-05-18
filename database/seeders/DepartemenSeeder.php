@@ -18,7 +18,7 @@ class DepartemenSeeder extends Seeder
         ];
 
         foreach ($departemens as $departemen) {
-            Departemen::create([
+            Departemen::updateOrCreate([
                 'nama_departemen' => $departemen
             ]);
         }

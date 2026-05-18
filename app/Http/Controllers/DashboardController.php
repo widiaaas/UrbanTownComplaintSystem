@@ -220,7 +220,14 @@ class DashboardController extends Controller
              */
             $totalWOMasuk = WorkOrder::whereNull(
                 'penanggung_jawab_id'
-            )->count();
+            )
+        
+            ->where(
+                'departemen_id',
+                $karyawan->departemen_id
+            )
+        
+            ->count();
 
             /**
              * ================= OVERDUE =================

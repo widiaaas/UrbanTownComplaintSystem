@@ -126,23 +126,23 @@ class AuthController extends Controller
                 ]);
         }
 
-        // password direset admin
-        if (
-            session('password_hash') !== $user->password
-        ) {
+        // // password direset admin
+        // if (
+        //     session('password_hash') !== $user->password
+        // ) {
         
-            Auth::logout();
+        //     Auth::logout();
         
-            request()->session()->invalidate();
+        //     request()->session()->invalidate();
         
-            request()->session()->regenerateToken();
+        //     request()->session()->regenerateToken();
         
-            return redirect('/')
-                ->withErrors([
-                    'username' =>
-                        'Session telah berakhir, silakan login kembali'
-                ]);
-        }
+        //     return redirect('/')
+        //         ->withErrors([
+        //             'username' =>
+        //                 'Session telah berakhir, silakan login kembali'
+        //         ]);
+        // }
 
         // SUDAH TIDAK WAJIB GANTI PASSWORD
         if (!$user->must_change_password) {

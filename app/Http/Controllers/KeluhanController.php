@@ -232,6 +232,15 @@ class KeluhanController extends Controller
             'taken_at' => now(),
         ]);
 
+        RiwayatPenangananKeluhan::create([
+            'keluhan_id' => $keluhan->id,
+            'judul' => 'Keluhan Diambil Alih',
+            'deskripsi' =>'Keluhan telah diambil oleh Tenant Relation dan mulai diproses',
+            'status' => 'open',
+            'waktu' => now(),
+            'lampiran' => []
+        ]);
+
         return response()->json([
             'message' => 'Keluhan berhasil diambil',
             'data' => $keluhan->fresh('penanggungJawab')
@@ -242,52 +251,97 @@ class KeluhanController extends Controller
     {
         $user = auth()->user();
 
-         // 🔥 pakai query builder
-        $query = $user->karyawan->keluhans()
-        ->with(['unit', 'penghuni','workOrders.departemen']);
+        $karyawan = $user->karyawan;
 
-         // 🔹 FILTER STATUS KELUHAN
+        // ================= QUERY =================
+        $query = Keluhan::with([
+                'unit',
+                'penghuni',
+                'workOrders.departemen'
+            ])
+
+            ->where(
+                'penanggung_jawab_id',
+                $karyawan->id
+            );
+
+        // ================= FILTER STATUS =================
         if ($request->filled('status')) {
+
             $statuses = explode(',', $request->status);
 
             $statuses = array_map(function ($s) {
-                return strtolower(str_replace(' ', '_', $s));
+
+                return strtolower(
+                    str_replace(' ', '_', $s)
+                );
+
             }, $statuses);
 
-            $query->whereIn('status', $statuses);
+            $query->whereIn(
+                'status',
+                $statuses
+            );
         }
 
-        // 🔥 🔥 INI TAMBAHAN UNTUK WO 🔥 🔥
+        // ================= FILTER WO =================
         if ($request->filled('wo_status')) {
 
-            $woStatuses = explode(',', $request->wo_status);
+            $woStatuses =
+                explode(',', $request->wo_status);
 
             $woStatuses = array_map(function ($s) {
-                return strtolower(str_replace(' ', '_', $s));
+
+                return strtolower(
+                    str_replace(' ', '_', $s)
+                );
+
             }, $woStatuses);
 
-            $query->whereHas('workOrders', function ($q) use ($woStatuses) {
-                $q->whereIn('status', $woStatuses);
-            });
+            $query->whereHas(
+                'workOrders',
+                function ($q) use ($woStatuses) {
+
+                    $q->whereIn(
+                        'status',
+                        $woStatuses
+                    );
+                }
+            );
         }
-        // dd($statuses);
 
-
+        // ================= RESULT =================
         $keluhan = $query
             ->latest()
             ->get()
             ->map(function ($k) {
+
                 return [
+
                     'id' => $k->id,
-                    'nomor_tiket' => $k->nomor_tiket,
-                    'waktu' => optional($k->created_at)->format('d-m-Y H:i'),
-                    'penghuni' => $k->penghuni->nama ?? '-',
-                    'unit' => $k->unit->nomor_unit ?? '-',
-                    'status' => $k->status_label,
+
+                    'nomor_tiket' =>
+                        $k->nomor_tiket,
+
+                    'waktu' =>
+                        optional($k->created_at)
+                            ->format('d-m-Y H:i'),
+
+                    'penghuni' =>
+                        $k->penghuni->nama ?? '-',
+
+                    'unit' =>
+                        $k->unit->nomor_unit ?? '-',
+
+                    'status' =>
+                        $k->status_label,
                 ];
             });
 
-        return view('tenantrelation.keluhan.daftarPenanganan', compact('keluhan'));
+        return view(
+            'tenantrelation.keluhan.daftarPenanganan',
+            compact('keluhan')
+        );
     }
 
     public function updateStatus(Request $request, $id)
@@ -379,9 +433,10 @@ class KeluhanController extends Controller
             'unit' => $keluhan->unit->nomor_unit ?? '-',
             'penghuni' => $keluhan->penghuni->nama ?? '-',
             'telepon' => $keluhan->penghuni->telepon ?? '-',
+            'tr' => $keluhan->penanggungJawab ?->nama ?? 'Belum ada penanggung jawab',
             'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'unassigned')),
             'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
-        
+            
             // 🔥 PENGAJUAN
             'pengajuan' => [
                 'judul' => $keluhan->judul,
@@ -422,7 +477,7 @@ class KeluhanController extends Controller
                     'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
                     'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
-                    'petugas' => $pj?->karyawan?->nama ?? '-',
+                    'petugas' => $pj?->karyawan?->nama ?? 'Belum ada penanggung jawab',
                     'laporan' => $wo->riwayat
                         ->sortBy('waktu')
                         ->map(function ($r) {
@@ -527,7 +582,7 @@ class KeluhanController extends Controller
     }
 
 
-    public function riwayatUnit(Request $request)
+    public function riwayatKeluhan(Request $request)
     {
         $query = Keluhan::with([
                 'unit',
@@ -593,7 +648,7 @@ class KeluhanController extends Controller
             });
 
         return view(
-            'tenantrelation.riwayatUnit',
+            'tenantrelation.riwayatKeluhan',
             compact('keluhan')
         );
     }

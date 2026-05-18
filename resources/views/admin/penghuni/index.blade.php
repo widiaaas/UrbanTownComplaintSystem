@@ -21,50 +21,61 @@
     </div>
 
     {{-- ================= FILTER ================= --}}
-    <form method="GET" action="{{ route('admin.penghuni.index') }}">
-        <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-end gap-4">
-            
-            {{-- Cari Nama / Unit --}}
-            <div class="flex-1">
-                <label for="nama" class="text-sm font-medium text-gray-700">Cari Nama / Unit</label>
-                <input 
-                    id="nama"
-                    type="text"
-                    name="nama"
-                    value="{{ request('nama') }}"
-                    placeholder="Masukkan nama atau nomor unit..."
-                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
-            </div>
+    <div
+        class="bg-white rounded-lg shadow p-4
+        flex flex-col md:flex-row gap-4">
 
-            {{-- Status --}}
-            <div>
-                <label for="status" class="text-sm font-medium text-gray-700">Status</label>
-                <select 
-                    id="status"
-                    name="status"
-                    class="w-full mt-1 border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200">
+        {{-- SEARCH --}}
+        <div class="flex-1">
 
-                    <option value="">Semua</option>
-                    <option value="Aktif" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
-                    <option value="Nonaktif" {{ request('status') == 'Nonaktif' ? 'selected' : '' }}>Nonaktif</option>
-                </select>
-            </div>
-            
-            {{-- Button --}}
-            <div class="flex gap-2">
-                <button type="submit"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Filter
-                </button>
+            <label
+                class="text-sm font-medium text-gray-700">
 
-                <a href="{{ route('admin.penghuni.index') }}"
-                    class="px-4 py-2 border rounded-lg hover:bg-gray-100 text-center">
-                    Reset
-                </a>
-            </div>
+                Cari Penghuni
+
+            </label>
+
+            <input
+                type="text"
+                x-model="search"
+                placeholder="Cari nama penghuni atau nomor unit..."
+                class="w-full mt-1 border rounded-lg px-3 py-2
+                focus:ring focus:ring-blue-200">
+
         </div>
-    </form>
 
+        {{-- FILTER STATUS --}}
+        <div class="md:w-64">
+
+            <label
+                class="text-sm font-medium text-gray-700">
+
+                Status
+
+            </label>
+
+            <select
+                x-model="statusFilter"
+                class="w-full mt-1 border rounded-lg px-3 py-2
+                bg-white focus:ring focus:ring-blue-200">
+
+                <option value="">
+                    Semua
+                </option>
+
+                <option value="Aktif">
+                    Aktif
+                </option>
+
+                <option value="Nonaktif">
+                    Nonaktif
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
     {{-- TABLE --}}
     <div class="bg-white rounded-lg shadow overflow-x-auto">
         <table class="min-w-full text-sm text-center border-collapse">
@@ -80,7 +91,7 @@
 
             <tbody>
                 {{-- DATA TIDAK ADA --}}
-                <template x-if="!penghuni.length">
+                <template x-if="!filteredPenghuni.length">
 
                     <tr>
                         <td
@@ -95,9 +106,8 @@
 
                 {{-- DATA ADA --}}
                 <template
-                    x-for="(p, index) in penghuni"
-                    :key="p.id"
-                >
+                    x-for="(p, index) in filteredPenghuni"
+                    :key="p.id">
 
                     <tr class="border-t hover:bg-gray-50 transition">
                         <td class="px-4 py-3" x-text="index+1"></td>
@@ -291,6 +301,8 @@ function penghuniManager(){
         openCreate:false,
         openEdit:false,
         openDetail:false,
+        search:'',
+        statusFilter:'',
 
         newPenghuni:{
             nama:'',
@@ -307,6 +319,56 @@ function penghuniManager(){
         init(data){
             this.penghuni = data;
         },
+
+        // Search
+        get filteredPenghuni(){
+
+            return this.penghuni.filter(p => {
+
+                // ================= SEARCH =================
+
+                const keyword =
+                    this.search.toLowerCase();
+
+                const unitAktif =
+                    p.riwayat_hunian
+                        ?.find(r => r.status === 'Aktif')
+                        ?.unit
+                        ?.nomor_unit || '';
+
+                const matchSearch =
+
+                    (p.nama || '')
+                        .toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
+                    unitAktif
+                        .toLowerCase()
+                        .includes(keyword);
+
+                // ================= STATUS =================
+
+                const isAktif =
+                    p.riwayat_hunian?.some(
+                        r => r.status === 'Aktif'
+                    );
+
+                const status =
+                    isAktif
+                        ? 'Aktif'
+                        : 'Nonaktif';
+
+                const matchStatus =
+
+                    !this.statusFilter ||
+
+                    status === this.statusFilter;
+
+                return matchSearch && matchStatus;
+            });
+            },
 
         // ================= ERROR HANDLER =================
         showError(msg, errors = {}){
@@ -461,7 +523,7 @@ function penghuniManager(){
 
             this.errors = {};
 
-            fetch(`/admin/penghuni/update/${this.selected.id}`,{
+            fetch(`{{ url('/penghuni') }}/${this.selected.id}`,{
                 method:'PUT',
                 headers:{
                     'Content-Type':'application/json',

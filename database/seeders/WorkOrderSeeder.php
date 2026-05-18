@@ -9,28 +9,28 @@ class WorkOrderSeeder extends Seeder
 {
     public function run(): void
     {
-        WorkOrder::create([
-            'nomor_tiket' => 'WO-0001',
+        // WorkOrder::create([
+        //     'nomor_tiket' => 'WO-0001',
 
-            'keluhan_id' => 1,
+        //     'keluhan_id' => 1,
 
-            'departemen_id' => 2,
+        //     'departemen_id' => 2,
 
-            'instruksi' => 'Lakukan pemeriksaan dan perbaikan AC.',
+        //     'instruksi' => 'Lakukan pemeriksaan dan perbaikan AC.',
 
-            'lokasi' => 'Tower A Lt 12 Unit A-1201',
+        //     'lokasi' => 'Tower A Lt 12 Unit A-1201',
 
-            'status' => 'on_progress',
+        //     'status' => 'on_progress',
 
-            'penanggung_jawab_id' => 3,
+        //     'penanggung_jawab_id' => 3,
 
-            'taken_at' => now(),
+        //     'taken_at' => now(),
 
-            'lampiran' => json_encode([
-                'wo/pemeriksaan1.jpg'
-            ]),
+        //     'lampiran' => json_encode([
+        //         'wo/pemeriksaan1.jpg'
+        //     ]),
 
-            'tanggal_dibuat' => now(),
-        ]);
+        //     'tanggal_dibuat' => now(),
+        // ]);
     }
 }

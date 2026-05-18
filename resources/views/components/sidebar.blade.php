@@ -241,8 +241,8 @@
 
             {{--=====RIwayat Unit======--}}
 
-            <a href="/riwayat-unit"
-             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-unit*', $currentPath) }}">
+            <a href="/riwayat-keluhan"
+             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-keluhan*', $currentPath) }}">
 
                 @include('components.icons.building-fill')
 
@@ -301,21 +301,18 @@
 
             </a>
 
-            <!-- {{-- KHUSUS ENGINEERING --}}
-            @if($departemen === 'Engineering')
+            {{-- ================= RIWAYAT WO ================= --}}
+ 
+            <a href="/riwayat-work-order"
+                class="sidebar-link">
 
-                <a
-                    href="/knowledge-base"
-                    class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('knowledge-base*', $currentPath) }}"
-                >
+                <i class="fas fa-clock-rotate-left"></i>
 
-                    @include('components.icons.bookOpen')
+                <span>
+                    Riwayat Work Order
+                </span>
 
-                    <span>Knowledge Base</span>
-
-                </a> -->
-
-            @endif
+            </a>
 
             {{-- PROFILE --}}
             <a
