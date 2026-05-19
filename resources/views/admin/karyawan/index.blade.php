@@ -98,16 +98,14 @@
             <tbody class="bg-white divide-y divide-gray-200">
 
             {{-- DATA TIDAK ADA --}}
-            <template x-if="employees.length === 0">
-
+            <template x-if="!filteredEmployees.length">
                 <tr>
                     <td
                         colspan="6"
                         class="px-4 py-4 text-center text-gray-400 italic">
-                            Data karyawan tidak tersedia
+                        Data karyawan tidak tersedia
                     </td>
                 </tr>
-
             </template>
 
             {{-- DATA ADA --}}
@@ -157,13 +155,12 @@
 
                         <div
                             x-data="dropdownMenu(emp)"
-                            class="relative inline-block text-left"
-                        >
+                            class="relative inline-block text-left">
 
                             <button 
                                 @click="toggle($event)"
                                 class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1"
-                            >
+>
                                 Aksi
                                 <span class="text-xs">▼</span>
                             </button>
@@ -175,7 +172,7 @@
                                 x-transition
                                 @click.outside="open = false"
                                 x-ref="menu"
-                                class="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] overflow-hidden">
+                                class="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
 
                                 <div class="py-1">
 
@@ -459,7 +456,7 @@
                 x-text="
                     selectedEmployee.role === 'tenant_relation'
                             ? 'Tenant Relation'
-                            : selectedEmployee.departemen_id?.nama_departemen
+                            : selectedEmployee.departemen?.nama_departemen
                 ">
             </span>
         </p>
@@ -938,9 +935,11 @@ function dropdownMenu(emp){
         button:null,
 
         toggle(event){
+
             this.open = !this.open;
+
             this.button = event.currentTarget;
-        }
+            }
     }
 }
 </script>

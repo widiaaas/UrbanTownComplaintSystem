@@ -34,6 +34,14 @@
                     <span x-text="form.nama"></span>
                 </div>
 
+                {{-- NIK (HANYA PENGHUNI) --}}
+                <template x-if=" user.role === 'unit'">
+                    <div class="flex justify-between">
+                        <span class="font-semibold">NIK</span>
+                        <span x-text="form.nik"></span>
+                    </div>
+                </template>
+
                 {{-- EMAIL --}}
                 <div class="flex justify-between">
                     <span class="font-semibold">Email</span>
@@ -99,6 +107,10 @@
                 <div>
                     <label class="block text-sm font-semibold mb-1">Nama</label>
                     <input x-model="form.nama" class="input w-full">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">NIK</label>
+                    <input x-model="form.nik" class="input w-full">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-1">Email</label>
@@ -239,6 +251,7 @@ function profileData(){
 
         form:{
             nama:'',
+            nik:'',
             email:'',
             no_telepon:'',
             jabatan:'',
@@ -308,8 +321,9 @@ function profileData(){
                     const penghuni = unit?.penghuni;
                     this.user.username =unit?.nomor_unit ?? '-';
                     this.form.nama = penghuni?.nama ??'Belum ada penghuni';
+                    this.form.nik =penghuni?.nik ?? '-';
                     this.form.email =penghuni?.email ?? '-';
-                    this.form.no_telepon =penghuni?.telepon ?? '-';
+                    this.form.no_telepon =penghuni?.no_telepon ?? '-';
                     this.form.jenis_kelamin =penghuni?.jenis_kelamin ?? '-';
                 }
             }catch(err){
@@ -322,14 +336,45 @@ function profileData(){
 
             this.errors = {};
 
+            const confirm =
+                await Swal.fire({
+
+                    title: 'Simpan perubahan?',
+
+                    text: 'Perubahan profil akan diperbarui',
+
+                    icon: 'question',
+
+                    showCancelButton: true,
+
+                    confirmButtonText: 'Ya, Simpan',
+
+                    cancelButtonText: 'Batal',
+
+                    confirmButtonColor: '#2563eb',
+
+                    cancelButtonColor: '#6b7280',
+                });
+
+            if(!confirm.isConfirmed){
+                return;
+            }
+
             try{
+
                 const res = await fetch('/profile/update',{
+
                     method:'PUT',
+
                     headers:{
                         'Content-Type':'application/json',
                         'Accept':'application/json',
-                        'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN':
+                            document.querySelector(
+                                'meta[name="csrf-token"]'
+                            ).content
                     },
+
                     body:JSON.stringify(this.form)
                 });
 
@@ -339,7 +384,11 @@ function profileData(){
                     throw data;
                 }
 
-                Swal.fire('Berhasil','Profil diperbarui','success');
+                Swal.fire(
+                    'Berhasil',
+                    'Profil berhasil diperbarui',
+                    'success'
+                );
 
                 this.editMode = false;
 
@@ -348,27 +397,69 @@ function profileData(){
                 let message = 'Terjadi kesalahan';
 
                 if(err.errors){
-                    message = Object.values(err.errors).flat().join('\n');
+
+                    message =
+                        Object.values(err.errors)
+                            .flat()
+                            .join('\n');
+
                     this.errors = err.errors;
                 }
 
-                Swal.fire('Error', message, 'error');
+                Swal.fire(
+                    'Error',
+                    message,
+                    'error'
+                );
             }
-        },
+            },
 
         // ================= UPDATE PASSWORD =================
         async updatePassword(){
 
             this.errors = {};
 
+            const confirm =
+                await Swal.fire({
+
+                    title: 'Ubah kata sandi?',
+
+                    text: 'Kata sandi akun akan diperbarui',
+
+                    icon: 'warning',
+
+                    showCancelButton: true,
+
+                    confirmButtonText: 'Ya, Ubah',
+
+                    cancelButtonText: 'Batal',
+
+                    confirmButtonColor: '#d97706',
+
+                    cancelButtonColor: '#6b7280',
+                });
+
+            if(!confirm.isConfirmed){
+                return;
+            }
+
             try{
-                const res = await fetch('/profile/update-password',{
+
+                const res = await fetch(
+                    '/profile/update-password',
+                {
+
                     method:'PUT',
+
                     headers:{
                         'Content-Type':'application/json',
                         'Accept':'application/json',
-                        'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN':
+                            document.querySelector(
+                                'meta[name="csrf-token"]'
+                            ).content
                     },
+
                     body:JSON.stringify(this.password)
                 });
 
@@ -378,11 +469,18 @@ function profileData(){
                     throw data;
                 }
 
-                Swal.fire('Berhasil','Password diubah','success');
+                Swal.fire(
+                    'Berhasil',
+                    'Password berhasil diubah',
+                    'success'
+                );
 
                 this.password = {
+
                     password_lama:'',
+
                     password_baru:'',
+
                     password_baru_confirmation:''
                 };
 
@@ -391,12 +489,20 @@ function profileData(){
                 let message = 'Terjadi kesalahan';
 
                 if(err.errors){
-                    message = Object.values(err.errors).flat().join('\n');
+
+                    message =
+                        Object.values(err.errors)
+                            .flat()
+                            .join('\n');
                 }
 
-                Swal.fire('Error', message, 'error');
+                Swal.fire(
+                    'Error',
+                    message,
+                    'error'
+                );
             }
-        }
+            }
     }
 }
 </script>

@@ -130,9 +130,12 @@ function penangananWOApp() {
                     (wo.nomor_tiket || '').toLowerCase().includes(search) ||
                     (wo.unit || '').toLowerCase().includes(search);
 
-                const matchStatus =
-                    !this.statusFilter ||
-                    wo.status === this.statusFilter;
+                    const matchStatus =
+
+                        !this.statusFilter ||
+
+                        this.normalizeStatus(wo.status) ===
+                        this.normalizeStatus(this.statusFilter);
 
                 return matchSearch && matchStatus;
             });
@@ -144,6 +147,13 @@ function penangananWOApp() {
             this.statusFilter = '';
         },
 
+        normalizeStatus(status) {
+
+            return (status || '')
+                .toLowerCase()
+                .replace(/\s+/g, '_');
+            },
+
         openStatusModal(wo) {
             this.selectedWO = { ...wo };
             this.newStatus = wo.status;
@@ -151,13 +161,14 @@ function penangananWOApp() {
         },
 
         statusClass(status) {
-            const classes = {
-                'Open': 'bg-blue-100 text-blue-700',
-                'On progress': 'bg-yellow-100 text-yellow-700',
-                'Waiting': 'bg-orange-100 text-orange-700',
-                'Close': 'bg-green-100 text-green-700'
+            const s = this.normalizeStatus(status);
+            return {
+                'bg-blue-100 text-blue-700':    s === 'open',
+                'bg-yellow-100 text-yellow-700': s === 'on_progress',
+                'bg-orange-100 text-orange-700': s === 'waiting',
+                'bg-green-100 text-green-700':  s === 'close',
+                'bg-gray-100 text-gray-700':    !['open','on_progress','waiting','close'].includes(s)
             };
-            return classes[status] || 'bg-gray-100 text-gray-700';
         }
     }
 }

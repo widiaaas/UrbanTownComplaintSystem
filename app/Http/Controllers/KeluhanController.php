@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Keluhan;
 use App\Models\Departemen;
 use App\Models\WorkOrder;
+use App\Models\Karyawan;
 use App\Models\RiwayatPenangananWO;
 use App\Models\RiwayatPenangananKeluhan;
 
@@ -202,7 +203,7 @@ class KeluhanController extends Controller
                     'penghuni' => [
                         'id' =>$k->penghuni?->id,
                         'nama' => $k->penghuni?->nama,
-                        'telepon' =>$k->penghuni?->telepon,
+                        'no_telepon' =>$k->penghuni?->no_telepon,
                     ],
                     'penanggungJawab' =>$k->penanggungJawab
                 ];
@@ -400,7 +401,7 @@ class KeluhanController extends Controller
             'unit',
             'penghuni',
             'riwayatPenanganan', 
-            'workOrders.penanggungJawab.karyawan',
+            'workOrders.penanggungJawab',
             'workOrders.riwayat'
         ])->findOrFail($id);
 
@@ -432,7 +433,7 @@ class KeluhanController extends Controller
             'nomor_tiket' => $keluhan->nomor_tiket,
             'unit' => $keluhan->unit->nomor_unit ?? '-',
             'penghuni' => $keluhan->penghuni->nama ?? '-',
-            'telepon' => $keluhan->penghuni->telepon ?? '-',
+            'no_telepon' => $keluhan->penghuni->no_telepon ?? '-',
             'tr' => $keluhan->penanggungJawab ?->nama ?? 'Belum ada penanggung jawab',
             'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'unassigned')),
             'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
@@ -447,7 +448,7 @@ class KeluhanController extends Controller
             
             // 🔥 RIWAYAT
             'riwayat_penanganan' => $keluhan->riwayatPenanganan
-                ->sortBy('waktu')
+                ->sortByDesc('waktu')
                 ->map(function ($r) {
                     return [
                         'judul' => $r->judul,
@@ -477,9 +478,10 @@ class KeluhanController extends Controller
                     'tanggal' => optional($wo->created_at)->format('d M Y H:i'),
                     'lokasi' => $wo->lokasi,
                     'instruksi' => $wo->instruksi,
-                    'petugas' => $pj?->karyawan?->nama ?? 'Belum ada penanggung jawab',
+                    'petugas' => $pj?->nama ?? 'Belum ada penanggung jawab',
+                    'lampiran' => $wo->lampiran ?? [],
                     'laporan' => $wo->riwayat
-                        ->sortBy('waktu')
+                        ->sortByDesc('waktu')
                         ->map(function ($r) {
                             return [
                                 'status' => strtolower(
@@ -566,6 +568,15 @@ class KeluhanController extends Controller
             'status' => 'close'
         ]);
         $keluhan->refresh(); 
+        
+        RiwayatPenangananKeluhan::create([
+            'keluhan_id' => $keluhan->id,
+            'judul' => 'Keluhan Selesai',
+            'deskripsi' => 'Penanganan keluhan telah selesai dan keluhan dinyatakan ditutup',
+            'status' => 'close',
+            'waktu' => now(),
+            'lampiran' => []
+        ]);
 
         return response()->json([
             'message' =>'Keputusan berhasil disimpan & keluhan ditutup',

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('nomor_unit', 10)->unique();
             $table->string('gedung', 50);
-            $table->integer('lantai');
-            $table->integer('nomor_kamar');
+            $table->string('lantai');
+            $table->string('nomor_kamar');
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
             $table->foreignId('pengguna_id')->constrained('penggunas')->onDelete('cascade');
             

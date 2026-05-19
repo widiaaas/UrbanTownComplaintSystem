@@ -88,7 +88,7 @@
                         <th class="px-4 py-3 text-center">Nomor WO</th>
                         <th class="px-4 py-3 text-center">Unit</th>
                         <th class="px-4 py-3 text-center"> Penghuni</th>
-                        <th class="px-4 py-3 text-center">Petugas</th>
+                        <th class="px-4 py-3 text-center">Penanggung Jawab</th>
                         <th class="px-4 py-3 text-center">Status</th>
                         <th class="px-4 py-3 text-center">Tanggal </th>
                         <th class="px-4 py-3 text-center">Aksi</th>

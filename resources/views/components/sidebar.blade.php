@@ -154,6 +154,18 @@
                 </div>
             </div>
 
+            {{-- RIWAYAT HUNIAN --}}
+            <a
+                href="/riwayat-hunian"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-hunian', $currentPath) }}"
+            >
+
+                @include('components.icons.history')
+
+                <span>Riwayat Hunian</span>
+
+            </a>
+
             {{-- PROFILE --}}
             <a
                 href="/profile"
@@ -239,15 +251,15 @@
 
             </a>
 
-            {{--=====RIwayat Unit======--}}
+            {{--=====RIwayat kELUHAN======--}}
 
             <a href="/riwayat-keluhan"
              class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-keluhan*', $currentPath) }}">
 
-                @include('components.icons.building-fill')
+                @include('components.icons.history')
 
                 <span>
-                    Riwayat Unit
+                    Riwayat Keluhan
                 </span>
 
             </a>
@@ -297,16 +309,16 @@
 
                 @include('components.icons.clipboardList')
 
-                <span>Penanganan WO</span>
+                <span>Penanganan Work Order</span>
 
             </a>
 
             {{-- ================= RIWAYAT WO ================= --}}
  
             <a href="/riwayat-work-order"
-                class="sidebar-link">
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-work-order*', $currentPath) }}">
 
-                <i class="fas fa-clock-rotate-left"></i>
+                @include('components.icons.history')
 
                 <span>
                     Riwayat Work Order

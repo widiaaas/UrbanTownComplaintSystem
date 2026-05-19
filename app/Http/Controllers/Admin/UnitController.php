@@ -89,7 +89,7 @@ class UnitController extends Controller
         )
 
             ->where('status', 'Aktif')
-            ->select('id','nama','telepon','email')
+            ->select('id','nama','no_telepon','email')
             ->get();
     }
 
@@ -105,8 +105,8 @@ class UnitController extends Controller
                         'nomor_unit'
                     )->whereNull('deleted_at')],
                 'gedung' => ['required','string','regex:/^Tower\s[A-Z]$/'],
-                'lantai' => [ 'required','integer', 'min:1','max:30'],
-                'nomor_kamar' => ['required', 'integer','min:1', 'max:9999'],
+                'lantai' => [ 'required','string','regex:/^[0-9]+$/','max:2'],
+                'nomor_kamar' => ['required', 'string','regex:/^[0-9]+$/','max:2'],
 
             ], [
 
@@ -155,15 +155,15 @@ class UnitController extends Controller
         try {
 
             return DB::transaction(function () use ($validated) {
-                $password = $this->generatePassword();
+                $password = bcrypt(Str::random(16));
 
                 // buat pengguna
                 $pengguna = Pengguna::create([
                     'username' =>$validated['nomor_unit'],
                     'password' =>Hash::make($password),
                     'role' => 'unit',
-                    'is_active' => true,
-                    'must_change_password' => true,
+                    'is_active' => false,
+                    'must_change_password' => false,
                 ]);
 
                 // Buat unit
@@ -180,7 +180,6 @@ class UnitController extends Controller
                     'success' => true,
                     'message' =>'Unit berhasil ditambahkan',
                     'unit' =>$unit->load('pengguna'),
-                    'password' => $password,
                 ]);
             });
 
@@ -222,24 +221,16 @@ class UnitController extends Controller
                 ],
 
                 'lantai' => [
-                    'required',
-                    'integer',
-                    'min:1',
-                    'max:30'
+                    'string',
+                    'required', 
+                    'regex:/^[0-9]+$/','max:2',
                 ],
 
                 'nomor_kamar' => [
-                    'required',
-                    'integer',
-                    'min:1',
-                    'max:9999'
+                    'string',
+                    'required', 
+                    'regex:/^[0-9]+$/','max:2',
                 ],
-
-                'status' => [
-                    'required',
-                    'in:Aktif,Nonaktif'
-                ],
-
             ], [
 
                 'gedung.regex' =>
@@ -311,7 +302,7 @@ class UnitController extends Controller
                         $validated['nomor_unit']
                     ),
                 'is_active' =>
-                    $validated['status'] === 'Aktif'
+                        $unit->status === 'Aktif'
             ]);
 
             /**
@@ -335,8 +326,6 @@ class UnitController extends Controller
                 'nomor_kamar' =>
                     $validated['nomor_kamar'],
 
-                'status' =>
-                    $validated['status'],
             ]);
 
             return response()->json([
@@ -403,11 +392,7 @@ class UnitController extends Controller
                 $request->penghuni_id
             );
 
-            /**
-             * =================================================
-             * CEK SUDAH PUNYA UNIT
-             * =================================================
-             */
+           // cek sudah punya unit
             $masihAktif = RiwayatHunian::where(
                 'penghuni_id',
                 $penghuniBaru->id

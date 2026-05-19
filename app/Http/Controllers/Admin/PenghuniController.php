@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Penghuni;
+use App\Models\RiwayatHunian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -48,21 +49,19 @@ class PenghuniController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-
+            'nik' => ['required','string','digits:16','unique:penghunis,nik'],
             'nama' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s]+$/'],
-
-            'telepon' => ['required', 'regex:/^08[0-9]{8,11}$/'],
-
+            'no_telepon' => ['required', 'regex:/^08[0-9]{8,11}$/'],
             'email' => ['nullable', 'email', 'max:100', 'unique:penghunis,email'],
-
             'jenis_kelamin' => ['required', 'in:Laki-laki,Perempuan'],
 
         ], [
-
+            'nik.digits' => 'NIK harus 16 digit angka',
+            'nik.unique' => 'NIK sudah terdaftar',
             'nama.required' => 'Nama wajib diisi',
             'nama.regex' => 'Nama hanya boleh huruf dan spasi',
-            'telepon.required' => 'Nomor telepon wajib diisi',
-            'telepon.regex' => 'Nomor telepon harus diawali 08 dan 10-13 digit',
+            'no_telepon.required' => 'Nomor no_telepon wajib diisi',
+            'no_telepon.regex' => 'Nomor no_telepon harus diawali 08 dan 10-13 digit',
             'email.email' => 'Format email tidak valid',
             'email.unique' => 'Email sudah digunakan',
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
@@ -82,9 +81,10 @@ class PenghuniController extends Controller
         try {
 
             $penghuni = Penghuni::create([
+                'nik' => $request->nik? trim($request->nik): null,
                 'nama' => trim($request->nama),
                 'email' => $request->email,
-                'telepon' => $request->telepon,
+                'no_telepon' => $request->no_telepon,
                 'jenis_kelamin' => $request->jenis_kelamin,
             ]);
 
@@ -121,20 +121,18 @@ class PenghuniController extends Controller
     public function update(Request $request, Penghuni $penghuni)
     {
         $validator = Validator::make($request->all(), [
-
+            'nik' => ['required','string','digits:16','unique:penghunis,nik,' . $penghuni->id],
             'nama' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s]+$/'],
-
-            'telepon' => ['required', 'regex:/^08[0-9]{8,11}$/'],
-
+            'no_telepon' => ['required', 'regex:/^08[0-9]{8,11}$/'],
             'email' => ['nullable', 'email', 'max:100', 'unique:penghunis,email,' . $penghuni->id],
             'jenis_kelamin' => ['required', 'in:Laki-laki,Perempuan'],
 
         ], [
 
+            'nik.digits' => 'NIK harus 16 digit angka',
+            'nik.unique' => 'NIK sudah terdaftar',
             'nama.regex' => 'Nama hanya boleh huruf dan spasi.',
-
-            'telepon.regex' => 'Nomor telepon harus diawali 08 dan 10-13 digit.',
-
+            'no_telepon.regex' => 'Nomor no_telepon harus diawali 08 dan 10-13 digit.',
             'email.email' => 'Format email tidak valid.',
         ]);
 
@@ -213,30 +211,49 @@ class PenghuniController extends Controller
         ]);
     }
 
-    // /**
-    //  * ================= DELETE =================
-    //  */
-    // public function destroy(Request $request, Penghuni $penghuni)
-    // {
-    //     // CEK MASIH MENEMPATI UNIT
-    //     if ($penghuni->unit_id !== null) {
+    public function riwayatHunian(Request $request)
+    {
+        $riwayat = RiwayatHunian::with([
+                'penghuni',
+                'unit'
+            ])
+            ->latest()
+            ->get()
+            ->map(function ($r) {
 
-    //         return response()->json([
+                return [
 
-    //             'success' => false,
+                    'id' => $r->id,
 
-    //             'message' => 'Penghuni masih menempati unit'
+                    'penghuni' =>
+                        $r->penghuni->nama ?? '-',
 
-    //         ], 422);
-    //     }
+                    'nik' =>
+                        $r->penghuni->nik ?? '-',
 
-    //     $penghuni->delete();
+                    'unit' =>
+                        $r->unit->nomor_unit ?? '-',
 
-    //     return response()->json([
+                    'tanggal_masuk' =>
+                        optional($r->tanggal_masuk)
+                            ->format('d M Y'),
 
-    //         'success' => true,
+                    'tanggal_keluar' =>
+                        $r->tanggal_keluar
+                            ? \Carbon\Carbon::parse(
+                                $r->tanggal_keluar
+                            )->format('d M Y')
+                            : '-',
 
-    //         'message' => 'Penghuni berhasil dihapus'
-    //     ]);
-    // }
+                    'status' =>
+                        $r->status
+                ];
+            });
+
+        return view(
+            'admin.penghuni.riwayatHunian',
+            compact('riwayat')
+        );
+    }
+
 }

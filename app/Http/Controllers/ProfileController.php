@@ -301,6 +301,13 @@ class ProfileController extends Controller
                     'max:100'
                 ],
 
+                'nik' => ['required','digits:16',  
+                    Rule::unique(
+                        'penghunis',
+                        'nik'
+                    )->ignore($penghuni->id)
+                ],
+
                 'email' => [
 
                     'nullable',
@@ -315,7 +322,7 @@ class ProfileController extends Controller
                     )->ignore($penghuni->id)
                 ],
 
-                'telepon' => [
+                'no_telepon' => [
                     'required',
                     'regex:/^(08|\+628)[0-9]{8,11}$/'
                 ],
@@ -337,6 +344,15 @@ class ProfileController extends Controller
 
                 'nama.regex' =>
                     'Nama hanya boleh huruf, titik, apostrophe, dan spasi',
+                
+                'nik.required' =>
+                    'NIK wajib diisi',
+
+                'nik.digits' =>
+                    'NIK harus 16 digit angka',
+
+                'nik.unique' =>
+                    'NIK sudah digunakan',
 
                 'email.email' =>
                     'Format email tidak valid',
@@ -344,10 +360,10 @@ class ProfileController extends Controller
                 'email.unique' =>
                     'Email sudah digunakan',
 
-                'telepon.required' =>
+                'no_telepon.required' =>
                     'Nomor telepon wajib diisi',
 
-                'telepon.regex' =>
+                'no_telepon.regex' =>
                     'Nomor telepon tidak valid',
 
                 'jenis_kelamin.required' =>
@@ -375,9 +391,12 @@ class ProfileController extends Controller
              * =================================================
              */
             $penghuni->update([
-
+                
                 'nama' =>
                     trim($request->nama),
+
+                'nik' =>
+                    trim($request->nik),
 
                 'email' =>
                     $request->email
@@ -386,8 +405,8 @@ class ProfileController extends Controller
                         )
                         : null,
 
-                'telepon' =>
-                    trim($request->telepon),
+                'no_telepon' =>
+                    trim($request->no_telepon),
 
                 'jenis_kelamin' =>
                     $request->jenis_kelamin,
@@ -440,16 +459,16 @@ class ProfileController extends Controller
                 'Password lama wajib diisi',
 
             'password_baru.required' =>
-                'Password baru wajib diisi',
+                'Kata Sandi baru wajib diisi',
 
             'password_baru.min' =>
-                'Password minimal 6 karakter',
+                'Kata Sandi minimal 6 karakter',
 
             'password_baru.confirmed' =>
-                'Konfirmasi password tidak cocok',
+                'Konfirmasi Kata Sandi tidak cocok',
 
             'password_baru.regex' =>
-                'Password harus mengandung huruf besar dan angka',
+                'Kata Sandi harus mengandung huruf besar dan angka',
         ]);
 
         /**
@@ -484,7 +503,7 @@ class ProfileController extends Controller
                 'errors' => [
 
                     'password_lama' => [
-                        'Password lama tidak sesuai'
+                        'Kata Sandi lama tidak sesuai'
                     ]
                 ]
 
@@ -508,7 +527,7 @@ class ProfileController extends Controller
                 'errors' => [
 
                     'password_baru' => [
-                        'Password baru tidak boleh sama dengan password lama'
+                        'Kata Sandi baru tidak boleh sama dengan password lama'
                     ]
                 ]
 
@@ -528,11 +547,15 @@ class ProfileController extends Controller
 
             'must_change_password' => false,
         ]);
+        $request->session()->regenerate();
+        session([
+            'password_hash' => $user->fresh()->password
+        ]);
 
         return response()->json([
 
             'message' =>
-                'Password berhasil diubah'
+                'Kata Sandi berhasil diubah'
         ]);
     }
 }

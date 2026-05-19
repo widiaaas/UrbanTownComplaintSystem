@@ -222,6 +222,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'must_change_password' => false,
         ]);
+        
 
         session([
             'password_hash' => $user->fresh()->password

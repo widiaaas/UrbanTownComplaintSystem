@@ -92,6 +92,18 @@
                 </tr>
             </thead>
             <tbody>
+
+                {{-- DATA TIDAK ADA --}}
+                <template x-if="!filteredUnits.length">
+                    <tr>
+                        <td
+                            colspan="8"
+                            class="px-4 py-4 text-center text-gray-400 italic">
+                            Data unit tidak tersedia
+                        </td>
+                    </tr>
+                </template>
+
                 <template x-for="(unit, index) in filteredUnits" :key="unit.id">
                 <tr class="text-center hover:bg-gray-50">
                     <!-- NO -->
@@ -283,28 +295,36 @@
                     >
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Lantai</label>
-                    <input 
-                        type="number" 
+                    <label class="block text-sm font-medium text-gray-700">
+                        Lantai
+                    </label>
+
+                    <input
+                        type="text"
                         x-model="newUnit.lantai"
-                        min="1" 
-                        max="30"
-                        placeholder="1 - 30"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Masukkan lantai"
                         class="w-full mt-1 border rounded-lg px-3 py-2"
-                        required
-                    >
+                        required>
+
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Nomor Kamar</label>
-                    <input 
-                        type="number" 
+
+                    <label class="block text-sm font-medium text-gray-700">
+                        Nomor Kamar
+                    </label>
+
+                    <input
+                        type="text"
                         x-model="newUnit.nomor_kamar"
-                        min="1" 
-                        max="30"
-                        placeholder="1 - 30"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Masukkan nomor kamar"
                         class="w-full mt-1 border rounded-lg px-3 py-2"
-                        required
-                    >
+                        required>
+
                 </div>
 
                 <template x-if="createdUnit">
@@ -354,26 +374,34 @@
                     >
                 </div>
                 <div>
-                    <label class="text-sm">Lantai</label>
-                    <input 
-                        type="number" 
+
+                    <label class="text-sm">
+                        Lantai
+                    </label>
+
+                    <input
+                        type="text"
                         x-model="editForm.lantai"
-                        min="1" 
-                        max="30"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         class="w-full mt-1 border rounded-lg px-3 py-2"
-                        required
-                    >
+                        placeholder="Masukkan lantai"
+                        required>
+
                 </div>
                 <div>
-                    <label class="text-sm">Nomor Kamar</label>
-                    <input 
-                        type="number" 
+                    <label class="text-sm">
+                        Nomor Kamar
+                    </label>
+
+                    <input
+                        type="text"
                         x-model="editForm.nomor_kamar"
-                        min="1" 
-                        max="30"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         class="w-full mt-1 border rounded-lg px-3 py-2"
-                        required
-                    >
+                        placeholder="Masukkan nomor kamar"
+                        required>
                 </div>
             </div>
 
@@ -449,7 +477,7 @@
                     <template x-if="selectedPenghuniDetail">
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm space-y-1">
                             <p><strong>Nama:</strong> <span x-text="selectedPenghuniDetail.nama"></span></p>
-                            <p><strong>No. HP:</strong> <span x-text="selectedPenghuniDetail.telepon"></span></p>
+                            <p><strong>No. HP:</strong> <span x-text="selectedPenghuniDetail.no_telepon"></span></p>
                             <p><strong>Email:</strong> <span x-text="selectedPenghuniDetail.email"></span></p>
                         </div>
                     </template>
@@ -483,75 +511,159 @@
         </div>
     </div>
 
-    {{-- ================= MODAL RESET PASSWORD ================= --}}
-    <div x-show="openReset" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div @click.outside="openReset = false" class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
-            <h2 class="text-lg font-semibold text-gray-800">Reset Password Unit</h2>
-            <p class="text-sm text-gray-600">Password login untuk unit <strong x-text="selectedUnit.nomor_unit"></strong> akan direset.</p>
-            <p class="text-xs text-gray-500">
-                Pengguna wajib mengganti password saat login berikutnya.
-            </p>
-            <template x-if="resetPasswordGenerated">
-                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-2">
-                    <p class="font-semibold text-yellow-800">Password Sementara Baru</p>
-                    <div class="bg-white border rounded px-3 py-2 font-mono text-center" x-text="newPassword"></div>
-                    <p class="text-xs text-gray-600">Berikan password ini kepada penghuni unit untuk login kembali.</p>
-                </div>
-            </template>
-            <div class="flex justify-end gap-2 pt-4">
-                <button @click="openReset = false" class="px-4 py-2 border rounded-lg">Batal</button>
-                <button @click="submitResetPassword" class="px-4 py-2 bg-purple-600 text-white rounded-lg">Reset Password</button>
-            </div>
-        </div>
-    </div>
+    {{-- ================= MODAL CREDENTIAL PASSWORD ================= --}}
+<div
+    x-show="openReset"
+    x-cloak
+    class="fixed inset-0 bg-black/50
+    flex items-center justify-center z-50">
 
+    <div
+        @click.outside="
+            openReset = false;
+            resetPasswordGenerated = false;
+            newPassword = '';
+        "
+        class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 space-y-5">
 
-    {{-- ================= MODAL CREDENTIAL ================= --}}
-    <div x-show="openCredential"
-        x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        {{-- HEADER --}}
+        <div>
 
-        <div @click.outside="openCredential = false"
-            class="bg-white w-full max-w-md rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-semibold text-gray-800">
 
-            <h2 class="text-lg font-semibold text-gray-800"
-                x-text="credentialTitle">
-            </h2>
-
-            <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-sm space-y-3">
-
-                <template x-if="credentialData.username">
-                    <div>
-                        <p class="text-gray-500">Username</p>
-
-                        <div class="bg-white border rounded px-3 py-2 font-mono text-center"
-                            x-text="credentialData.username">
-                        </div>
-                    </div>
+                <template x-if="!resetPasswordGenerated">
+                    <span>Reset Password Unit</span>
                 </template>
 
-                <div>
-                    <p class="text-gray-500">Password Sementara</p>
+                <template x-if="resetPasswordGenerated">
+                    <span>Password Berhasil Direset</span>
+                </template>
 
-                    <div class="bg-white border rounded px-3 py-2 font-mono text-center"
-                        x-text="credentialData.password">
+            </h2>
+
+            <p
+                class="text-sm text-gray-600 mt-1">
+
+                <template x-if="!resetPasswordGenerated">
+
+                    <span>
+                        Password login untuk unit
+                        <strong x-text="selectedUnit.nomor_unit"></strong>
+                        akan direset.
+                    </span>
+
+                </template>
+
+                <template x-if="resetPasswordGenerated">
+
+                    <span>
+                        Berikan password berikut kepada penghuni unit
+                        untuk login kembali.
+                    </span>
+
+                </template>
+
+            </p>
+
+        </div>
+
+        {{-- WARNING --}}
+        <template x-if="!resetPasswordGenerated">
+
+            <div
+                class="bg-yellow-50 border border-yellow-200
+                rounded-lg p-3 text-sm text-yellow-800">
+
+                Pengguna wajib mengganti password
+                saat login berikutnya.
+
+            </div>
+
+        </template>
+
+        {{-- PASSWORD RESULT --}}
+        <template x-if="resetPasswordGenerated">
+
+            <div
+                class="bg-green-50 border border-green-200
+                rounded-lg p-4 space-y-3">
+
+                <div>
+
+                    <p class="text-xs text-gray-500 mb-1">
+                        Password Sementara Baru
+                    </p>
+
+                    <div
+                        class="bg-white border rounded-lg
+                        px-3 py-2 text-center font-mono text-lg"
+                        x-text="newPassword">
                     </div>
+
                 </div>
 
-                <p class="text-xs text-gray-600"
-                x-text="credentialDescription">
-                </p>
             </div>
 
-            <div class="flex justify-end pt-4">
+        </template>
+
+        {{-- FOOTER --}}
+        <div class="flex justify-end gap-2 pt-2">
+
+            {{-- BEFORE RESET --}}
+            <template x-if="!resetPasswordGenerated">
+
+                <div class="flex gap-2">
+
+                    <button
+                        @click="
+                            openReset = false;
+                            resetPasswordGenerated = false;
+                            newPassword = '';
+                        "
+                        class="px-4 py-2 border rounded-lg
+                        hover:bg-gray-100">
+
+                        Batal
+
+                    </button>
+
+                    <button
+                        @click="submitResetPassword"
+                        class="px-4 py-2 bg-purple-600
+                        text-white rounded-lg hover:bg-purple-700">
+
+                        Reset Password
+
+                    </button>
+
+                </div>
+
+            </template>
+
+            {{-- AFTER RESET --}}
+            <template x-if="resetPasswordGenerated">
+
                 <button
-                    @click="openCredential = false"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    @click="
+                        openReset = false;
+                        resetPasswordGenerated = false;
+                        newPassword = '';
+                    "
+                    class="px-4 py-2 bg-blue-600
+                    text-white rounded-lg hover:bg-blue-700">
+
                     Tutup
+
                 </button>
-            </div>
+
+            </template>
+
         </div>
+
     </div>
+
+</div>
+
 </div>
 
 <script>
@@ -714,21 +826,14 @@ function unitManager() {
                     nomor_kamar: ''
                 };
 
-                // tutup modal tambah unit
+                // tutup modal
                 this.openCreateUnit = false;
 
-                // 🔥 credential modal
-                this.credentialTitle = 'Akun Unit Berhasil Dibuat';
-
-                this.credentialDescription =
-                    'Berikan password ini kepada penghuni unit untuk login pertama.';
-
-                this.credentialData = {
-                    username: data.unit.nomor_unit,
-                    password: data.password
-                };
-
-                this.openCredential = true;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Unit berhasil ditambahkan'
+                });
                 })
             .catch(err => {
 
@@ -883,21 +988,10 @@ function unitManager() {
             })
             .then(data => {
 
-                this.openReset = false;
+                this.resetPasswordGenerated = true;
 
-                // 🔥 credential modal
-                this.credentialTitle = 'Password Berhasil Direset';
-
-                this.credentialDescription =
-                    'Berikan password ini kepada penghuni unit untuk login kembali.';
-
-                this.credentialData = {
-                    username: '',
-                    password: data.new_password
-                };
-
-                this.openCredential = true;
-            })
+                this.newPassword = data.new_password;
+                })
             .catch(err => {
 
                 console.error(err);
@@ -911,23 +1005,73 @@ function unitManager() {
             },
 
         // ================= GANTI PENGHUNI =================
-        submitGantiPenghuni() {
+        async submitGantiPenghuni() {
 
             if (!this.selectedPenghuniId) {
-                Swal.fire('Error', 'Pilih penghuni terlebih dahulu', 'error');
+
+                Swal.fire(
+                    'Error',
+                    'Pilih penghuni terlebih dahulu',
+                    'error'
+                );
+
+                return;
+            }
+
+            const penghuni =
+                this.penghuniList.find(
+                    p => p.id == this.selectedPenghuniId
+                );
+
+            const confirm =
+                await Swal.fire({
+
+                    title: 'Perbarui penghuni unit?',
+
+                    html: `
+                        Penghuni unit
+                        <b>${this.selectedUnit.nomor_unit}</b>
+                        akan diganti menjadi
+                        <b>${penghuni?.nama || '-'}</b>
+                    `,
+
+                    icon: 'question',
+
+                    showCancelButton: true,
+
+                    confirmButtonText: 'Ya, Perbarui',
+
+                    cancelButtonText: 'Batal',
+
+                    confirmButtonColor: '#2563eb',
+
+                    cancelButtonColor: '#6b7280',
+                });
+
+            if (!confirm.isConfirmed) {
                 return;
             }
 
             fetch(`/units/${this.selectedUnit.id}/ganti-penghuni`, {
+
                 method: 'POST',
+
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+
+                    'X-CSRF-TOKEN':
+                        document.querySelector(
+                            'meta[name="csrf-token"]'
+                        ).content
                 },
+
                 body: JSON.stringify({
-                    penghuni_id: this.selectedPenghuniId
+
+                    penghuni_id:
+                        this.selectedPenghuniId
                 })
             })
+
             .then(async res => {
 
                 const data = await res.json();
@@ -936,56 +1080,66 @@ function unitManager() {
 
                 return data;
             })
+
             .then(data => {
 
                 // update UI
                 this.unitsData = this.unitsData.map(u =>
+
                     u.id === this.selectedUnit.id
+
                         ? {
                             ...u,
+
                             current_penghuni:
-                                this.penghuniList.find(
-                                    p => p.id == this.selectedPenghuniId
-                                )?.nama || '-'
+                                penghuni?.nama || '-'
                         }
+
                         : u
                 );
 
                 this.applyFilter();
 
-                // reset state
                 this.selectedPenghuniId = '';
+
                 this.selectedPenghuniDetail = null;
 
-                // tutup modal ganti penghuni
                 this.openEditPenghuni = false;
 
-                // 🔥 credential modal
-                this.credentialTitle = 'Penghuni Berhasil Diganti';
+                Swal.fire({
 
-                this.credentialDescription =
-                    'Berikan password ini kepada penghuni baru untuk login pertama.';
+                    icon: 'success',
 
-                this.credentialData = {
-                    username: '',
-                    password: data.password
-                };
+                    title: 'Berhasil',
 
-                this.openCredential = true;
+                    text: 'Penghuni berhasil diperbarui'
+                });
+
+                // tampil password baru
+                this.openReset = true;
+
+                this.resetPasswordGenerated = true;
+
+                this.newPassword = data.password;
             })
+
             .catch(err => {
 
                 console.error(err);
 
-                let message = 'Gagal mengganti penghuni';
+                let message =
+                    'Gagal mengganti penghuni';
 
                 if (err.message) {
                     message = err.message;
                 }
 
                 Swal.fire({
+
                     icon: 'error',
+
                     title: 'Error',
+
                     text: message
                 });
             });

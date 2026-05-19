@@ -43,7 +43,7 @@
             Pengajuan Penghuni
         </h3>
 
-        <div class="grid grid-cols-2 gap-4 text-sm">
+        <div class="grid md:grid-cols-3 gap-4 text-sm">
 
             <div>
                 <p class="font-medium mb-1">
@@ -58,13 +58,26 @@
 
             <div>
                 <p class="font-medium mb-1">
-                    Penghuni
+                    Nama Penghuni
                 </p>
 
                 <div
                     class="bg-gray-100 rounded-lg p-3 text-gray-700"
                     x-text="wo.penghuni || '-'">
                 </div>
+            </div>
+
+            <div>
+
+                <p class="font-medium mb-1">
+                    Nomor Telepon
+                </p>
+
+                <div
+                    class="bg-gray-100 rounded-lg p-3 text-gray-700"
+                    x-text="wo.no_telepon || '-'">
+                </div>
+
             </div>
 
         </div>

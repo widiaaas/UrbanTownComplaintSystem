@@ -8,6 +8,7 @@ use App\Models\WorkOrder;
 use App\Models\Karyawan;
 use App\Models\Departemen;
 use App\Models\RiwayatPenangananWorkOrder;
+use App\Models\RiwayatPenangananKeluhan;
 use Illuminate\Support\Facades\Validator;
 
 class WorkOrderController extends Controller
@@ -104,10 +105,14 @@ class WorkOrderController extends Controller
 
         $wo->load('departemen');
 
-        // // UPDATE STATUS KELUHAN
-        // $keluhan->update([
-        //     'status' => 'on_progress'
-        // ]);
+        RiwayatPenangananKeluhan::create([
+            'keluhan_id' => $keluhan->id,
+            'judul' => 'Work Order telah dibuat',
+            'deskripsi' =>'Work Order telah dibuat dan diteruskan ke departemen terkait untuk proses penanganan',
+            'status' => 'on_progress',
+            'waktu' => now(),
+            'lampiran' => []
+        ]);
 
         return response()->json([
 
@@ -166,7 +171,7 @@ class WorkOrderController extends Controller
                 'unit' => $keluhan?->unit?->nomor_unit ?? '-',
                 'tanggal' => optional($item->created_at)->format('d-m-Y H:i'),
                 'penghuni' => $keluhan?->penghuni?->nama ?? '-',
-                'telepon' => $keluhan?->penghuni?->telepon ?? '-',
+                'no_telepon' => $keluhan?->penghuni?->no_telepon ?? '-',
                 'instruksi' => $item->instruksi,
                 'lampiran' => $item->lampiran ?? [],
 
@@ -198,7 +203,7 @@ class WorkOrderController extends Controller
             'taken_at' => now()
         ]);
 
-        RiwayatPenangananWO::create([
+        RiwayatPenangananWorkOrder::create([
             'work_order_id' => $wo->id,
             'judul' => 'Work Order Diambil Alih',
             'deskripsi' =>'Work Order telah diambil dan mulai diproses oleh departemen',
@@ -239,7 +244,7 @@ class WorkOrderController extends Controller
 
                 'deskripsi' => $item->keluhan->deskripsi ?? '-',
                 'requestor' => $item->keluhan->penghuni->nama ?? '-',
-                'telepon' => $item->keluhan->penghuni->telepon ?? '-',
+                'no_telepon' => $item->keluhan->penghuni->no_telepon ?? '-',
                 'instruksi' => $item->instruksi,
                 'lokasi' => $item->lokasi,
                 
@@ -372,6 +377,11 @@ class WorkOrderController extends Controller
                 $wo->keluhan
                     ->penghuni
                     ->nama ?? '-',
+
+            'no_telepon' =>
+                $wo->keluhan
+                    ->penghuni
+                    ->no_telepon ?? '-',
 
             'unit' =>
                 $wo->keluhan

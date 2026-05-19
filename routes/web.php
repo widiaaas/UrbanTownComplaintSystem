@@ -171,7 +171,7 @@ Route::middleware(['auth','active'])->group(function () {
         Route::post('/units/{unit}/ganti-penghuni', [UnitController::class, 'gantiPenghuni'])->name('admin.units.gantiPenghuni');
         Route::put('/units/{unit}/toggle', [UnitController::class, 'toggleStatus'])->name('admin.units.toggleStatus');
         Route::get('/penghuni-available', [UnitController::class, 'getAvailablePenghuni'])->name('admin.penghuni.available');
-
+        Route::get('/riwayat-hunian',[PenghuniController::class, 'riwayatHunian'])->name('admin.riwayat-hunian');
         // ================= PENGHUNI =================
         Route::get('/IndexPenghuni', [PenghuniController::class, 'index'])->name('admin.penghuni.index');
         Route::post('/penghuni/store', [PenghuniController::class, 'store'])->name('admin.penghuni.store');

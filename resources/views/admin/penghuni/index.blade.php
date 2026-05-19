@@ -13,7 +13,7 @@
         <button 
             @click="
                 openCreate = true;
-                newPenghuni = {nama:'',email:'',telepon:'',status:'Aktif'};
+                newPenghuni = {nama:'',email:'',no_telepon:'',status:'Aktif'};
             "
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             + Tambah Penghuni
@@ -163,6 +163,10 @@
                     <label class="text-sm font-medium text-gray-700">Nama</label>
                     <input x-model="newPenghuni.nama" class="w-full border px-3 py-2 rounded">
                 </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">NIK</label>
+                    <input x-model="newPenghuni.nik" class="w-full border px-3 py-2 rounded">
+                </div>
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">Email</label>
@@ -171,7 +175,7 @@
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">Telepon</label>
-                    <input x-model="newPenghuni.telepon" class="w-full border px-3 py-2 rounded">
+                    <input x-model="newPenghuni.no_telepon" class="w-full border px-3 py-2 rounded">
                 </div>
 
                 <div>
@@ -206,6 +210,10 @@
                     <label class="text-sm font-medium text-gray-700">Nama</label>
                     <input x-model="selected.nama" class="w-full border px-3 py-2 rounded">
                 </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">NIK</label>
+                    <input x-model="selected.nik" class="w-full border px-3 py-2 rounded">
+                </div>
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">Email</label>
@@ -214,7 +222,7 @@
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">Telepon</label>
-                    <input x-model="selected.telepon" class="w-full border px-3 py-2 rounded">
+                    <input x-model="selected.no_telepon" class="w-full border px-3 py-2 rounded">
                 </div>
 
                 <div>
@@ -254,6 +262,10 @@
                     <p class="text-gray-500">Nama</p>
                     <p class="font-medium" x-text="selected.nama"></p>
                 </div>
+                <div>
+                    <p class="text-gray-500">NIK</p>
+                    <p class="font-medium" x-text="selected.nik"></p>
+                </div>
 
                 <div>
                     <p class="text-gray-500">Email</p>
@@ -262,17 +274,12 @@
 
                 <div>
                     <p class="text-gray-500">Telepon</p>
-                    <p class="font-medium" x-text="selected.telepon"></p>
+                    <p class="font-medium" x-text="selected.no_telepon"></p>
                 </div>
 
                 <div>
                     <p class="text-gray-500">Jenis Kelamin</p>
                     <p class="font-medium" x-text="selected.jenis_kelamin"></p>
-                </div>
-
-                <div>
-                    <p class="text-gray-500">Status</p>
-                    <p class="font-medium" x-text="selected.status"></p>
                 </div>
 
             </div>
@@ -305,9 +312,10 @@ function penghuniManager(){
         statusFilter:'',
 
         newPenghuni:{
+            nik:'',
             nama:'',
             email:'',
-            telepon:'',
+            no_telepon:'',
             jenis_kelamin:'',
             status:'Aktif'
         },
@@ -422,14 +430,18 @@ function penghuniManager(){
                 this.showError('Nama wajib diisi', {nama:['Nama wajib diisi']});
                 return;
             }
+            if(!this.newPenghuni.nik){
+                this.showError('NIKwajib diisi', {nik:['NIK wajib diisi']});
+                return;
+            }
 
             if(!this.newPenghuni.email){
                 this.showError('Email wajib diisi', {email:['Email wajib diisi']});
                 return;
             }
 
-            if(!this.newPenghuni.telepon){
-                this.showError('No. Telepon wajib diisi', {telepon:['No. Telepon wajib diisi']});
+            if(!this.newPenghuni.no_telepon){
+                this.showError('No. Telepon wajib diisi', {no_telepon:['No. Telepon wajib diisi']});
                 return;
             }
             if(!this.newPenghuni.jenis_kelamin){
@@ -478,11 +490,12 @@ function penghuniManager(){
 
                     // RESET FORM
                     this.newPenghuni = {
+                        nik:'',
                         nama:'',
                         email:'',
-                        telepon:'',
+                        no_telepon:'',
                         jenis_kelamin:'',
-                        status:'Aktif'
+        
                     };
 
                 } else {

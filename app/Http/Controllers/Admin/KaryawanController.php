@@ -303,44 +303,6 @@ class KaryawanController extends Controller
         }
     }
 
-    // /**
-    //  * ================== DELETE ==================
-    //  */
-    // public function destroy(Karyawan $karyawan)
-    // {
-    //     if (
-    //         $karyawan->pengguna->role === 'admin'
-    //     ) {
-        
-    //         abort(403);
-    //     }
-
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // hapus akun login
-    //         $karyawan->pengguna()->delete();
-
-    //         // hapus karyawan
-    //         $karyawan->delete();
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Karyawan berhasil dihapus'
-    //         ]);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
     /**
      * ================== RESET PASSWORD ==================
      */

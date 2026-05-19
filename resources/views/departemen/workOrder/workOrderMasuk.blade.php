@@ -83,7 +83,7 @@
                         <p><strong>Requestor / Penghuni:</strong> <span x-text="selected.requestor ?? selected.penghuni"></span></p>
                     </div>
                     <div class="space-y-2">
-                        <p><strong>Telepon:</strong> <span x-text="selected.telepon"></span></p>
+                        <p><strong>Telepon:</strong> <span x-text="selected.no_telepon"></span></p>
                         <p><strong>Tanggal:</strong> <span x-text="selected.tanggal"></span></p>
                         <p><strong>TR penanggung Jawab:</strong> <span x-text="selected.tr"></span></p>
                     </div>
@@ -198,7 +198,7 @@
                 </div>
                 {{-- Instruksi --}}
                 <div class="bg-white rounded-lg p-4 border">
-                    <p class="font-medium mb-2">Instruksi / Deskripsi WO:</p>
+                    <p class="font-medium mb-2">Instruksi Detail:</p>
                     <div class="bg-gray-100 p-3 rounded" x-text="selected.instruksi"></div>
                 </div>
 
@@ -278,7 +278,8 @@ function workOrderApp(){
 
         Swal.fire({
             title: 'Ambil Work Order?',
-            text: `Work Order ${wo.no} akan menjadi tanggung jawab Anda`,
+            html:
+                 `Work Order <b>${wo.nomor_tiket}</b> akan menjadi tanggung jawab Anda`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#16a34a',

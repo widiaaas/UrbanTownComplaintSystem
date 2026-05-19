@@ -13,9 +13,10 @@ class Penghuni extends Model
     protected $table = 'penghunis';
 
     protected $fillable = [  
+        'nik',
         'nama',
         'email',
-        'telepon',
+        'no_telepon',
         'jenis_kelamin',
         'status',
         'unit_id',

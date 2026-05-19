@@ -80,7 +80,7 @@
                 <p><b>No. Unit:</b> <span x-text="selected.unit?.nomor_unit ?? '-'"></span></p>
                 <p><b>No. Tiket:</b> <span x-text="selected.nomor_tiket"></span></p>
                 <p><b>Nama:</b> <span x-text="selected.penghuni?.nama ?? '-'"></span></p>
-                <p><b>Telepon:</b> <span x-text="selected.penghuni?.telepon ?? '-'"></span></p>
+                <p><b>Telepon:</b> <span x-text="selected.penghuni?.no_telepon ?? '-'"></span></p>
                 <p><b>Tanggal:</b> <span x-text="selected.tanggal"></span></p>
 
                 <div>

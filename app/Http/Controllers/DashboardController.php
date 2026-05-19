@@ -50,7 +50,13 @@ class DashboardController extends Controller
                 'karyawan' => Karyawan::where(
                     'status',
                     'Aktif'
-                )->count(),
+                )
+                    ->whereHas(
+                        'pengguna', function($q){
+                            $q->where ('role','!=','admin');
+                        }
+                    )
+                ->count(),
             ];
 
             return view('admin.dashboard', compact(

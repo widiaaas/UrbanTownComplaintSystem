@@ -32,7 +32,7 @@
     <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
         <p><b>No Unit</b><br><span x-text="keluhan.unit"></span></p>
         <p><b>Nama Penghuni</b><br><span x-text="keluhan.nama"></span></p>
-        <p><b>No Telepon</b><br><span x-text="keluhan.telepon"></span></p>
+        <p><b>No Telepon</b><br><span x-text="keluhan.no_telepon"></span></p>
         <p> <b>TR Penanggung Jawab</b><br><span x-text="keluhan.tr"></span></p>
         <p><b>Waktu</b><br><span x-text="keluhan.waktu"></span></p>
         <p><b>Status Keluhan</b><br>
@@ -523,7 +523,7 @@
                 </div>
                 <div>
                     <label class="font-medium">Nomor Telepon</label>
-                    <input class="w-full border rounded px-3 py-1 bg-gray-100" x-model="keluhan.telepon" disabled>
+                    <input class="w-full border rounded px-3 py-1 bg-gray-100" x-model="keluhan.no_telepon" disabled>
                 </div>
                 <div class="col-span-2">
                     <label class="font-medium">Department</label>
@@ -665,7 +665,7 @@ function detailKeluhanApp() {
                 tower: data.tower ?? '-',
                 lantai: data.lantai ?? '-',
                 nama: data.penghuni,
-                telepon: data.telepon,
+                no_telepon: data.no_telepon,
                 tr: data.tr,
                 waktu: data.waktu,
                 judul: data.pengajuan.judul,
