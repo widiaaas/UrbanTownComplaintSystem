@@ -382,7 +382,9 @@ class KeluhanController extends Controller
                 'keluhan_id' => $keluhan->id,
                 'status' => $status,
                 'judul' => 'Update Status',
-                'deskripsi' => $request->catatan,
+                'deskripsi' =>
+                'Status keluhan diperbarui menjadi ' .
+                    ucwords(str_replace('_', ' ', $status)),
                 'waktu' => now()
             ]);
         }

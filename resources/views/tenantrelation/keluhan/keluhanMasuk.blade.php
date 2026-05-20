@@ -382,10 +382,68 @@
 
                 {{-- PDF --}}
                 <template x-if="isPdf(previewUrl)">
-                    <iframe :src="previewUrl"
-                            class="w-full h-[75vh] border rounded"></iframe>
-                </template>
 
+                    <div
+                        class="flex items-center justify-between
+                        bg-gray-50 border border-gray-200
+                        rounded-2xl px-4 py-3">
+
+                        {{-- LEFT --}}
+                        <div class="flex items-center gap-3 min-w-0">
+
+                            {{-- ICON --}}
+                            <div
+                                class="w-11 h-11 rounded-xl
+                                bg-red-100 text-red-600
+                                flex items-center justify-center
+                                shrink-0 text-lg">
+
+                                📄
+
+                            </div>
+
+                            {{-- INFO --}}
+                            <div class="min-w-0">
+
+                                <p
+                                    class="text-sm font-semibold
+                                    text-gray-800">
+
+                                    File PDF
+
+                                </p>
+
+                                <p
+                                    class="text-xs text-gray-400
+                                    truncate max-w-[240px]"
+                                    x-text="previewUrl.split('/').pop()">
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        {{-- ACTION --}}
+                        <div
+                            class="flex items-center gap-2
+                            shrink-0">
+
+                            {{-- VIEW --}}
+                            <a
+                                :href="previewUrl"
+                                target="_blank"
+                                title="Buka PDF"
+                                class="hover:scale-105 transition">
+
+                                @include('components.buttons.btn-view')
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </template>
                 {{-- FILE LAIN --}}
                 <template x-if="!isImage(previewUrl) && !isPdf(previewUrl)">
                     <a :href="previewUrl" target="_blank"

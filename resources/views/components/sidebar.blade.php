@@ -2,23 +2,23 @@
 
     use Illuminate\Support\Facades\Auth;
 
-    // Ambil user login
+    // USER LOGIN
     $user = Auth::user();
 
     $currentPath = request()->path();
 
-    // Data karyawan
+    // DATA KARYAWAN
     $karyawan = $user?->karyawan;
 
-    // Nama departemen
+    // DEPARTEMEN
     $departemen =
         $karyawan?->departemen?->nama_departemen;
 
-    /**
-     * ============================================
-     * ROLE SYSTEM BARU
-     * ============================================
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE SYSTEM
+    |--------------------------------------------------------------------------
+    */
     $isAdmin =
         $user?->role === 'admin';
 
@@ -31,63 +31,119 @@
     $isUnit =
         $user?->role === 'unit';
 
-    // Helper active menu
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVE MENU
+    |--------------------------------------------------------------------------
+    */
     function activeMenu($path, $currentPath)
     {
         return request()->is($path)
-            ? 'bg-blue-50 text-blue-700'
-            : 'text-gray-700 hover:bg-gray-100';
+            ? 'bg-blue-50 text-blue-700 shadow-sm'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
     }
 
 @endphp
 
-<!-- Overlay mobile -->
+{{-- ================= MOBILE OVERLAY ================= --}}
 <div
     x-show="sidebarOpen"
-    class="fixed inset-0 z-40 bg-black bg-opacity-25 lg:hidden"
-    @click="sidebarOpen = false"
     x-transition.opacity
-></div>
+    @click="sidebarOpen = false"
+    class="fixed inset-0 z-40
+    bg-black/40 backdrop-blur-[1px]
+    lg:hidden">
+</div>
 
-<!-- Sidebar -->
+{{-- ================= SIDEBAR ================= --}}
 <aside
-    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-200 ease-in-out flex flex-col"
->
 
-    <div class="flex flex-col h-full p-4">
+    :class="
+        sidebarOpen
+        ? 'translate-x-0'
+        : '-translate-x-full lg:translate-x-0'
+    "
 
-        {{-- LOGO --}}
-        <a href="/" class="flex items-center space-x-3 mb-6">
+    class="
+    fixed lg:relative
+    inset-y-0 left-0
+    z-50
 
-            <img
-                src="{{ asset('images/logo.png') }}"
-                class="h-9 w-9 object-contain"
-            />
+    w-72
+    shrink-0
 
+    bg-white/95 backdrop-blur-xl
+    border-r border-gray-200/80
+
+    shadow-xl lg:shadow-none
+
+    transition-transform duration-300 ease-in-out
+
+    flex flex-col
+    ">
+
+    {{-- CONTAINER --}}
+    <div class="flex flex-col h-full px-5 py-5">
+
+        {{-- ================= LOGO ================= --}}
+        <a
+            href="/"
+            class="flex items-center gap-3
+            pb-6 mb-4 border-b border-gray-100">
+
+            {{-- LOGO --}}
+            <div
+                class="w-18 h-18 rounded-2xl
+                
+                flex items-center justify-center">
+
+                <img
+                    src="{{ asset('images/logo.png') }}"
+                    class="h-8 w-8 object-contain">
+
+            </div>
+
+            {{-- TEXT --}}
             <div class="leading-tight">
 
-                <h1 class="font-bold text-lg text-gray-900">
-                    Unit Complaint System
+                <h1
+                    class="font-black text-xl
+                    tracking-tight text-gray-900">
+
+                    Unit Complaint
+
                 </h1>
 
-                <p class="text-xs text-gray-500">
+                <p
+                    class="text-sm text-gray-500
+                    mt-0.5">
+
                     Sistem Keluhan Unit
+
                 </p>
 
             </div>
+
         </a>
 
-        {{-- MENU --}}
-        <nav class="flex-1 space-y-1 overflow-y-auto">
+        {{-- ================= MENU ================= --}}
+        <nav
+            class="flex-1 overflow-y-auto
+            space-y-1 pr-1">
 
-        {{-- ================= ADMIN ================= --}}
+        {{-- ===================================================== --}}
+        {{-- ======================= ADMIN ======================= --}}
+        {{-- ===================================================== --}}
         @if($isAdmin)
 
+            {{-- DASHBOARD --}}
             <a
                 href="/dashboard"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('dashboard', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('dashboard', $currentPath) }}">
 
                 @include('components.icons.dashboard')
 
@@ -95,10 +151,14 @@
 
             </a>
 
+            {{-- UNIT --}}
             <a
                 href="/IndexUnits"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('IndexUnits*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('IndexUnits*', $currentPath) }}">
 
                 @include('components.icons.building')
 
@@ -106,59 +166,102 @@
 
             </a>
 
+            {{-- USER MENU --}}
             @php
+
                 $userMenuOpen =
                     request()->is('IndexKaryawan*') ||
                     request()->is('IndexPenghuni*');
+
             @endphp
 
             <div
                 x-data="{ open: {{ $userMenuOpen ? 'true' : 'false' }} }"
-                class="space-y-1"
-            >
+                class="space-y-1">
 
+                {{-- BUTTON --}}
                 <button
                     @click="open = !open"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
-                >
+                    class="w-full flex items-center
+                    justify-between
+                    px-4 py-3 rounded-2xl
+                    text-sm font-semibold
+                    text-gray-600
+                    hover:bg-gray-100
+                    hover:text-gray-900
+                    transition-all">
 
                     <div class="flex items-center gap-3">
 
                         @include('components.icons.users')
 
-                        <span>Kelola Karyawan & Penghuni</span>
+                        <span>
+                            Kelola Pengguna
+                        </span>
 
                     </div>
+
+                    {{-- ARROW --}}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-4 h-4 transition-transform"
+                        :class="open ? 'rotate-90' : ''"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"/>
+
+                    </svg>
+
                 </button>
 
-                <div x-show="open" x-collapse class="ml-10 space-y-1">
+                {{-- SUB MENU --}}
+                <div
+                    x-show="open"
+                    x-collapse
+                    class="ml-6 mt-1
+                    border-l border-gray-200
+                    pl-4 space-y-1">
 
                     <a
                         href="/IndexKaryawan"
-                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ activeMenu('IndexKaryawan*', $currentPath) }}"
-                    >
+                        class="block px-3 py-2
+                        rounded-xl text-sm
+                        transition-all
+                        {{ activeMenu('IndexKaryawan*', $currentPath) }}">
 
-                        <span>Karyawan</span>
+                        Karyawan
 
                     </a>
 
                     <a
                         href="/IndexPenghuni"
-                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ activeMenu('IndexPenghuni*', $currentPath) }}"
-                    >
+                        class="block px-3 py-2
+                        rounded-xl text-sm
+                        transition-all
+                        {{ activeMenu('IndexPenghuni*', $currentPath) }}">
 
-                        <span>Penghuni</span>
+                        Penghuni
 
                     </a>
 
                 </div>
+
             </div>
 
             {{-- RIWAYAT HUNIAN --}}
             <a
                 href="/riwayat-hunian"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-hunian', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('riwayat-hunian*', $currentPath) }}">
 
                 @include('components.icons.clipboardClock')
 
@@ -169,8 +272,11 @@
             {{-- PROFILE --}}
             <a
                 href="/profile"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('profile*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('profile*', $currentPath) }}">
 
                 @include('components.icons.user')
 
@@ -178,13 +284,18 @@
 
             </a>
 
-        {{-- ================= UNIT ================= --}}
+        {{-- ===================================================== --}}
+        {{-- ======================== UNIT ======================= --}}
+        {{-- ===================================================== --}}
         @elseif($isUnit)
 
             <a
                 href="/ajukanKeluhan"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('ajukanKeluhan*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('ajukanKeluhan*', $currentPath) }}">
 
                 @include('components.icons.form')
 
@@ -194,8 +305,11 @@
 
             <a
                 href="/riwayatKeluhan"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayatKeluhan*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('riwayatKeluhan*', $currentPath) }}">
 
                 @include('components.icons.clipboardClock')
 
@@ -203,11 +317,13 @@
 
             </a>
 
-            {{-- PROFILE --}}
             <a
                 href="/profile"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('profile*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('profile*', $currentPath) }}">
 
                 @include('components.icons.user')
 
@@ -215,13 +331,18 @@
 
             </a>
 
-        {{-- ================= TENANT RELATION ================= --}}
+        {{-- ===================================================== --}}
+        {{-- ================= TENANT RELATION =================== --}}
+        {{-- ===================================================== --}}
         @elseif($isTenantRelation)
 
             <a
                 href="/dashboard"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('dashboard', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('dashboard', $currentPath) }}">
 
                 @include('components.icons.dashboard')
 
@@ -231,8 +352,11 @@
 
             <a
                 href="/keluhan-masuk"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('keluhan-masuk*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('keluhan-masuk*', $currentPath) }}">
 
                 @include('components.icons.clipboardPaste')
 
@@ -242,8 +366,11 @@
 
             <a
                 href="/daftar-penanganan"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('daftar-penanganan*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('daftar-penanganan*', $currentPath) }}">
 
                 @include('components.icons.clipboardList')
 
@@ -251,24 +378,27 @@
 
             </a>
 
-            {{--=====RIwayat kELUHAN======--}}
-
-            <a href="/riwayat-keluhan"
-             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-keluhan*', $currentPath) }}">
+            <a
+                href="/riwayat-keluhan"
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('riwayat-keluhan*', $currentPath) }}">
 
                 @include('components.icons.clipboardClock')
-               
-                <span>
-                    Riwayat Keluhan
-                </span>
+
+                <span>Riwayat Keluhan</span>
 
             </a>
 
-            {{-- PROFILE --}}
             <a
                 href="/profile"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('profile*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('profile*', $currentPath) }}">
 
                 @include('components.icons.user')
 
@@ -276,14 +406,18 @@
 
             </a>
 
-            
-        {{-- ================= DEPARTEMEN ================= --}}
+        {{-- ===================================================== --}}
+        {{-- ==================== DEPARTEMEN ===================== --}}
+        {{-- ===================================================== --}}
         @elseif($isDepartemen)
 
             <a
                 href="/dashboard"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('dashboard', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('dashboard', $currentPath) }}">
 
                 @include('components.icons.dashboard')
 
@@ -293,8 +427,11 @@
 
             <a
                 href="/work-order-masuk"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('work-order-masuk*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('work-order-masuk*', $currentPath) }}">
 
                 @include('components.icons.clipboardPaste')
 
@@ -304,8 +441,11 @@
 
             <a
                 href="/daftar-work-order"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('daftar-work-order*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('daftar-work-order*', $currentPath) }}">
 
                 @include('components.icons.clipboardList')
 
@@ -313,24 +453,27 @@
 
             </a>
 
-            {{-- ================= RIWAYAT WO ================= --}}
- 
-            <a href="/riwayat-work-order"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-work-order*', $currentPath) }}">
+            <a
+                href="/riwayat-work-order"
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('riwayat-work-order*', $currentPath) }}">
 
                 @include('components.icons.clipboardClock')
 
-                <span>
-                    Riwayat Work Order
-                </span>
+                <span>Riwayat Work Order</span>
 
             </a>
 
-            {{-- PROFILE --}}
             <a
                 href="/profile"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('profile*', $currentPath) }}"
-            >
+                class="flex items-center gap-3
+                px-4 py-3 rounded-2xl
+                text-sm font-semibold
+                transition-all
+                {{ activeMenu('profile*', $currentPath) }}">
 
                 @include('components.icons.user')
 
@@ -343,4 +486,5 @@
         </nav>
 
     </div>
+
 </aside>

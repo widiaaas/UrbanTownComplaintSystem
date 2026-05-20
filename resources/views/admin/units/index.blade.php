@@ -77,7 +77,12 @@
     </div>
 
     {{-- ================= TABLE ================= --}}
-    <div class="bg-white rounded-lg shadow overflow-x-auto overflow-y-visible">
+    <div
+    class="bg-white rounded-2xl shadow-sm
+    border border-gray-100
+    overflow-visible">
+
+    <div class="overflow-x-auto overflow-y-visible">
         <table class="min-w-full divide-y">
             <thead class="bg-gray-50">
                 <tr>
@@ -155,32 +160,15 @@
                                     @click.outside="open = false"
                                     x-ref="menu"
 
-                                    class="fixed w-45 bg-white border border-gray-100
-                                        rounded-2xl shadow-xl z-[9999]
-                                        overflow-hidden"
+                                    class="absolute right-0 top-full mt-2 w-56
+                                        bg-white/95 backdrop-blur-sm
+                                        border border-gray-100
+                                        rounded-2xl shadow-2xl
+                                        z-[99999]
+                                        max-h-[320px] overflow-y-auto
+                                        overflow-hidden">
 
-                                        x-init="
-                                            $watch('open', value => {
-
-                                                if (value) {
-
-                                                    const rect =
-                                                        $el.previousElementSibling
-                                                            .getBoundingClientRect();
-
-                                                    // posisi vertical
-                                                    $el.style.top =
-                                                        (rect.bottom + window.scrollY + 6) + 'px';
-
-                                                    // posisi horizontal
-                                                    let left =
-                                                        rect.left + window.scrollX - 20;
-
-                                                    $el.style.left = left + 'px';
-                                                }
-                                            })
-                                        ">
-
+                                        
                                     {{-- ================= MENU UTAMA ================= --}}
                                     <div class="py-1.5">
 
@@ -286,6 +274,7 @@
                 </template>
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- ================= MODAL TAMBAH UNIT ================= --}}
@@ -1051,7 +1040,7 @@ function unitManager() {
                     html: `
                         Penghuni unit
                         <b>${this.selectedUnit.nomor_unit}</b>
-                        akan diganti menjadi
+                        akan diperbarui menjadi
                         <b>${penghuni?.nama || '-'}</b>
                     `,
 
@@ -1126,14 +1115,21 @@ function unitManager() {
 
                 this.openEditPenghuni = false;
 
-                Swal.fire({
+                    // reset state modal
+                    this.resetPasswordGenerated = false;
 
-                    icon: 'success',
+                    this.newPassword = '';
 
-                    title: 'Berhasil',
+                    // buka modal credential
+                    this.openReset = true;
 
-                    text: 'Penghuni berhasil diperbarui'
-                });
+                    // tampilkan password baru
+                    this.$nextTick(() => {
+
+                        this.resetPasswordGenerated = true;
+
+                        this.newPassword = data.password;
+                    });
 
                 // tampil password baru
                 this.openReset = true;

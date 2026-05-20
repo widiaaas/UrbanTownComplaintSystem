@@ -4,250 +4,454 @@
 
 @section('content')
 
-<div x-data="profileData()" x-init="init()" class="p-6 max-w-xl mx-auto">
+<div 
+    x-data="profileData()" 
+    x-init="init()" 
+    class="py-4 px-3"
+>
 
-    <h1 class="text-2xl font-bold mb-4">Profile Saya</h1>
+    <div class="max-w-3xl mx-auto">
 
-    <div class="bg-white rounded-lg shadow">
+        {{-- HEADER --}}
+        <div class="mb-3">
+            <h1 class="text-2xl font-bold text-gray-800">
+                Profile Saya
+            </h1>
 
-        {{-- TAB --}}
-        <div class="flex border-b">
-            <button @click="tab='profil'" :class="tab==='profil' ? activeTab : normalTab">Profil</button>
-            <button @click="tab='password'" :class="tab==='password' ? activeTab : normalTab">Ubah Kata Sandi</button>
+            <p class="text-sm text-gray-500 mt-1">
+                Kelola informasi akun dan keamanan password
+            </p>
         </div>
 
-        {{-- ================= PROFIL ================= --}}
-        <div x-show="tab==='profil'" class="p-6 space-y-4">
+        {{-- CARD --}}
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
 
-        <template x-if="!editMode">
-            <div class="space-y-3">
 
-                {{-- USERNAME --}}
-                <div class="flex justify-between">
-                    <span class="font-semibold">Username</span>
-                    <span x-text="user.username"></span>
-                </div>
+            {{-- TAB --}}
+            <div class="border-b bg-white">
+                <div class="flex">
 
-                {{-- NAMA --}}
-                <div class="flex justify-between">
-                    <span class="font-semibold">Nama</span>
-                    <span x-text="form.nama"></span>
-                </div>
-
-                {{-- NIK (HANYA PENGHUNI) --}}
-                <template x-if=" user.role === 'unit'">
-                    <div class="flex justify-between">
-                        <span class="font-semibold">NIK</span>
-                        <span x-text="form.nik"></span>
-                    </div>
-                </template>
-
-                {{-- EMAIL --}}
-                <div class="flex justify-between">
-                    <span class="font-semibold">Email</span>
-                    <span x-text="form.email"></span>
-                </div>
-
-                {{-- TELEPON --}}
-                <div class="flex justify-between">
-                    <span class="font-semibold">Nomor Telepon</span>
-                    <span x-text="form.no_telepon"></span>
-                </div>
-
-                {{-- DEPARTEMEN (HANYA KARYAWAN) --}}
-                <template x-if=" user.role === 'admin' || user.role === 'tenant_relation' || user.role === 'departemen'">
-                    <div class="flex justify-between">
-                        <span class="font-semibold">Jabatan</span>
-                        <span x-text="form.jabatan"></span>
-                    </div>
-                </template>
-
-                {{-- JENIS KELAMIN --}}
-                <div class="flex justify-between">
-                    <span class="font-semibold">Jenis Kelamin</span>
-                    <span x-text="form.jenis_kelamin"></span>
-                </div>
-
-                {{-- STATUS --}}
-                <div class="flex justify-between">
-                    <span class="font-semibold">
-                        Status
-                    </span>
-                    <span
-                        :class="form.nama === 'Belum ada penghuni'? 'text-red-600': 'text-green-600'"
-                        x-text="form.nama === 'Belum ada penghuni'? 'Kosong': 'Aktif'">
-                    </span>
-                </div>
-
-                {{-- BUTTON --}}
-                <div class="text-right">
                     <button
-                        class="btn btn-warning"
-                        @click="editMode=true"
-                        :disabled="
-                            user.role === 'unit' &&
-                            form.nama === 'Belum ada penghuni'
-                        "
+                        @click="tab='profil'"
+                        class="px-4 py-3 font-medium transition-all duration-300"
                         :class="
-                            user.role === 'unit' &&
-                            form.nama === 'Belum ada penghuni'
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                        ">
-                        Edit
+                            tab === 'profil'
+                            ? 'border-b-4 border-yellow-500 text-yellow-600 bg-yellow-50'
+                            : 'text-gray-500 hover:text-yellow-500'
+                        "
+                    >
+                        Profil
                     </button>
+
+                    <button
+                        @click="tab='password'"
+                        class="px-6 py-4 font-medium transition-all duration-300"
+                        :class="
+                            tab === 'password'
+                            ? 'border-b-4 border-yellow-500 text-yellow-600 bg-yellow-50'
+                            : 'text-gray-500 hover:text-yellow-500'
+                        "
+                    >
+                        Ubah Kata Sandi
+                    </button>
+
                 </div>
             </div>
-        </template>
 
-            {{-- EDIT --}}
-            <template x-if="editMode">
-                <div class="space-y-4">
+            {{-- ================= PROFIL ================= --}}
+            <div x-show="tab==='profil'" class="p-5">
 
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Nama</label>
-                    <input x-model="form.nama" class="input w-full">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">NIK</label>
-                    <input x-model="form.nik" class="input w-full">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Email</label>
-                    <input type="email" x-model="form.email"class="input w-full">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Telepon</label>
-                    <input type="tel" x-model="form.no_telepon" class="input w-full">
-                </div>
+                {{-- VIEW MODE --}}
+                <template x-if="!editMode">
 
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Jenis Kelamin</label>
-                    <select x-model="form.jenis_kelamin" class="input w-full">
-                        <option value="">Pilih</option>
-                        <template x-for="item in options.jenis_kelamin" :key="item">
-                            <option :value="item" x-text="item"></option>
-                        </template>
-                    </select>
-                </div>
+                    <div class="space-y-5">
 
-                    <div class="flex justify-end gap-2">
-                        <button @click="editMode=false" class="btn">Batal</button>
-                        <button @click="updateProfile()" class="btn btn-primary">Simpan</button>
+                        <div class="grid md:grid-cols-2 gap-3">
+
+                            {{-- USERNAME --}}
+                            <div class="border rounded-xl p-3">
+                                <p class="text-xs text-gray-500 mb-1">
+                                    Username
+                                </p>
+
+                                <p 
+                                    class="text-sm font-semibold text-gray-800"
+                                    x-text="user.username"
+                                ></p>
+                            </div>
+
+                            {{-- NAMA --}}
+                            <div class="border rounded-xl p-3">
+                                <p class="text-xs text-gray-500 mb-1">
+                                    Nama
+                                </p>
+
+                                <p 
+                                    class="text-sm font-semibold text-gray-800"
+                                    x-text="form.nama"
+                                ></p>
+                            </div>
+
+                            {{-- NIK --}}
+                            <template x-if="user.role === 'unit'">
+                                <div class="border rounded-xl p-3">
+                                    <p class="text-xs text-gray-500 mb-1">
+                                        NIK
+                                    </p>
+
+                                    <p 
+                                        class="text-sm font-semibold text-gray-800"
+                                        x-text="form.nik"
+                                    ></p>
+                                </div>
+                            </template>
+
+                            {{-- EMAIL --}}
+                            <div class="border rounded-xl p-3">
+                                <p class="text-xs text-gray-500 mb-1">
+                                    Email
+                                </p>
+
+                                <p 
+                                    class="font-semibold text-gray-800 break-all"
+                                    x-text="form.email"
+                                ></p>
+                            </div>
+
+                            {{-- TELEPON --}}
+                            <div class="border rounded-xl p-3">
+                                <p class="text-xs text-gray-500 mb-1">
+                                    Nomor Telepon
+                                </p>
+
+                                <p 
+                                    class="text-sm font-semibold text-gray-800"
+                                    x-text="form.no_telepon"
+                                ></p>
+                            </div>
+
+                            {{-- JABATAN --}}
+                            <template x-if=" user.role === 'admin' || user.role === 'tenant_relation' || user.role === 'departemen'">
+                                <div class="border rounded-xl p-3">
+                                    <p class="text-xs text-gray-500 mb-1">
+                                        Jabatan
+                                    </p>
+
+                                    <p 
+                                        class="text-sm font-semibold text-gray-800"
+                                        x-text="form.jabatan"
+                                    ></p>
+                                </div>
+                            </template>
+
+                            {{-- JK --}}
+                            <div class="border rounded-xl p-3">
+                                <p class="text-xs text-gray-500 mb-1">
+                                    Jenis Kelamin
+                                </p>
+
+                                <p 
+                                    class="text-sm font-semibold text-gray-800"
+                                    x-text="form.jenis_kelamin"
+                                ></p>
+                            </div>
+
+                            {{-- STATUS --}}
+                            <div class="border rounded-xl p-3">
+                                <p class="text-sm text-gray-500 mb-2">
+                                    Status
+                                </p>
+
+                                <span
+                                    class="px-3 py-1 rounded-full text-sm font-semibold"
+                                    :class="
+                                        form.nama === 'Belum ada penghuni'
+                                        ? 'bg-red-100 text-red-600'
+                                        : 'bg-green-100 text-green-600'
+                                    "
+                                    x-text="
+                                        form.nama === 'Belum ada penghuni'
+                                        ? 'Kosong'
+                                        : 'Aktif'
+                                    "
+                                ></span>
+                            </div>
+
+                        </div>
+
+                        {{-- BUTTON --}}
+                        <div class="pt-4 text-right">
+
+                            <button
+                                @click="editMode=true"
+                                class="px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-sm text-white font-medium transition-all duration-300"
+                                :disabled="
+                                    user.role === 'unit' &&
+                                    form.nama === 'Belum ada penghuni'
+                                "
+                                :class="
+                                    user.role === 'unit' &&
+                                    form.nama === 'Belum ada penghuni'
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : ''
+                                "
+                            >
+                                Edit Profil
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+                {{-- EDIT MODE --}}
+                <template x-if="editMode">
+
+                    <div class="space-y-5">
+
+                        <div class="grid md:grid-cols-2 gap-5">
+
+                            <div>
+                                <label class="block mb-1 text-xs font-semibold text-gray-700">
+                                    Nama
+                                </label>
+
+                                <input 
+                                    x-model="form.nama"
+                                    class="w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 px-3 py-2 text-sm outline-none transition"
+                                >
+                            </div>
+
+                            <template x-if="user.role === 'unit'">
+
+                                <div>
+                                    <label class="block mb-1 text-xs font-semibold text-gray-700">
+                                        NIK
+                                    </label>
+
+                                    <input 
+                                        x-model="form.nik"
+                                        class="w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 px-3 py-2 text-sm outline-none transition"
+                                    >
+                                </div>
+
+                            </template>
+
+                            <div>
+                                <label class="block mb-1 text-xs font-semibold text-gray-700">
+                                    Email
+                                </label>
+
+                                <input 
+                                    type="email"
+                                    x-model="form.email"
+                                    class="w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 px-3 py-2 text-sm outline-none transition"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block mb-1 text-xs font-semibold text-gray-700">
+                                    Telepon
+                                </label>
+
+                                <input 
+                                    type="tel"
+                                    x-model="form.no_telepon"
+                                    class="w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 px-3 py-2 text-sm outline-none transition"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block mb-1 text-xs font-semibold text-gray-700">
+                                    Jenis Kelamin
+                                </label>
+
+                                <select 
+                                    x-model="form.jenis_kelamin"
+                                    class="w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 px-3 py-2 text-sm outline-none transition"
+                                >
+                                    <option value="">Pilih</option>
+
+                                    <template 
+                                        x-for="item in options.jenis_kelamin" 
+                                        :key="item"
+                                    >
+                                        <option 
+                                            :value="item" 
+                                            x-text="item"
+                                        ></option>
+                                    </template>
+
+                                </select>
+                            </div>
+
+                        </div>
+
+                        {{-- BUTTON --}}
+                        <div class="flex justify-end gap-3 pt-4">
+
+                            <button
+                                @click="editMode=false"
+                                class="px-5 py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition"
+                            >
+                                Batal
+                            </button>
+
+                            <button
+                                @click="updateProfile()"
+                                class="px-6 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-semibold shadow-lg transition"
+                            >
+                                Simpan Perubahan
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+            {{-- ================= PASSWORD ================= --}}
+            <div x-show="tab==='password'" class="p-5">
+
+                <div class="max-w-xl mx-auto space-y-5">
+
+                    {{-- PASSWORD LAMA --}}
+                    <div>
+
+                        <label class="block mb-1 text-xs font-semibold text-gray-700">
+                            Kata Sandi Lama
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+                                :type="showPassword.lama ? 'text' : 'password'"
+                                x-model="password.password_lama"
+                                class="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 px-4 py-3 pr-12 outline-none transition"
+                            >
+
+                            <button
+                                type="button"
+                                @click="showPassword.lama = !showPassword.lama"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                            >
+
+                                <template x-if="!showPassword.lama">
+                                    @include('components.icons.eye')
+                                </template>
+
+                                <template x-if="showPassword.lama">
+                                    @include('components.icons.eyeSlash')
+                                </template>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    {{-- PASSWORD BARU --}}
+                    <div>
+
+                        <label class="block mb-1 text-xs font-semibold text-gray-700">
+                            Kata Sandi Baru
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+                                :type="showPassword.baru ? 'text' : 'password'"
+                                x-model="password.password_baru"
+                                class="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 px-4 py-3 pr-12 outline-none transition"
+                            >
+
+                            <button
+                                type="button"
+                                @click="showPassword.baru = !showPassword.baru"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                            >
+
+                                <template x-if="!showPassword.baru">
+                                    @include('components.icons.eye')
+                                </template>
+
+                                <template x-if="showPassword.baru">
+                                    @include('components.icons.eyeSlash')
+                                </template>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    {{-- KONFIRMASI --}}
+                    <div>
+
+                        <label class="block mb-1 text-xs font-semibold text-gray-700">
+                            Konfirmasi Kata Sandi
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+                                :type="showPassword.konfirmasi ? 'text' : 'password'"
+                                x-model="password.password_baru_confirmation"
+                                class="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 px-4 py-3 pr-12 outline-none transition"
+                            >
+
+                            <button
+                                type="button"
+                                @click="showPassword.konfirmasi = !showPassword.konfirmasi"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                            >
+
+                                <template x-if="!showPassword.konfirmasi">
+                                    @include('components.icons.eye')
+                                </template>
+
+                                <template x-if="showPassword.konfirmasi">
+                                    @include('components.icons.eyeSlash')
+                                </template>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    {{-- BUTTON --}}
+                    <div class="pt-3 text-right">
+
+                        <button
+                            @click="updatePassword()"
+                            class="px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-semibold shadow-lg transition"
+                        >
+                            Simpan Kata Sandi
+                        </button>
+
                     </div>
 
                 </div>
-            </template>
 
-        </div>
-
-        {{-- ================= PASSWORD ================= --}}
-        <div x-show="tab==='password'" class="p-6 space-y-4">
-
-            <!-- PASSWORD LAMA -->
-            <div>
-                <label class="block text-sm font-semibold mb-1">Kata Sandi Lama</label>
-
-                <div class="relative">
-                    <input 
-                        :type="showPassword.lama ? 'text' : 'password'"
-                        x-model="password.password_lama" 
-                        class="input w-full pr-12"
-                    >
-
-                    <button 
-                        type="button"
-                        @click="showPassword.lama = !showPassword.lama"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
-                    >
-                        <template x-if="!showPassword.lama">
-                            @include('components.icons.eye')
-                        </template>
-
-                        <template x-if="showPassword.lama">
-                            @include('components.icons.eyeSlash')
-                        </template>
-                    </button>
-                </div>
             </div>
-
-            <!-- PASSWORD BARU -->
-            <div>
-                <label class="block text-sm font-semibold mb-1">Kata Sandi Baru</label>
-
-                <div class="relative">
-                    <input 
-                        :type="showPassword.baru ? 'text' : 'password'"
-                        x-model="password.password_baru" 
-                        class="input w-full pr-12"
-                    >
-
-                    <button 
-                        type="button"
-                        @click="showPassword.baru = !showPassword.baru"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
-                    >
-                        <template x-if="!showPassword.baru">
-                            @include('components.icons.eye')
-                        </template>
-
-                        <template x-if="showPassword.baru">
-                            @include('components.icons.eyeSlash')
-                        </template>
-                    </button>
-                </div>
-            </div>
-
-            <!-- KONFIRMASI PASSWORD -->
-            <div>
-                <label class="block text-sm font-semibold mb-1">Konfirmasi Kata Sandi</label>
-
-                <div class="relative">
-                    <input 
-                        :type="showPassword.konfirmasi ? 'text' : 'password'"
-                        x-model="password.password_baru_confirmation" 
-                        class="input w-full pr-12"
-                    >
-
-                    <button 
-                        type="button"
-                        @click="showPassword.konfirmasi = !showPassword.konfirmasi"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
-                    >
-                        <template x-if="!showPassword.konfirmasi">
-                            @include('components.icons.eye')
-                        </template>
-
-                        <template x-if="showPassword.konfirmasi">
-                            @include('components.icons.eyeSlash')
-                        </template>
-                    </button>
-                </div>
-            </div>
-
-            <div class="text-right">
-                <button @click="updatePassword()" class="btn btn-primary">
-                    Simpan Kata Sandi
-                </button>
-            </div>
-
-        </div>
-
 
         </div>
 
     </div>
+
 </div>
 
 <script>
 function profileData(){
     return {
+
         tab:'profil',
         editMode:false,
         errors:{},
-
-        activeTab:'px-4 py-3 border-b-2 border-yellow-500 text-yellow-600',
-        normalTab:'px-4 py-3 text-gray-500',
 
         form:{
             nama:'',
@@ -274,26 +478,39 @@ function profileData(){
             departemen:[],
             jenis_kelamin:[]
         },
+
         user:{},
 
-        // ================= INIT (FETCH DATA) =================
+        // ================= INIT =================
         async init(){
+
             try{
-                const res = await fetch('/profile/show', {
+
+                const res = await fetch('/profile/show',{
+
                     headers:{
                         'Accept':'application/json'
                     }
+
                 });
 
                 const data = await res.json();
 
-                // isi options
                 this.user = data.user;
-                this.options.departemen = data.options?.departemen ?? [];
-                this.options.jenis_kelamin = data.options?.jenis_kelamin ?? [];
 
-                // jika karyawan
-                if(data.user.role === 'admin' ||data.user.role === 'tenant_relation' ||data.user.role === 'departemen'){
+                this.options.departemen =
+                    data.options?.departemen ?? [];
+
+                this.options.jenis_kelamin =
+                    data.options?.jenis_kelamin ?? [];
+
+                // KARYAWAN
+                if(
+                    data.user.role === 'admin' ||
+                    data.user.role === 'tenant_relation' ||
+                    data.user.role === 'departemen'
+                ){
+
                     const p = data.profile;
 
                     this.form.nama = p?.nama ?? '';
@@ -301,7 +518,6 @@ function profileData(){
                     this.form.no_telepon = p?.no_telepon ?? '';
                     this.form.jenis_kelamin = p?.jenis_kelamin ?? '';
 
-                    // 🔥 mapping role ke label
                     if(data.user.role === 'admin'){
                         this.form.jabatan = 'Admin';
                     }
@@ -314,20 +530,35 @@ function profileData(){
                     }
                 }
 
-                // jika unit
-                // jika unit
+                // UNIT
                 if(data.user.role === 'unit'){
+
                     const unit = data.profile;
                     const penghuni = unit?.penghuni;
-                    this.user.username =unit?.nomor_unit ?? '-';
-                    this.form.nama = penghuni?.nama ??'Belum ada penghuni';
-                    this.form.nik =penghuni?.nik ?? '-';
-                    this.form.email =penghuni?.email ?? '-';
-                    this.form.no_telepon =penghuni?.no_telepon ?? '-';
-                    this.form.jenis_kelamin =penghuni?.jenis_kelamin ?? '-';
+
+                    this.user.username =
+                        unit?.nomor_unit ?? '-';
+
+                    this.form.nama =
+                        penghuni?.nama ?? 'Belum ada penghuni';
+
+                    this.form.nik =
+                        penghuni?.nik ?? '-';
+
+                    this.form.email =
+                        penghuni?.email ?? '-';
+
+                    this.form.no_telepon =
+                        penghuni?.no_telepon ?? '-';
+
+                    this.form.jenis_kelamin =
+                        penghuni?.jenis_kelamin ?? '-';
                 }
+
             }catch(err){
+
                 console.error(err);
+
             }
         },
 
@@ -339,21 +570,17 @@ function profileData(){
             const confirm =
                 await Swal.fire({
 
-                    title: 'Simpan perubahan?',
+                    title:'Simpan perubahan?',
+                    text:'Perubahan profil akan diperbarui',
+                    icon:'question',
 
-                    text: 'Perubahan profil akan diperbarui',
+                    showCancelButton:true,
 
-                    icon: 'question',
+                    confirmButtonText:'Ya, Simpan',
+                    cancelButtonText:'Batal',
 
-                    showCancelButton: true,
-
-                    confirmButtonText: 'Ya, Simpan',
-
-                    cancelButtonText: 'Batal',
-
-                    confirmButtonColor: '#2563eb',
-
-                    cancelButtonColor: '#6b7280',
+                    confirmButtonColor:'#eab308',
+                    cancelButtonColor:'#6b7280',
                 });
 
             if(!confirm.isConfirmed){
@@ -412,7 +639,7 @@ function profileData(){
                     'error'
                 );
             }
-            },
+        },
 
         // ================= UPDATE PASSWORD =================
         async updatePassword(){
@@ -422,21 +649,17 @@ function profileData(){
             const confirm =
                 await Swal.fire({
 
-                    title: 'Ubah kata sandi?',
+                    title:'Ubah kata sandi?',
+                    text:'Kata sandi akun akan diperbarui',
+                    icon:'warning',
 
-                    text: 'Kata sandi akun akan diperbarui',
+                    showCancelButton:true,
 
-                    icon: 'warning',
+                    confirmButtonText:'Ya, Ubah',
+                    cancelButtonText:'Batal',
 
-                    showCancelButton: true,
-
-                    confirmButtonText: 'Ya, Ubah',
-
-                    cancelButtonText: 'Batal',
-
-                    confirmButtonColor: '#d97706',
-
-                    cancelButtonColor: '#6b7280',
+                    confirmButtonColor:'#eab308',
+                    cancelButtonColor:'#6b7280',
                 });
 
             if(!confirm.isConfirmed){
@@ -478,9 +701,7 @@ function profileData(){
                 this.password = {
 
                     password_lama:'',
-
                     password_baru:'',
-
                     password_baru_confirmation:''
                 };
 
@@ -502,7 +723,7 @@ function profileData(){
                     'error'
                 );
             }
-            }
+        }
     }
 }
 </script>

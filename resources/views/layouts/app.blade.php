@@ -1,43 +1,83 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title')</title>
 
-    {{-- CSRF Token --}}
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-    {{-- Tailwind --}}
+    <title>
+        @yield('title')
+    </title>
+
+    {{-- CSRF --}}
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}">
+
+    {{-- TAILWIND --}}
     @vite('resources/css/app.css')
 
-    {{-- Alpine --}}
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    {{-- ALPINE --}}
+    <script
+        src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        defer>
+    </script>
 
+    {{-- SWEETALERT --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
-<body class="bg-gray-100 overflow-x-hidden">
+<body
+    class="bg-[#f3f6fb]
+    overflow-hidden">
 
-<div x-data="{ sidebarOpen: false }" class="flex h-screen">
+    {{-- APP --}}
+    <div
+        x-data="{ sidebarOpen: false }"
+        class="flex h-screen overflow-hidden">
 
-    {{-- SIDEBAR --}}
-    @include('components.sidebar')
+        {{-- SIDEBAR --}}
+        @include('components.sidebar')
 
-    {{-- MAIN --}}
-    <div class="flex-1 flex flex-col">
+        {{-- MAIN --}}
+        <div
+            class="flex-1 flex flex-col
+            min-w-0">
 
-        {{-- NAVBAR --}}
-        @include('components.navbar')
+            {{-- NAVBAR --}}
+            <header
+                class="sticky top-0 z-20
+                bg-white/80 backdrop-blur-xl
+                border-b border-gray-200/70
+                shadow-sm">
 
-        {{-- CONTENT --}}
-        <main class="flex-1 overflow-y-auto p-6">
-            @yield('content')
-        </main>
+                @include('components.navbar')
+
+            </header>
+
+            {{-- CONTENT --}}
+            <main
+                class="flex-1 overflow-y-auto
+                px-6 py-5 min-w-0">
+
+                <div
+                    class="w-full min-h-full">
+
+                    @yield('content')
+
+                </div>
+
+            </main>
+
+        </div>
 
     </div>
 
-</div>
-
 </body>
+
 </html>
