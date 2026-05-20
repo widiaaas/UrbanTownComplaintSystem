@@ -134,15 +134,35 @@
                             </span>
                         </td>
 
-                        <td class="space-x-2">
+                        <td class="px-4 py-2 text-center">
 
-                            <button @click="detail(p)" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">
-                                Detail
-                            </button>
+                            <div class="flex items-center justify-center gap-2">
 
-                            <button @click="edit(p)"  class="px-2 py-1 bg-blue-500 text-white rounded text-xs">
-                                Edit
-                            </button>
+                                {{-- DETAIL --}}
+                                <button
+                                    @click="detail(p)"
+                                    class="flex items-center gap-2
+                                    px-2  text-xs
+                                    
+                                    rounded-lg hover:bg-green-200 transition">
+
+                                    @include('components.buttons.btn-view')
+
+                                </button>
+
+                                {{-- EDIT --}}
+                                <button
+                                    @click="edit(p)"
+                                    class="flex items-center gap-2
+                                    px-2  text-xs
+                                   
+                                    rounded-lg hover:bg-green-200 transition">
+
+                                    @include('components.buttons.btn-edit')
+
+                                </button>
+
+                            </div>
 
                         </td>
                     </tr>
@@ -244,53 +264,191 @@
         </div>
     </div>
 
-    {{-- MODAL DETAIL --}}
+    {{-- ================= MODAL DETAIL PENGHUNI ================= --}}
     <div
         x-show="openDetail"
         x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        x-transition.opacity
+        class="fixed inset-0 bg-black/50
+        backdrop-blur-sm
+        flex items-center justify-center
+        z-50 p-4">
 
-        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+        <div
+            @click.outside="openDetail = false"
+            x-transition.scale
+            class="bg-white w-full max-w-lg
+            rounded-2xl shadow-2xl overflow-hidden">
 
-            <h2 class="text-lg font-semibold mb-4">
-                Detail Penghuni
-            </h2>
-
-            <div class="space-y-3 text-sm">
+            {{-- HEADER --}}
+            <div
+                class="flex items-center justify-between
+                px-6 py-4 border-b border-gray-100">
 
                 <div>
-                    <p class="text-gray-500">Nama</p>
-                    <p class="font-medium" x-text="selected.nama"></p>
+
+                    <h2 class="text-lg font-semibold text-gray-800">
+                        Detail Penghuni
+                    </h2>
+
+                    <p class="text-sm text-gray-500">
+                        Informasi lengkap data penghuni
+                    </p>
+
                 </div>
-                <div>
-                    <p class="text-gray-500">NIK</p>
-                    <p class="font-medium" x-text="selected.nik"></p>
-                </div>
 
-                <div>
-                    <p class="text-gray-500">Email</p>
-                    <p class="font-medium" x-text="selected.email || '-'"></p>
-                </div>
+                {{-- CLOSE --}}
+                <button
+                    @click="openDetail = false"
+                    class="w-9 h-9 rounded-lg
+                    flex items-center justify-center
+                    hover:bg-gray-100 transition">
 
-                <div>
-                    <p class="text-gray-500">Telepon</p>
-                    <p class="font-medium" x-text="selected.no_telepon"></p>
-                </div>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5 text-gray-500"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
 
-                <div>
-                    <p class="text-gray-500">Jenis Kelamin</p>
-                    <p class="font-medium" x-text="selected.jenis_kelamin"></p>
+                        <path d="M18 6 6 18"/>
+                        <path d="m6 6 12 12"/>
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+            {{-- CONTENT --}}
+            <div class="p-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {{-- NAMA --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Nama Penghuni
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.nama || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- NIK --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            NIK
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.nik || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- EMAIL --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Email
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800 break-all"
+                            x-text="selected.email || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- TELEPON --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Nomor Telepon
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.no_telepon || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- JENIS KELAMIN --}}
+                    <div class="md:col-span-2">
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Jenis Kelamin
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.jenis_kelamin || '-'">
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
 
-            <div class="flex justify-end mt-6">
+            {{-- FOOTER --}}
+            <div
+                class="flex justify-end
+                px-6 py-4 border-t
+                border-gray-100 bg-gray-50">
 
                 <button
                     @click="openDetail = false"
-                    class="px-4 py-2 border rounded"
-                >
+                    class="px-4 py-2 rounded-xl
+                    bg-blue-600 text-white
+                    text-sm font-medium
+                    hover:bg-blue-700 transition">
+
                     Tutup
+
                 </button>
 
             </div>

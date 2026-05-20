@@ -14,7 +14,7 @@
         {{-- LEFT --}}
         <div>
             <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                🏢 Dashboard Tenant Relation
+            @include('components.icons.building2') Dashboard Tenant Relation
             </h1>
 
             <p class="text-gray-500 mt-1">
@@ -157,7 +157,7 @@
                 class="flex justify-between items-center border-b pb-2 hover:bg-gray-50 rounded px-2 transition">
                 <div>
                     <p class="font-semibold text-gray-900">
-                        {{ $keluhan->ticket ?? 'KEL-' . $keluhan->id }}
+                        {{ $keluhan->nomor_tiket ?? '-' }}
                     </p>
                     <p class="text-sm text-gray-700">
                         {{ $keluhan->judul ?? '-' }}

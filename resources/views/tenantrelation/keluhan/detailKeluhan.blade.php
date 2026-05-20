@@ -9,11 +9,21 @@
     <div class="flex justify-between items-start">
         <div>
             <h1 class="text-2xl font-bold text-gray-800" x-text="keluhan.judul"></h1>
-            <p class="text-sm text-gray-500">
-                No Tiket: <span x-text="keluhan.tiket"></span>
+            <p class="text-sm text-gray-600 font-semibold">
+                No Tiket:
+                <span class="text-gray-800" x-text="keluhan.tiket"></span>
             </p>
         </div>
-        <a href="/daftar-penanganan" class="text-sm text-blue-600 hover:underline">← Kembali</a>
+        <a href="/daftar-penanganan"
+            class="inline-flex items-center gap-2
+            text-sm font-medium text-blue-600
+            hover:text-blue-700 transition">
+
+            @include('components.icons.arrowLeft')
+
+            <span>Kembali</span>
+
+        </a>
     </div>
 
     <template x-if="readonly">
@@ -57,19 +67,68 @@
                 <p class="text-sm font-medium mb-1">Deskripsi Keluhan</p>
                 <p class="text-gray-600" x-text="keluhan.deskripsi"></p>
             </div>
-            <div >
+            <div>
+
                 <p class="text-sm font-medium mb-1">Lampiran Keluhan</p>
-                <template x-for="file in keluhan.lampiranKeluhan" :key="file">
-                    <button
-                        @click="previewFile = file; openPreview = true" 
-                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:underline">
-                        📎 <span x-text="file.split('/').pop()"></span>
-                    </button>
+     
+                <template
+                    x-if="keluhan.lampiranKeluhan &&
+                    keluhan.lampiranKeluhan.length">
+
+                    <div
+                        class="flex flex-wrap gap-2 mt-2">
+
+                        <template
+                            x-for="file in keluhan.lampiranKeluhan"
+                            :key="file">
+
+                            <button
+                                @click="
+                                    previewFile = file;
+                                    openPreview = true
+                                "
+                                title="Preview Lampiran"
+                                class="inline-flex items-center gap-1.5
+                                px-2 py-1 rounded-lg
+                                bg-blue-50 text-blue-700
+                                text-xs font-medium
+                                hover:bg-blue-100 transition">
+
+                                @include('components.buttons.btn-view')
+
+                                <span
+                                    x-text="
+                                        keluhan.lampiranKeluhan.length > 1
+                                        ? 'Lampiran ' + (i + 1)
+                                        : 'Lampiran'
+                                    ">
+                                </span>
+
+                            </button>
+
+                        </template>
+
+                    </div>
+
                 </template>
-                <template x-if="!keluhan.lampiranKeluhan || keluhan.lampiranKeluhan.length === 0">
-                    <p class="text-xs text-gray-400 italic">Tidak ada lampiran</p>
+
+                <template
+                    x-if="!keluhan.lampiranKeluhan ||
+                    keluhan.lampiranKeluhan.length === 0">
+
+                    <div
+                        class="mt-2 bg-gray-50
+                        border border-dashed border-gray-200
+                        rounded-xl px-4 py-4
+                        text-sm text-gray-400 italic">
+
+                        Tidak ada lampiran
+
+                    </div>
+
                 </template>
-            </div>
+
+                </div>
         </div>
     </div>
 
@@ -144,8 +203,14 @@
                 {{-- RIWAYAT --}}
                 <button
                     @click="openRiwayat = true"
-                    class="text-sm text-blue-600 hover:underline">
-                    Lihat Riwayat
+                    class="inline-flex items-center gap-1.5
+                    text-sm font-medium text-blue-600
+                    hover:text-blue-700 transition">
+
+                    @include('components.icons.eye')
+
+                    <span>Lihat Riwayat</span>
+
                 </button>
             </div>
         </div>
@@ -178,25 +243,41 @@
                     <input type="file" multiple @change="handleUploadKeputusan($event)" class="text-sm">
                     <div class="flex flex-wrap gap-2 mt-2">
                         <template x-for="(file, index) in keputusan.lampiran" :key="index">
-                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
+                        <div
+                            class="flex items-center gap-2
+                            bg-gray-50 border border-gray-200
+                            rounded-xl px-3 py-2
+                            shadow-sm">
 
-                                <span x-text="file.name"></span>
-
-                                <!-- 🔥 PREVIEW BUTTON -->
-                                <button 
-                                    @click="openPreviewFile(file)"
-                                    class="text-blue-600 hover:underline">
-                                    Preview
-                                </button>
-
-                                <!-- DELETE -->
-                                <button 
-                                    @click="hapusLampiranKeputusan(index)"
-                                    class="text-red-500 hover:text-red-700">
-                                    ✕
-                                </button>
-
+                            {{-- FILE NAME --}}
+                            <div
+                                class="max-w-[180px]
+                                truncate text-xs
+                                font-medium text-gray-700"
+                                x-text="file.name">
                             </div>
+
+                            {{-- PREVIEW --}}
+                            <button
+                                @click="openPreviewFile(file)"
+                                title="Preview Lampiran"
+                                class="hover:scale-105 transition">
+
+                                @include('components.buttons.btn-view')
+
+                            </button>
+
+                            {{-- DELETE --}}
+                            <button
+                                @click="hapusLampiranKeputusan(index)"
+                                title="Hapus Lampiran"
+                                class="hover:scale-105 transition">
+
+                                @include('components.buttons.btn-delete')
+
+                            </button>
+
+                        </div>
                         </template>
                     </div>
                 </div>
@@ -225,15 +306,48 @@
                 <div>
                     <label class="text-sm font-medium mb-1 block">Lampiran Dokumentasi</label>
                     <input type="file" multiple x-ref="fileKeputusan"
-                        @change="previewFiles = Array.from($event.target.files)"
+                    @change="previewFiles = [
+                            ...previewFiles,
+                            ...Array.from($event.target.files)
+                        ]"
                         class="text-sm">
                     <div class="flex flex-wrap gap-2 mt-2">
                         <template x-for="(file, index) in previewFiles" :key="index">
-                            <div class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
-                                <span x-text="file.name"></span>
-                                <button @click="openPreviewFile(file)" class="text-blue-600 hover:underline">Preview</button>
-                                <button @click="previewFiles.splice(index,1)" class="text-red-500 hover:text-red-700">✕</button>
+                        <div
+                            class="flex items-center gap-2
+                            bg-gray-50 border border-gray-200
+                            rounded-xl px-3 py-2
+                            shadow-sm">
+
+                            {{-- FILE NAME --}}
+                            <div
+                                class="max-w-[180px]
+                                truncate text-xs
+                                font-medium text-gray-700"
+                                x-text="file.name">
                             </div>
+
+                            {{-- PREVIEW --}}
+                            <button
+                                @click="openPreviewFile(file)"
+                                title="Preview Lampiran"
+                                class="hover:scale-105 transition">
+
+                                @include('components.buttons.btn-view')
+
+                            </button>
+
+                            {{-- DELETE --}}
+                            <button
+                                @click="hapusLampiranKeputusan(index)"
+                                title="Hapus Lampiran"
+                                class="hover:scale-105 transition">
+
+                                @include('components.buttons.btn-delete')
+
+                            </button>
+
+                        </div>
                         </template>
                     </div>
                 </div>
@@ -275,9 +389,17 @@
                 {{-- LAMPIRAN --}}
                 <div>
 
+                    <label
+                        class="text-xs font-semibold
+                        text-gray-700">
+
+                        Lampiran Keputusan
+
+                    </label>
+
                     <template x-if="keluhan.lampiranKeputusan.length">
 
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 mt-2">
 
                             <template
                                 x-for="(file, i) in keluhan.lampiranKeputusan"
@@ -285,10 +407,10 @@
 
                                 <button
                                     @click="openPreviewFile(file)"
-                                    class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:underline">
-                                    
-                                    📎 Lampiran Keputusan
-                                    <span x-text="i + 1"></span>
+                                    title="Preview Lampiran"
+                                    class="hover:scale-105 transition">
+
+                                    @include('components.buttons.btn-view')
 
                                 </button>
 
@@ -300,9 +422,15 @@
 
                     <template x-if="!keluhan.lampiranKeputusan.length">
 
-                        <p class="text-xs text-gray-400 italic">
+                        <div
+                            class="mt-2 bg-gray-50
+                            border border-dashed border-gray-200
+                            rounded-xl px-4 py-4
+                            text-sm text-gray-400 italic">
+
                             Tidak ada lampiran keputusan
-                        </p>
+
+                        </div>
 
                     </template>
 
@@ -319,12 +447,63 @@
         <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
             <button @click="openPreview = false"
                 class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">✕</button>
-            <p class="text-sm font-semibold mb-3" x-text="previewFile"></p>
             <template x-if="typeof previewFile === 'string' && isImage(previewFile)">
                 <img :src="'/storage/' + previewFile" class="max-h-[70vh] mx-auto rounded">
             </template>
-            <template x-if="typeof previewFile === 'string' && isPDF(previewFile)">
-                <iframe :src="'/storage/' + previewFile" class="w-full h-[70vh] rounded"></iframe>
+            <template
+                x-if="typeof previewFile === 'string' && isPDF(previewFile)">
+
+                <div
+                    class="flex items-center justify-between
+                    bg-gray-50 border border-gray-200
+                    rounded-xl px-4 py-3">
+
+                    {{-- LEFT --}}
+                    <div class="flex items-center gap-3">
+
+                        {{-- ICON --}}
+                        <div
+                            class="w-10 h-10 rounded-lg
+                            bg-red-100 text-red-600
+                            flex items-center justify-center">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+
+                                <path d="M14 2v6h6"/>
+
+                            </svg>
+
+                        </div>
+
+                        {{-- FILE NAME --}}
+                        <div
+                            class="text-sm font-medium
+                            text-gray-700 truncate max-w-[250px]"
+                            x-text="previewFile.split('/').pop()">
+                        </div>
+
+                    </div>
+
+                    {{-- ACTION --}}
+                    <a
+                        :href="'/storage/' + previewFile"
+                        target="_blank"
+                        class="text-sm font-medium
+                        text-blue-600 hover:text-blue-700">
+
+                        Buka
+
+                    </a>
+
+                </div>
+
             </template>
             <template x-if="typeof previewFile === 'string' && !isImage(previewFile) && !isPDF(previewFile)">
                 <div class="text-center text-gray-500 py-10">Preview tidak tersedia</div>
@@ -338,12 +517,66 @@
         <div class="bg-white w-full max-w-4xl rounded-xl p-4 relative">
             <button @click="openPreview = false"
                 class="absolute top-3 right-3 text-xl text-gray-600 hover:text-black">✕</button>
-            <p class="text-sm font-semibold mb-3" x-text="previewFile?.name"></p>
+            
             <template x-if="previewFile && typeof previewFile === 'object' && previewFile.type && previewFile.type.startsWith('image/')">
                 <img :src="URL.createObjectURL(previewFile)" class="max-h-[70vh] mx-auto rounded">
             </template>
-            <template x-if="previewFile && typeof previewFile === 'object' && previewFile.type === 'application/pdf'">
-                <iframe :src="URL.createObjectURL(previewFile)" class="w-full h-[70vh] rounded"></iframe>
+            <template
+                x-if="previewFile &&
+                typeof previewFile === 'object' &&
+                previewFile.type === 'application/pdf'">
+
+                <div
+                    class="flex items-center justify-between
+                    bg-gray-50 border border-gray-200
+                    rounded-xl px-4 py-3">
+
+                    {{-- LEFT --}}
+                    <div class="flex items-center gap-3">
+
+                        {{-- ICON --}}
+                        <div
+                            class="w-10 h-10 rounded-lg
+                            bg-red-100 text-red-600
+                            flex items-center justify-center">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+
+                                <path d="M14 2v6h6"/>
+
+                            </svg>
+
+                        </div>
+
+                        {{-- FILE NAME --}}
+                        <div
+                            class="text-sm font-medium
+                            text-gray-700 truncate max-w-[250px]"
+                            x-text="previewFile?.name">
+                        </div>
+
+                    </div>
+
+                    {{-- ACTION --}}
+                    <a
+                        :href="URL.createObjectURL(previewFile)"
+                        target="_blank"
+                        class="text-sm font-medium
+                        text-blue-600 hover:text-blue-700">
+
+                        Buka
+
+                    </a>
+
+                </div>
+
             </template>
             <template x-if="previewFile && typeof previewFile === 'object' && previewFile.type && !previewFile.type.startsWith('image/') && previewFile.type !== 'application/pdf'">
                 <div class="text-center text-gray-500 py-10">Preview tidak tersedia untuk file ini</div>
@@ -374,13 +607,29 @@
                         </span>
                         <p class="font-medium text-gray-800" x-text="r.judul"></p>
                         <p class="text-gray-600 mt-1" x-text="r.deskripsi"></p>
-                        <div class="flex flex-wrap gap-2 mt-2" x-show="r.lampiran && r.lampiran.length">
-                            <template x-for="file in r.lampiran" :key="file">
-                                <button @click="openPreviewFile(file)"
-                                    class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                    <span x-text="file.split('/').pop()"></span>
+                        <div
+                            class="flex flex-wrap gap-2 mt-3"
+                            x-show="r.lampiran && r.lampiran.length">
+
+                            <template x-for="(file, i) in r.lampiran" :key="i">
+
+                                <button
+                                    @click="openPreviewFile(file)"
+                                    title="Preview Lampiran"
+                                    class="inline-flex items-center gap-1.5
+                                    px-2 py-1 rounded-lg
+                                    bg-blue-50 text-blue-700
+                                    text-xs font-medium
+                                    hover:bg-blue-100 transition">
+
+                                    @include('components.buttons.btn-view')
+
+                                    <span x-text="'Lampiran ' + (i + 1)"></span>
+
                                 </button>
+
                             </template>
+
                         </div>
                         <p class="text-xs text-gray-400 mt-2" x-text="r.waktu"></p>
                     </div>
@@ -447,15 +696,25 @@
 
                             <button
                                 @click="openPreviewFile(file)"
-                                class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                title="Preview Lampiran"
+                                class="inline-flex items-center gap-1.5
+                                px-2 py-1 rounded-lg
+                                bg-blue-50 text-blue-700
+                                text-xs font-medium
+                                hover:bg-blue-100 transition">
 
-                                📎
+                                @include('components.buttons.btn-view')
 
                                 <span
-                                    x-text="file.split('/').pop()">
+                                    x-text="
+                                        selectedWO.lampiran.length > 1
+                                        ? 'Lampiran ' + (i + 1)
+                                        : 'Lampiran'
+                                    ">
                                 </span>
 
                             </button>
+
                         </template>
 
                     </div>
@@ -569,25 +828,36 @@
                         :key="index">
 
                         <div
-                            class="relative border rounded px-3 py-1 text-xs bg-gray-50 flex items-center gap-2">
+                            class="flex items-center gap-2
+                            bg-gray-50 border border-gray-200
+                            rounded-xl px-3 py-2
+                            shadow-sm">
 
-                            <span x-text="file.name"></span>
+                            {{-- FILE NAME --}}
+                            <div
+                                class="max-w-[180px]
+                                truncate text-xs
+                                font-medium text-gray-700"
+                                x-text="file.name">
+                            </div>
 
                             {{-- PREVIEW --}}
                             <button
                                 @click="openPreviewFile(file)"
-                                class="text-blue-600 hover:underline">
+                                title="Preview Lampiran"
+                                class="hover:scale-105 transition">
 
-                                Preview
+                                @include('components.buttons.btn-view')
 
                             </button>
 
                             {{-- DELETE --}}
                             <button
                                 @click="hapusLampiranWO(index)"
-                                class="text-red-500 hover:text-red-700">
+                                title="Hapus Lampiran"
+                                class="hover:scale-105 transition">
 
-                                ✕
+                                @include('components.buttons.btn-delete')
 
                             </button>
 

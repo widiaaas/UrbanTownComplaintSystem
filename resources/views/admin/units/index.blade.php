@@ -138,7 +138,12 @@
 
                                 <!-- BUTTON -->
                                 <button @click="open = !open"
-                                    class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1">
+                                class="px-3 py-1.5 text-xs
+                                    bg-gray-100 text-gray-700
+                                    rounded-lg border border-gray-200
+                                    hover:bg-gray-200
+                                    transition flex items-center gap-1"
+                                    >
                                     Aksi <span class="text-xs">▼</span>
                                 </button>
 
@@ -150,41 +155,47 @@
                                     @click.outside="open = false"
                                     x-ref="menu"
 
-                                    class="fixed w-52 bg-white border border-gray-200
-                                    rounded-xl shadow-xl z-[9999] overflow-hidden"
+                                    class="fixed w-45 bg-white border border-gray-100
+                                        rounded-2xl shadow-xl z-[9999]
+                                        overflow-hidden"
 
-                                    x-init="
-                                        $watch('open', value => {
+                                        x-init="
+                                            $watch('open', value => {
 
-                                            if (value) {
+                                                if (value) {
 
-                                                const rect =
-                                                    $el.previousElementSibling
-                                                        .getBoundingClientRect();
+                                                    const rect =
+                                                        $el.previousElementSibling
+                                                            .getBoundingClientRect();
 
-                                                // posisi vertical
-                                                $el.style.top =
-                                                    (rect.bottom + window.scrollY + 6) + 'px';
+                                                    // posisi vertical
+                                                    $el.style.top =
+                                                        (rect.bottom + window.scrollY + 6) + 'px';
 
-                                                // posisi horizontal
-                                                $el.style.left =
-                                                    (rect.left + window.scrollX - 50) + 'px';
-                                            }
-                                        })
-                                    ">
+                                                    // posisi horizontal
+                                                    let left =
+                                                        rect.left + window.scrollX - 20;
+
+                                                    $el.style.left = left + 'px';
+                                                }
+                                            })
+                                        ">
 
                                     {{-- ================= MENU UTAMA ================= --}}
-                                    <div class="py-1">
+                                    <div class="py-1.5">
 
+                                        {{-- EDIT --}}
                                         <button
                                             @click="editUnit()"
                                             class="w-full flex items-center gap-3
-                                            px-4 py-2.5 text-sm text-gray-700
-                                            hover:bg-gray-100 transition">
+                                            px-3 py-2 text-sm text-gray-700
+                                            hover:bg-blue-50 transition-all duration-150">
 
-                                            <span>✏️</span>
+                                            @include('components.buttons.btn-edit')
 
-                                            <span>Edit Unit</span>
+                                            <span class="font-medium">
+                                                Edit Unit
+                                            </span>
 
                                         </button>
 
@@ -192,27 +203,33 @@
 
                                             <div>
 
+                                                {{-- UPDATE PENGHUNI --}}
                                                 <button
                                                     @click="gantiPenghuni()"
                                                     class="w-full flex items-center gap-3
-                                                    px-4 py-2.5 text-sm text-gray-700
-                                                    hover:bg-gray-100 transition">
+                                                    px-3 py-2 text-sm text-gray-700
+                                                    hover:bg-indigo-50 transition-all duration-150">
 
-                                                    <span>👥</span>
+                                                    @include('components.buttons.btn-update-penghuni')
 
-                                                    <span>Perbarui Penghuni</span>
+                                                    <span class="font-medium">
+                                                        Perbarui Penghuni
+                                                    </span>
 
                                                 </button>
 
+                                                {{-- RESET PASSWORD --}}
                                                 <button
                                                     @click="resetPassword()"
                                                     class="w-full flex items-center gap-3
-                                                    px-4 py-2.5 text-sm text-gray-700
-                                                    hover:bg-gray-100 transition">
+                                                    px-3 py-2 text-sm text-gray-700
+                                                    hover:bg-amber-50 transition-all duration-150">
 
-                                                    <span>🔑</span>
+                                                    @include('components.buttons.btn-reset')
 
-                                                    <span>Reset Kata Sandi</span>
+                                                    <span class="font-medium">
+                                                        Reset Kata Sandi
+                                                    </span>
 
                                                 </button>
 
@@ -223,19 +240,21 @@
                                     </div>
 
                                     {{-- ================= STATUS ACTION ================= --}}
-                                    <div class="border-t border-gray-100 py-1">
+                                    <div class="border-t border-gray-100 py-1.5">
 
                                         <template x-if="unit.status == 'Aktif'">
 
                                             <button
                                                 @click="toggleStatus('nonaktif')"
                                                 class="w-full flex items-center gap-3
-                                                px-4 py-2.5 text-sm text-orange-600
-                                                hover:bg-orange-50 transition">
+                                                px-3 py-2 text-sm text-orange-600
+                                                hover:bg-orange-50 transition-all duration-150">
 
-                                                <span>⛔</span>
+                                                @include('components.buttons.btn-nonactive')
 
-                                                <span>Nonaktifkan Unit</span>
+                                                <span class="font-semibold">
+                                                    Nonaktifkan Unit
+                                                </span>
 
                                             </button>
 
@@ -246,19 +265,20 @@
                                             <button
                                                 @click="toggleStatus('aktif')"
                                                 class="w-full flex items-center gap-3
-                                                px-4 py-2.5 text-sm text-green-600
-                                                hover:bg-green-50 transition">
+                                                px-3 py-2 text-sm text-green-600
+                                                hover:bg-green-50 transition-all duration-150">
 
-                                                <span>✅</span>
+                                                @include('components.buttons.btn-active')
 
-                                                <span>Aktifkan Unit</span>
+                                                <span class="font-semibold">
+                                                    Aktifkan Unit
+                                                </span>
 
                                             </button>
 
                                         </template>
 
                                     </div>
-
                                 </div>
                             </div>
                         </td>

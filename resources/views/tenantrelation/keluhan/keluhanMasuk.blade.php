@@ -32,23 +32,39 @@
                         <td class="px-5 py-3 text-center" x-text="k.tanggal"></td>
                         <td class="px-5 py-3 text-center"  x-text="k.penghuni?.nama ?? '-'"></td>
                         <td class="px-5 py-3 text-center" x-text="k.judul"></td>
-                        <td class="px-5 py-3 text-center space-x-1">
-                            
-                            {{-- Ambil --}}
-                            <button 
-                                x-show="!k.penanggungJawab"
-                                @click="ambilKeluhan(k)"
-                                class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
-                                Ambil
+                        <td class="px-5 py-2 text-center">
+
+                        <div class="flex items-center justify-center gap-1.5">
+
+                            {{-- AMBIL --}}
+                            <template x-if="!k.penanggungJawab">
+
+                                <button
+                                    @click="ambilKeluhan(k)"
+                                    title="Ambil Keluhan"
+                                    class="p-0.5 rounded-md
+                                    hover:bg-emerald-50 transition">
+
+                                    @include('components.buttons.btn-ambil')
+
+                                </button>
+
+                            </template>
+
+                            {{-- DETAIL --}}
+                            <button
+                                @click="openModal(k)"
+                                title="Detail Keluhan"
+                                class="p-0.5 rounded-md
+                                hover:bg-sky-50 transition">
+
+                                @include('components.buttons.btn-view')
+
                             </button>
 
-                            {{-- Detail --}}
-                            <button 
-                                @click="openModal(k)"
-                                class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
-                                Detail
-                            </button>
-                        </td>
+                        </div>
+
+                    </td>
                     </tr>
                 </template>
 
@@ -63,49 +79,276 @@
         </table>
     </div>
 
-    {{-- MODAL --}}
-    <div x-show="showModal" x-cloak
-         class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-        <div @click.outside="showModal=false"
-             class="bg-gray-100 w-full max-w-xl rounded-xl shadow-lg overflow-hidden">
+    {{-- ================= MODAL DETAIL KELUHAN ================= --}}
+    <div
+        x-show="showModal"
+        x-cloak
+        x-transition.opacity
+        class="fixed inset-0 bg-black/50
+        backdrop-blur-sm
+        z-50 flex items-center
+        justify-center p-4">
+
+        <div
+            @click.outside="showModal = false"
+            x-transition.scale
+            class="bg-white w-full max-w-2xl
+                max-h-[85vh]
+                rounded-2xl shadow-2xl
+                overflow-hidden flex flex-col">
 
             {{-- HEADER --}}
-            <div class="px-6 py-4 bg-gray-200 border-b flex justify-between">
-                <h2 class="text-lg font-semibold">Detail Keluhan</h2>
-                <button @click="showModal=false">&times;</button>
-            </div>
-            {{-- BODY --}}
-            <div class="p-6 space-y-3 text-sm bg-white">
-                <p class="text-lg font-semibold text-gray-800" x-text="selected.judul"></p>
-                <p><b>No. Unit:</b> <span x-text="selected.unit?.nomor_unit ?? '-'"></span></p>
-                <p><b>No. Tiket:</b> <span x-text="selected.nomor_tiket"></span></p>
-                <p><b>Nama:</b> <span x-text="selected.penghuni?.nama ?? '-'"></span></p>
-                <p><b>Telepon:</b> <span x-text="selected.penghuni?.no_telepon ?? '-'"></span></p>
-                <p><b>Tanggal:</b> <span x-text="selected.tanggal"></span></p>
+            <div
+                class="px-6 py-4 border-b border-gray-100
+                flex items-center justify-between">
 
                 <div>
-                    <p class="font-medium">Deskripsi:</p>
-                    <div class="bg-gray-100 p-3 rounded" x-text="selected.deskripsi"></div>
+
+                    <h2 class="text-lg font-semibold text-gray-800">
+                        Detail Keluhan
+                    </h2>
+
+                    <p class="text-sm text-gray-500">
+                        Informasi lengkap data keluhan penghuni
+                    </p>
+
+                </div>
+
+                {{-- CLOSE --}}
+                <button
+                    @click="showModal = false"
+                    class="w-9 h-9 rounded-lg
+                    flex items-center justify-center
+                    hover:bg-gray-100 transition">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5 text-gray-500"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M18 6 6 18"/>
+                        <path d="m6 6 12 12"/>
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+            {{-- BODY --}}
+            <div class="p-5 space-y-5 overflow-y-auto">
+
+                {{-- JUDUL --}}
+                <div>
+
+                    <label
+                        class="text-xs font-semibold
+                        text-gray-700">
+
+                        Judul Keluhan
+
+                    </label>
+
+                    <div
+                        class="mt-1 bg-blue-50
+                        border border-blue-100
+                        rounded-xl px-4 py-3">
+
+                        <p
+                            class="text-base font-semibold
+                            text-blue-800"
+                            x-text="selected.judul">
+                        </p>
+
+                    </div>
+
+                </div>
+
+                {{-- INFORMASI --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {{-- NO UNIT --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Nomor Unit
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.unit?.nomor_unit ?? '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- NO TIKET --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Nomor Tiket
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.nomor_tiket || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- NAMA --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Nama Penghuni
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.penghuni?.nama ?? '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- TELEPON --}}
+                    <div>
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Nomor Telepon
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.penghuni?.no_telepon ?? '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- TANGGAL --}}
+                    <div class="md:col-span-2">
+
+                        <label
+                            class="text-xs font-semibold
+                            text-gray-700">
+
+                            Tanggal Keluhan
+
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50
+                            border border-gray-100
+                            rounded-xl px-4 py-3
+                            text-sm text-gray-800"
+                            x-text="selected.tanggal || '-'">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- DESKRIPSI --}}
+                <div>
+
+                    <label
+                        class="text-xs font-semibold
+                        text-gray-700">
+
+                        Deskripsi Keluhan
+
+                    </label>
+
+                    <div
+                        class="mt-1 bg-gray-50
+                        border border-gray-100
+                        rounded-xl px-4 py-4
+                        text-sm text-gray-800 leading-relaxed"
+                        x-text="selected.deskripsi || '-'">
+                    </div>
+
                 </div>
 
                 {{-- LAMPIRAN --}}
                 <div>
-                    <p class="font-medium">Lampiran:</p>
 
-                    <template x-if="selected.lampiran && selected.lampiran.length">
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <template x-for="(file, i) in selected.lampiran" :key="i">
-                                <button @click="previewFile(file)"
-                                        class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:underline">
-                                    📎 Preview
+                    <label
+                        class="text-xs font-semibold
+                        text-gray-700">
+
+                        Lampiran
+
+                    </label>
+
+                    <template
+                        x-if="selected.lampiran &&
+                        selected.lampiran.length">
+
+                        <div
+                            class="flex flex-wrap gap-2 mt-2">
+
+                            <template
+                                x-for="(file, i) in selected.lampiran"
+                                :key="i">
+
+                                <button
+                                    @click="previewFile(file)"
+                                    class="hover:scale-105 transition">
+
+                                    @include('components.buttons.btn-view')
+
                                 </button>
+
                             </template>
+
                         </div>
+
                     </template>
 
-                    <template x-if="!selected.lampiran || selected.lampiran.length === 0">
-                        <p class="text-xs text-gray-400 italic">Tidak ada lampiran</p>
+                    <template
+                        x-if="!selected.lampiran ||
+                        selected.lampiran.length === 0">
+
+                        <div
+                            class="mt-2 bg-gray-50
+                            border border-dashed border-gray-200
+                            rounded-xl px-4 py-4
+                            text-sm text-gray-400 italic">
+
+                            Tidak ada lampiran
+
+                        </div>
+
                     </template>
+
                 </div>
 
             </div>

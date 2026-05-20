@@ -12,7 +12,7 @@
         {{-- LEFT --}}
         <div>
             <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                ⚙️ Dashboard Admin
+            @include('components.icons.userRound') Dashboard Admin
             </h1>
 
             <p class="text-gray-500 mt-1">

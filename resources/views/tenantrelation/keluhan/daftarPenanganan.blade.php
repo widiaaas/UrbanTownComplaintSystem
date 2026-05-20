@@ -80,11 +80,23 @@
                                 </span>
                             </td>
 
-                            <td class="px-5 py-3 text-center">
-                                <a :href="'/keluhan/' + k.id"
-                                class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700">
-                                    Detail
-                                </a>
+                            <td class="px-5 py-2 text-center">
+
+                                <div class="flex items-center justify-center gap-1.5">
+
+                                    {{-- DETAIL --}}
+                                    <a
+                                        :href="'/keluhan/' + k.id"
+                                        title="Detail Penanganan"
+                                        class="p-0.5 rounded-md
+                                        hover:bg-sky-50 transition">
+
+                                        @include('components.buttons.btn-view')
+
+                                    </a>
+
+                                </div>
+
                             </td>
                         </tr>
                     </template>

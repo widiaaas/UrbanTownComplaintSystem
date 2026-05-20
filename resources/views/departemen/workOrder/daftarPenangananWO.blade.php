@@ -75,23 +75,24 @@
                                       :class="statusClass(wo.status)"
                                       x-text="wo.status"></span>
                             </td>
-                            <td class="px-5 py-3 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a
-                                        :href="'/detailWorkOrder/' + wo.id"
-                                        class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700">
-                                        Detail
-                                    </a>
+                            <td class="px-5 py-2 text-center">
 
-                                    <!-- <template x-if="wo.status !== 'Close'">
-                                        <button
-                                            @click="openStatusModal(wo)"
-                                            class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700">
-                                            Ubah Status
-                                        </button>
-                                    </template> -->
-                                </div>
-                            </td>
+                            <div class="flex items-center justify-center gap-1.5">
+
+                                {{-- DETAIL --}}
+                                <a
+                                    :href="'/detailWorkOrder/' + wo.id"
+                                    title="Detail Work Order"
+                                    class="p-0.5 rounded-md
+                                    hover:bg-sky-50 transition">
+
+                                    @include('components.buttons.btn-view')
+
+                                </a>
+
+                            </div>
+
+                        </td>
                         </tr>
                     </template>
 

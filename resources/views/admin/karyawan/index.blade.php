@@ -159,8 +159,12 @@
 
                             <button 
                                 @click="toggle($event)"
-                                class="px-3 py-1.5 text-xs bg-gray-200 rounded hover:bg-gray-300 flex items-center gap-1"
->
+                                class="px-3 py-1.5 text-xs
+                                    bg-gray-100 text-gray-700
+                                    rounded-lg border border-gray-200
+                                    hover:bg-gray-200
+                                    transition flex items-center gap-1"
+                                    >
                                 Aksi
                                 <span class="text-xs">▼</span>
                             </button>
@@ -172,9 +176,12 @@
                                 x-transition
                                 @click.outside="open = false"
                                 x-ref="menu"
-                                class="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                                class="absolute -right-10 mt-2
+                                    w-56 bg-white border border-gray-100
+                                    rounded-xl shadow-lg
+                                    z-50 overflow-hidden">
 
-                                <div class="py-1">
+                                <div class="py-1.5">
 
                                     {{-- DETAIL --}}
                                     <button
@@ -183,11 +190,15 @@
                                             selectedEmployee = emp;
                                             open = false
                                         "
-                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">
+                                        class="w-full flex items-center gap-2.5
+                                        px-3 py-2 text-sm text-gray-700
+                                        hover:bg-sky-50 transition">
 
-                                        <span>👁️</span>
+                                        @include('components.buttons.btn-view')
 
-                                        <span>Detail Karyawan</span>
+                                        <span class="font-medium">
+                                            Detail Karyawan
+                                        </span>
 
                                     </button>
 
@@ -198,11 +209,15 @@
                                             selectedEmployee = {...emp};
                                             open = false
                                         "
-                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">
+                                        class="w-full flex items-center gap-2.5
+                                        px-3 py-2 text-sm text-gray-700
+                                        hover:bg-blue-50 transition">
 
-                                        <span>✏️</span>
+                                        @include('components.buttons.btn-edit')
 
-                                        <span>Edit Karyawan</span>
+                                        <span class="font-medium">
+                                            Edit Karyawan
+                                        </span>
 
                                     </button>
 
@@ -213,11 +228,15 @@
                                             selectedEmployee = emp;
                                             open = false
                                         "
-                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">
+                                        class="w-full flex items-center gap-2.5
+                                        px-3 py-2 text-sm text-gray-700
+                                        hover:bg-amber-50 transition">
 
-                                        <span>🔑</span>
+                                        @include('components.buttons.btn-reset')
 
-                                        <span>Reset Kata Sandi</span>
+                                        <span class="font-medium">
+                                            Reset Kata Sandi
+                                        </span>
 
                                     </button>
 
@@ -438,38 +457,220 @@
     </div>
 
     {{-- ================= MODAL DETAIL KARYAWAN ================= --}}
-    <div x-show="openDetail" x-cloak
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div
+        x-show="openDetail"
+        x-cloak
+        x-transition.opacity
+        class="fixed inset-0 bg-black/50
+        backdrop-blur-sm
+        flex items-center justify-center
+        z-50 p-4">
 
-        <div @click.outside="openDetail=false"
-            class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 space-y-3">
+        <div
+            @click.outside="openDetail = false"
+            x-transition.scale
+            class="bg-white w-full max-w-lg
+            rounded-2xl shadow-2xl overflow-hidden">
 
-            <h2 class="text-lg font-semibold">Detail Karyawan</h2>
+            {{-- HEADER --}}
+            <div
+                class="flex items-center justify-between
+                px-6 py-4 border-b border-gray-100">
 
-            <p><strong>Nama:</strong> <span x-text="selectedEmployee.nama"></span></p>
-            <p><strong>ID Pegawai:</strong> <span x-text="selectedEmployee.id_pegawai"></span></p>
-            <p><strong>No. Telp:</strong> <span x-text="selectedEmployee.no_telepon"></span></p>
-            <p><strong>Email:</strong> <span x-text="selectedEmployee.email"></span></p>
-            <p><strong>Role:</strong>
+                <div>
 
-            <span
-                x-text="
-                    selectedEmployee.role === 'tenant_relation'
-                            ? 'Tenant Relation'
-                            : selectedEmployee.departemen?.nama_departemen
-                ">
-            </span>
-        </p>
-            <p><strong>Jenis Kelamin:</strong> <span x-text="selectedEmployee.jenis_kelamin"></span></p>
-            <p><strong>Status:</strong> <span x-text="selectedEmployee.status"></span></p>
+                    <h2 class="text-lg font-semibold text-gray-800">
+                        Detail Karyawan
+                    </h2>
 
-            <div class="flex justify-end pt-4">
-                <button @click="openDetail=false"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                    Tutup
+                    <p class="text-sm text-gray-500">
+                        Informasi lengkap data karyawan
+                    </p>
+
+                </div>
+
+                {{-- CLOSE --}}
+                <button
+                    @click="openDetail = false"
+                    class="w-9 h-9 rounded-lg
+                    flex items-center justify-center
+                    hover:bg-gray-100 transition">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5 text-gray-500"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M18 6 6 18"/>
+                        <path d="m6 6 12 12"/>
+
+                    </svg>
+
                 </button>
+
             </div>
+
+            {{-- CONTENT --}}
+            <div class="p-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {{-- NAMA --}}
+                    <div>
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            Nama Karyawan
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50 border border-gray-100
+                            rounded-xl px-4 py-3 text-sm text-gray-800"
+                            x-text="selectedEmployee.nama || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- ID PEGAWAI --}}
+                    <div>
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            ID Pegawai
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50 border border-gray-100
+                            rounded-xl px-4 py-3 text-sm text-gray-800"
+                            x-text="selectedEmployee.id_pegawai || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- NO TELP --}}
+                    <div>
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            Nomor Telepon
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50 border border-gray-100
+                            rounded-xl px-4 py-3 text-sm text-gray-800"
+                            x-text="selectedEmployee.no_telepon || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- EMAIL --}}
+                    <div>
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            Email
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50 border border-gray-100
+                            rounded-xl px-4 py-3 text-sm text-gray-800 break-all"
+                            x-text="selectedEmployee.email || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- ROLE --}}
+                    <div>
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            Role
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50 border border-gray-100
+                            rounded-xl px-4 py-3 text-sm text-gray-800">
+
+                            <span
+                                x-text="
+                                    selectedEmployee.role === 'tenant_relation'
+                                        ? 'Tenant Relation'
+                                        : selectedEmployee.departemen?.nama_departemen
+                                ">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    {{-- JENIS KELAMIN --}}
+                    <div>
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            Jenis Kelamin
+                        </label>
+
+                        <div
+                            class="mt-1 bg-gray-50 border border-gray-100
+                            rounded-xl px-4 py-3 text-sm text-gray-800"
+                            x-text="selectedEmployee.jenis_kelamin || '-'">
+                        </div>
+
+                    </div>
+
+                    {{-- STATUS --}}
+                    <div class="md:col-span-2">
+
+                        <label class="text-xs font-semibold text-gray-700">
+                            Status
+                        </label>
+
+                        <div class="mt-2">
+
+                            <span
+                                x-show="selectedEmployee.status === 'Aktif'"
+                                class="inline-flex items-center
+                                px-3 py-1 rounded-full text-xs font-medium
+                                bg-green-100 text-green-700">
+
+                                Aktif
+
+                            </span>
+
+                            <span
+                                x-show="selectedEmployee.status === 'Nonaktif'"
+                                class="inline-flex items-center
+                                px-3 py-1 rounded-full text-xs font-medium
+                                bg-red-100 text-red-700">
+
+                                Nonaktif
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div
+                class="flex justify-end gap-2
+                px-6 py-4 border-t border-gray-100 bg-gray-50">
+
+                <button
+                    @click="openDetail = false"
+                    class="px-4 py-2 rounded-xl
+                    bg-blue-600 text-white text-sm font-medium
+                    hover:bg-blue-700 transition">
+
+                    Tutup
+
+                </button>
+
+            </div>
+
         </div>
+
     </div>
 
     {{-- ================= MODAL RESET PASSWORD ================= --}}

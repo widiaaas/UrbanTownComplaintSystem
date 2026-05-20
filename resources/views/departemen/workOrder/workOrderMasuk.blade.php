@@ -32,21 +32,38 @@
                         <td class="px-5 py-3 font-medium" x-text="wo.unit"></td>
                         <td class="px-5 py-3" x-text="wo.tanggal"></td>
                         <td class="px-5 py-3" x-text="wo.instruksi"></td>
-                        <td class="px-5 py-3 text-center space-x-1">
-                            {{-- Tombol Ambil WO --}}
-                            <button 
-                                x-show="!wo.diambil" 
-                                @click="ambilWO(wo)"
-                                class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
-                                Ambil WO
-                            </button>
+                        <td class="px-5 py-2 text-center">
 
-                            {{-- Tombol Detail --}}
-                            <button 
-                                @click="openModal(wo)"
-                                class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
-                                Detail
-                            </button>
+                            <div class="flex items-center justify-center gap-1.5">
+
+                                {{-- AMBIL WO --}}
+                                <template x-if="!wo.diambil">
+
+                                    <button
+                                        @click="ambilWO(wo)"
+                                        title="Ambil Work Order"
+                                        class="p-0.5 rounded-md
+                                        hover:bg-emerald-50 transition">
+
+                                        @include('components.buttons.btn-ambil')
+
+                                    </button>
+
+                                </template>
+
+                                {{-- DETAIL --}}
+                                <button
+                                    @click="openModal(wo)"
+                                    title="Detail Work Order"
+                                    class="p-0.5 rounded-md
+                                    hover:bg-sky-50 transition">
+
+                                    @include('components.buttons.btn-view')
+
+                                </button>
+
+                            </div>
+
                         </td>
                     </tr>
                 </template>
@@ -165,12 +182,21 @@
 
                                     <button
                                         @click="previewFile(file)"
-                                        class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                        title="Preview Lampiran"
+                                        class="inline-flex items-center gap-1.5
+                                        px-2 py-1 rounded-lg
+                                        bg-blue-50 text-blue-700
+                                        text-xs font-medium
+                                        hover:bg-blue-100 transition">
 
-                                        📎
+                                        @include('components.buttons.btn-view')
 
                                         <span
-                                            x-text="file.split('/').pop()">
+                                            x-text="
+                                                selected.lampiran_pengajuan.length > 1
+                                                ? 'Lampiran ' + (i + 1)
+                                                : 'Lampiran'
+                                            ">
                                         </span>
 
                                     </button>
@@ -207,20 +233,55 @@
                 <div>
                     <p class="font-medium mb-2">Lampiran Work Order:</p>
 
-                    <div class="flex gap-2 flex-wrap">
+                    <div class="flex flex-wrap gap-2">
 
-                        <template x-if="selected.lampiran && selected.lampiran.length">
-                            <template x-for="file in selected.lampiran" :key="file">
+                        <template
+                            x-if="selected.lampiran &&
+                            selected.lampiran.length">
+
+                            <template
+                                x-for="(file, i) in selected.lampiran"
+                                :key="i">
+
                                 <button
                                     @click="previewFile(file)"
-                                    class="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded hover:underline">
-                                    Lihat File
+                                    title="Preview Lampiran"
+                                    class="inline-flex items-center gap-1.5
+                                    px-2 py-1 rounded-lg
+                                    bg-blue-50 text-blue-700
+                                    text-xs font-medium
+                                    hover:bg-blue-100 transition">
+
+                                    @include('components.buttons.btn-view')
+
+                                    <span
+                                        x-text="
+                                            selected.lampiran.length > 1
+                                            ? 'Lampiran ' + (i + 1)
+                                            : 'Lampiran'
+                                        ">
+                                    </span>
+
                                 </button>
+
                             </template>
+
                         </template>
 
-                        <template x-if="!selected.lampiran || !selected.lampiran.length">
-                            <span class="text-gray-400 text-sm italic">Tidak ada lampiran</span>
+                        <template
+                            x-if="!selected.lampiran ||
+                            !selected.lampiran.length">
+
+                            <div
+                                class="bg-gray-50 border
+                                border-dashed border-gray-200
+                                rounded-xl px-4 py-3
+                                text-sm text-gray-400 italic">
+
+                                Tidak ada lampiran
+
+                            </div>
+
                         </template>
 
                     </div>
@@ -253,7 +314,60 @@
 
                     <!-- PDF -->
                     <template x-if="previewUrl.endsWith('.pdf')">
-                        <iframe :src="'/storage/' + previewUrl" class="w-full h-[70vh]"></iframe>
+
+                    <div
+                        class="flex items-center justify-between
+                        bg-gray-50 border border-gray-200
+                        rounded-xl px-4 py-3
+                        w-full max-w-4xl">
+
+                        {{-- LEFT --}}
+                        <div class="flex items-center gap-3">
+
+                            {{-- ICON --}}
+                            <div
+                                class="w-10 h-10 rounded-lg
+                                bg-red-100 text-red-600
+                                flex items-center justify-center">
+
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="w-5 h-5"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2">
+
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+
+                                    <path d="M14 2v6h6"/>
+
+                                </svg>
+
+                            </div>
+
+                            {{-- FILE NAME --}}
+                            <div
+                                class="text-sm font-medium
+                                text-gray-700 truncate
+                                max-w-[250px]"
+                                x-text="previewUrl.split('/').pop()">
+                            </div>
+
+                        </div>
+
+                        {{-- ACTION --}}
+                        <a
+                            :href="'/storage/' + previewUrl"
+                            target="_blank"
+                            class="text-sm font-medium
+                            text-blue-600 hover:text-blue-700">
+
+                            Buka PDF
+
+                        </a>
+
+                    </div>
+
                     </template>
 
                 </div>

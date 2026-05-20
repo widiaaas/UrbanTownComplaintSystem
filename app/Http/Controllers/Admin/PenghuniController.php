@@ -214,46 +214,97 @@ class PenghuniController extends Controller
     public function riwayatHunian(Request $request)
     {
         $riwayat = RiwayatHunian::with([
+    
                 'penghuni',
+    
                 'unit'
+    
             ])
+    
             ->latest()
+    
             ->get()
+    
             ->map(function ($r) {
-
+    
+                $penghuni = $r->penghuni;
+    
+                $unit = $r->unit;
+    
                 return [
-
+    
                     'id' => $r->id,
-
+    
+                    // ================= PENGHUNI =================
+    
                     'penghuni' =>
-                        $r->penghuni->nama ?? '-',
-
+                        $penghuni?->nama ?? '-',
+    
                     'nik' =>
-                        $r->penghuni->nik ?? '-',
-
+                        $penghuni?->nik ?? '-',
+    
+                    'email' =>
+                        $penghuni?->email ?? '-',
+    
+                    'no_telepon' =>
+                        $penghuni?->no_telepon ?? '-',
+    
+                    'jenis_kelamin' =>
+                        $penghuni?->jenis_kelamin ?? '-',
+    
+                    'alamat_asal' =>
+                        $penghuni?->alamat_asal ?? '-',
+    
+                    // ================= UNIT =================
+    
                     'unit' =>
-                        $r->unit->nomor_unit ?? '-',
-
+                        $unit?->nomor_unit ?? '-',
+    
+                    'gedung' =>
+                        $unit?->gedung ?? '-',
+    
+                    'lantai' =>
+                        $unit?->lantai ?? '-',
+    
+                    // ================= RIWAYAT =================
+    
                     'tanggal_masuk' =>
-                        optional($r->tanggal_masuk)
-                            ->format('d M Y'),
-
+    
+                        $r->tanggal_masuk
+    
+                            ? \Carbon\Carbon::parse(
+                                $r->tanggal_masuk
+                            )->format('d M Y')
+    
+                            : '-',
+    
                     'tanggal_keluar' =>
+    
                         $r->tanggal_keluar
+    
                             ? \Carbon\Carbon::parse(
                                 $r->tanggal_keluar
                             )->format('d M Y')
+    
                             : '-',
-
+    
                     'status' =>
-                        $r->status
+                        $r->status,
+    
+                    'created_at' =>
+    
+                        optional($r->created_at)
+                            ->format('d M Y H:i'),
                 ];
-            });
-
+            })
+    
+            ->values();
+    
         return view(
+    
             'admin.penghuni.riwayatHunian',
+    
             compact('riwayat')
         );
     }
-
 }

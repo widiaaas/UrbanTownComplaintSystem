@@ -15,7 +15,7 @@
         {{-- LEFT --}}
         <div>
             <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                📊 Dashboard Departemen
+            @include('components.icons.building2') Dashboard Departemen
             </h1>
 
             <p class="text-gray-500 mt-1">
@@ -41,13 +41,23 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {{-- TOTAL Masuk --}}
-        <div class="bg-white p-5 rounded-lg shadow border">
-            <p class="text-sm text-gray-500">Total WO Belum Ditangani</p>
+    {{-- TOTAL WO BELUM DITANGANI --}}
+    <a href="/work-order-masuk?filter=open" class="block h-full">
+
+        <div class="bg-white p-5 rounded-lg shadow border h-full
+            hover:shadow-md hover:border-blue-200 transition">
+
+            <p class="text-sm text-gray-500">
+                Total WO Belum Ditangani
+            </p>
+
             <p class="text-2xl font-bold text-blue-600 mt-2">
                 {{ $totalWOMasuk }}
             </p>
+
         </div>
+
+    </a>
 
         <!-- {{-- OVERDUE --}}
         <div class="bg-white p-5 rounded-lg shadow border">

@@ -160,7 +160,7 @@
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-hunian', $currentPath) }}"
             >
 
-                @include('components.icons.history')
+                @include('components.icons.clipboardClock')
 
                 <span>Riwayat Hunian</span>
 
@@ -174,7 +174,7 @@
 
                 @include('components.icons.user')
 
-                <span>Profile Admin</span>
+                <span>Profile</span>
 
             </a>
 
@@ -197,7 +197,7 @@
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayatKeluhan*', $currentPath) }}"
             >
 
-                @include('components.icons.clipboardList')
+                @include('components.icons.clipboardClock')
 
                 <span>Keluhan Saya</span>
 
@@ -211,7 +211,7 @@
 
                 @include('components.icons.user')
 
-                <span>Profile Penghuni</span>
+                <span>Profile</span>
 
             </a>
 
@@ -234,7 +234,7 @@
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('keluhan-masuk*', $currentPath) }}"
             >
 
-                @include('components.icons.clipboardList')
+                @include('components.icons.clipboardPaste')
 
                 <span>Keluhan Masuk</span>
 
@@ -256,8 +256,8 @@
             <a href="/riwayat-keluhan"
              class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-keluhan*', $currentPath) }}">
 
-                @include('components.icons.history')
-
+                @include('components.icons.clipboardClock')
+               
                 <span>
                     Riwayat Keluhan
                 </span>
@@ -272,7 +272,7 @@
 
                 @include('components.icons.user')
 
-                <span>Profile Tenant Relation</span>
+                <span>Profile</span>
 
             </a>
 
@@ -296,7 +296,7 @@
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('work-order-masuk*', $currentPath) }}"
             >
 
-                @include('components.icons.clipboardList')
+                @include('components.icons.clipboardPaste')
 
                 <span>Work Order Masuk</span>
 
@@ -309,7 +309,7 @@
 
                 @include('components.icons.clipboardList')
 
-                <span>Penanganan Work Order</span>
+                <span>Penanganan Saya</span>
 
             </a>
 
@@ -318,7 +318,7 @@
             <a href="/riwayat-work-order"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {{ activeMenu('riwayat-work-order*', $currentPath) }}">
 
-                @include('components.icons.history')
+                @include('components.icons.clipboardClock')
 
                 <span>
                     Riwayat Work Order
@@ -334,7 +334,7 @@
 
                 @include('components.icons.user')
 
-                <span>Profile Departemen</span>
+                <span>Profile</span>
 
             </a>
 

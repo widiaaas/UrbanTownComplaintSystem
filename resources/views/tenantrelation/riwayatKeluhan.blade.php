@@ -155,12 +155,22 @@
                                 </td>
                                 <td class="px-4 py-3 text-center"  x-text="item.tanggal"></td>
                                 <td class="px-4 py-3 text-center"  x-text="item.tr"></td>
-                                <td class="px-4 py-3 text-center">
-                                    <a
-                                        :href="`/keluhan/${item.id}`"
-                                        class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 text-xs">
-                                        Detail
-                                    </a>
+                                <td class="px-4 py-2 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+
+                                        {{-- DETAIL --}}
+                                        <a
+                                            :href="`/keluhan/${item.id}`"
+                                            title="Detail Keluhan"
+                                            class="p-0.5 rounded-md
+                                            hover:bg-sky-50 transition">
+
+                                            @include('components.buttons.btn-view')
+
+                                        </a>
+
+                                    </div>
+
                                 </td>
                             </tr>
                         </template>
