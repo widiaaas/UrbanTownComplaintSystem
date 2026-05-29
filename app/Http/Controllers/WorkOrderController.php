@@ -367,7 +367,9 @@ class WorkOrderController extends Controller
 
             'lokasi' =>
                 $wo->lokasi,
-
+            
+            'nomor_tiket_keluhan' =>
+                 $wo->keluhan->nomor_tiket ?? '-',
             // ================= PENGAJUAN =================
 
             'judul_keluhan' =>

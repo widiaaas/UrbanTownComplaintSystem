@@ -34,7 +34,7 @@
     </template>
 
     {{-- ================= INFO UTAMA WO ================= --}}
-    <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-xl shadow">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm bg-white p-6 rounded-xl shadow">
         <p><b>Departemen</b><br><span x-text="wo.departemen?.nama_departemen"></span></p>
         <p><b>TR Penanggung Jawab</b><br><span x-text="wo.tr"></span></p>
         <p><b>Tanggal WO</b><br><span x-text="wo.tanggal"></span></p>
@@ -44,6 +44,10 @@
                 x-text="formatStatus(wo.status)">
             </span>
         </p>
+    <p>
+        <b>No. Tiket Keluhan</b><br>
+        <span x-text="wo.nomor_tiket_keluhan"></span>
+    </p>
     </div>
 
     {{-- ================= PENGAJUAN PENGHUNI ================= --}}

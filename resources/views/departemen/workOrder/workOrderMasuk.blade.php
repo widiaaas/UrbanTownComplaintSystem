@@ -82,7 +82,7 @@
     {{-- MODAL DETAIL WO --}}
     <div x-show="showModal" x-cloak
          class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div @click.outside="showModal = false"
+        <div @click.outside="if(!openPreview) showModal = false"
              class="bg-white w-full sm:max-w-md md:max-w-2xl rounded-lg shadow-lg max-h-[90vh] flex flex-col">
 
             {{-- Header --}}
@@ -295,15 +295,26 @@
             </div>
 
         </div>
+    </div>
 
-            <!-- ================= MODAL PREVIEW FILE ================= -->
-        <div x-show="openPreview" x-cloak
-            class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <!-- ================= MODAL PREVIEW FILE ================= -->
+    <div
+        x-show="openPreview"
+        x-cloak
+        @click.self="openPreview = false"
+        class="fixed inset-0 bg-black/70
+        flex items-center justify-center
+        z-[9999]">
+            <div
+             @click.stop
+             class="bg-white rounded-lg p-4 max-w-4xl w-full relative">
 
-            <div class="bg-white rounded-lg p-4 max-w-4xl w-full relative">
-
-                <button @click="openPreview=false"
-                    class="absolute top-2 right-2 text-xl">✕</button>
+            <button
+                @click.stop="openPreview = false"
+                type="button"
+                class="absolute top-2 right-2 text-xl">
+                ✕
+            </button>
 
                 <div class="mt-6">
 
@@ -373,7 +384,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
 <script>
 function workOrderApp(){

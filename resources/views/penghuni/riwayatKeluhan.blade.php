@@ -190,7 +190,51 @@
 
                 <!-- PDF -->
                 <template x-if="previewFile.match(/\.pdf$/i)">
-                    <iframe :src="previewFile" class="w-full h-[70vh]"></iframe>
+
+                    <div
+                        class="flex items-center justify-between
+                        bg-gray-50 border border-gray-200
+                        rounded-xl px-4 py-4">
+
+                        <div class="flex items-center gap-3">
+
+                            <div
+                                class="w-12 h-12 rounded-lg
+                                bg-red-100 text-red-600
+                                flex items-center justify-center">
+
+                                📄
+
+                            </div>
+
+                            <div>
+
+                                <p class="font-medium text-gray-800">
+                                    File PDF
+                                </p>
+
+                                <p
+                                    class="text-sm text-gray-500"
+                                    x-text="previewFile.split('/').pop()">
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <a
+                            :href="previewFile"
+                            target="_blank"
+                            class="px-4 py-2
+                            bg-blue-600 text-white
+                            rounded-lg hover:bg-blue-700">
+
+                            Buka PDF
+
+                        </a>
+
+                    </div>
+
                 </template>
 
                 <!-- FILE LAIN -->

@@ -23,7 +23,7 @@
 <body
     class="min-h-screen
     bg-cover bg-center bg-no-repeat
-    flex items-center justify-center lg:justify-end
+    flex items-center justify-center
     relative overflow-hidden"
     style="background-image: url('{{ asset('images/gedung.jpg') }}');">
 
@@ -46,19 +46,39 @@
 
         <div
             class="flex flex-col justify-end
+            h-full
             p-14 text-white">
 
-            {{-- SMALL BADGE --}}
-            <div
-                class="mt-8 inline-flex items-center
-                gap-2 text-sm text-white/80">
+            <div>
 
+                {{-- TITLE --}}
+                <h1
+                    class="text-5xl font-black
+                    tracking-tight leading-tight">
+
+                    Urban Town
+                    <br>
+                    Serpong
+
+                </h1>
+
+                {{-- LINE --}}
                 <div
-                    class="w-2 h-2 rounded-full
-                    bg-emerald-400 animate-pulse">
+                    class="w-24 h-1 rounded-full
+                    bg-blue-400 mt-6">
                 </div>
 
-                Urbantown Complaint Management System
+                {{-- ADDRESS --}}
+                <p
+                    class="mt-6 text-base
+                    text-white/75 leading-relaxed
+                    max-w-md">
+
+                    Jl. Raya Bukit Sarua, Ciputat, 
+                    Tangerang Selatan,
+                    Banten 15414
+
+                </p>
 
             </div>
 
@@ -71,7 +91,7 @@
         x-data="{ showPassword: false }"
         class="relative z-20
         w-full max-w-md
-        mr-0 lg:mr-32
+        lg:ml-[40%]
         mx-4
         bg-white/85 backdrop-blur-xl
         rounded-3xl shadow-2xl

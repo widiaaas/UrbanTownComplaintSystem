@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('penghunis', function (Blueprint $table) {
             $table->id();
             $table->string('nik', 16);
-            $table->string('nama', 50);
+            $table->string('nama', 100);
             $table->string('email', 100);
             $table->string('no_telepon', 15);
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);

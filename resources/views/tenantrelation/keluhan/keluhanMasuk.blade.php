@@ -444,6 +444,7 @@
                     </div>
 
                 </template>
+                
                 {{-- FILE LAIN --}}
                 <template x-if="!isImage(previewUrl) && !isPdf(previewUrl)">
                     <a :href="previewUrl" target="_blank"

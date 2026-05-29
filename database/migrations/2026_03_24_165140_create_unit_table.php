@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_unit', 10)->unique();
-            $table->string('gedung', 50);
+            $table->string('gedung', 10);
             $table->string('lantai');
             $table->string('nomor_kamar');
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');

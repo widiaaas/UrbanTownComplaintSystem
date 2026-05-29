@@ -40,7 +40,7 @@
 
         {{-- TOTAL UNIT --}}
         <a href="/IndexUnits?status=Aktif" class="block bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition">
-            <p class="text-sm text-gray-500">Total Unit</p>
+            <p class="text-sm text-gray-500">Total Unit Aktif</p>
             <p class="text-3xl font-bold text-blue-600 mt-2">
                 {{ $stats['unit'] }}
             </p>
