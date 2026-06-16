@@ -217,99 +217,138 @@ class WorkOrderController extends Controller
         ]);
     }
 
-    public function daftarPenanganan()
+    public function daftarPenanganan(Request $request)
     {
         $user = auth()->user();
 
-        $wo = WorkOrder::with([
+        $query = WorkOrder::with([
             'keluhan.unit',
             'keluhan.penghuni',
             'riwayat',
-            'penanggungJawab' // 🔥 WAJIB
+            'penanggungJawab'
         ])
-        ->where('penanggung_jawab_id',$user->karyawan->id)
-        ->latest()
-        ->get()
-        ->values()
-        ->map(function ($item) {
-            
-            $pj = $item->penanggungJawab;
-            return [
-                'id' => $item->id,
-                'nomor_tiket' => $item->nomor_tiket,
-                'unit' => $item->keluhan->unit->nomor_unit ?? '-',
-                'tanggal' => optional($item->created_at)->format('d M Y H:i'),
-                
-                'status' => ucwords(str_replace('_', ' ', $item->status)),
+        ->where(
+            'penanggung_jawab_id',
+            $user->karyawan->id
+        );
 
-                'deskripsi' => $item->keluhan->deskripsi ?? '-',
-                'requestor' => $item->keluhan->penghuni->nama ?? '-',
-                'no_telepon' => $item->keluhan->penghuni->no_telepon ?? '-',
-                'instruksi' => $item->instruksi,
-                'lokasi' => $item->lokasi,
-                
-                'petugas' => $pj 
-                    ? ($pj->nama ?? $pj->username) 
-                    : '-',
-                // 🔥 INI YANG BIKIN LAPORAN MUNCUL
-                'laporan' => $item->riwayat
-                    ->sortBy('waktu') // 🔥 biar urut
-                    ->values()
-                    ->map(function ($r) {
+        // ================= FILTER STATUS =================
+        if ($request->filled('status')) {
 
-                    $judul = 'Update Penanganan';
-                    $deskripsi = $r->deskripsi;
-                
-                    if ($r->deskripsi && str_contains($r->deskripsi, ' - ')) {
-                        $split = explode(' - ', $r->deskripsi);
-                        $judul = $split[0];
-                        $deskripsi = implode(' - ', array_slice($split, 1));
-                    }
-                
-                    return [
-                        'status' => $r->status,
-                        'judul' => $judul,
-                        'deskripsi' => $deskripsi,
-                        'waktu' => optional($r->waktu)->format('d M Y H:i'),
-                        'lampiran' => $r->lampiran ?? [] 
-                    ];
-                }),
+            $statuses = explode(',', $request->status);
 
-                'lampiran' => $item->lampiran ?? []
-            ];
-        });
+            $statuses = array_map(function ($s) {
 
-        return view('departemen.workOrder.daftarPenangananWO', [
-            'wo' => $wo
-        ]);
+                return strtolower(
+                    str_replace(' ', '_', $s)
+                );
+
+            }, $statuses);
+
+            $query->whereIn(
+                'status',
+                $statuses
+            );
+        }
+
+        $wo = $query
+            ->latest()
+            ->get()
+            ->values()
+            ->map(function ($item) {
+
+                $pj = $item->penanggungJawab;
+
+                return [
+
+                    'id' => $item->id,
+                    'nomor_tiket' => $item->nomor_tiket,
+                    'unit' => $item->keluhan->unit->nomor_unit ?? '-',
+                    'tanggal' => optional($item->created_at)
+                        ->format('d M Y H:i'),
+
+                    'status' => ucwords(
+                        str_replace(
+                            '_',
+                            ' ',
+                            $item->status
+                        )
+                    ),
+
+                    'deskripsi' => $item->keluhan->deskripsi ?? '-',
+                    'requestor' => $item->keluhan->penghuni->nama ?? '-',
+                    'no_telepon' => $item->keluhan->penghuni->no_telepon ?? '-',
+                    'instruksi' => $item->instruksi,
+                    'lokasi' => $item->lokasi,
+
+                    'petugas' => $pj
+                        ? ($pj->nama ?? $pj->username)
+                        : '-',
+
+                    'laporan' => $item->riwayat
+                        ->sortBy('waktu')
+                        ->values()
+                        ->map(function ($r) {
+
+                            $judul = 'Update Penanganan';
+                            $deskripsi = $r->deskripsi;
+
+                            if (
+                                $r->deskripsi &&
+                                str_contains($r->deskripsi, ' - ')
+                            ) {
+
+                                $split = explode(
+                                    ' - ',
+                                    $r->deskripsi
+                                );
+
+                                $judul = $split[0];
+
+                                $deskripsi = implode(
+                                    ' - ',
+                                    array_slice($split, 1)
+                                );
+                            }
+
+                            return [
+                                'status' => $r->status,
+                                'judul' => $judul,
+                                'deskripsi' => $deskripsi,
+                                'waktu' => optional($r->waktu)
+                                    ->format('d M Y H:i'),
+                                'lampiran' => $r->lampiran ?? []
+                            ];
+                        }),
+
+                    'lampiran' => $item->lampiran ?? []
+
+                ];
+            });
+
+        return view(
+            'departemen.workOrder.daftarPenangananWO',
+            compact('wo')
+        );
     }
 
     public function detail(Request $request)
     {
         $id = $request->id;
-
         $user = auth()->user();
-
         $karyawan = $user->karyawan;
-
         $wo = WorkOrder::with([
-
             'keluhan.unit',
-
             'keluhan.penghuni',
-
             'departemen',
-
             'penanggungJawab',
-
             'keluhan.penanggungJawab',
-
             'riwayat'
 
         ])->findOrFail($id);
 
-        // ================= READONLY =================
-
+        
+        // READ ONLY SESUAI DENGAN PETUGAS 
         $readonly = false;
 
         // BUKAN PETUGAS WO
@@ -328,19 +367,10 @@ class WorkOrderController extends Controller
         $data = [
 
             'id' => $wo->id,
-
-            'nomor_tiket' =>
-                $wo->nomor_tiket,
-
-            'deskripsi' =>
-                $wo->keluhan->deskripsi ?? '-',
-
-            'departemen' =>
-                $wo->departemen,
-
-            'instruksi' =>
-                $wo->instruksi,
-
+            'nomor_tiket' => $wo->nomor_tiket,
+            'deskripsi' => $wo->keluhan->deskripsi ?? '-',
+            'departemen' => $wo->departemen,
+            'instruksi' =>$wo->instruksi,
             'status' =>
                 ucwords(
                     str_replace(
@@ -362,19 +392,13 @@ class WorkOrderController extends Controller
                 optional($wo->created_at)
                     ->format('d M Y H:i'),
 
-            'lampiran' =>
-                $wo->lampiran ?? [],
+            'lampiran' => $wo->lampiran ?? [],
+            'lokasi' => $wo->lokasi,
+            'nomor_tiket_keluhan' => $wo->keluhan->nomor_tiket ?? '-',
 
-            'lokasi' =>
-                $wo->lokasi,
-            
-            'nomor_tiket_keluhan' =>
-                 $wo->keluhan->nomor_tiket ?? '-',
-            // ================= PENGAJUAN =================
 
-            'judul_keluhan' =>
-                $wo->keluhan->judul ?? '-',
-
+            // PENGAJUANN
+            'judul_keluhan' =>$wo->keluhan->judul ?? '-',
             'penghuni' =>
                 $wo->keluhan
                     ->penghuni
@@ -402,18 +426,10 @@ class WorkOrderController extends Controller
                 ->map(function ($r) {
 
                     return [
-
-                        'status' =>
-                            $r->status,
-
-                        'judul' =>
-                            $r->judul,
-
-                        'deskripsi' =>
-                            $r->deskripsi,
-
+                        'status' => $r->status,
+                        'judul' => $r->judul,
+                        'deskripsi' =>  $r->deskripsi,
                         'waktu' => $r->waktu
-
                             ? \Carbon\Carbon::parse(
                                 $r->waktu
                             )->format('d M Y H:i')
@@ -428,8 +444,7 @@ class WorkOrderController extends Controller
                                 : '-'
                             ),
 
-                        'lampiran' =>
-                            $r->lampiran ?? []
+                        'lampiran' => $r->lampiran ?? []
                     ];
                 })->values()
         ];
@@ -437,9 +452,7 @@ class WorkOrderController extends Controller
         return view(
             'departemen.workOrder.detailWorkOrder',
             [
-
                 'wo' => $data,
-
                 'readonly' => $readonly
             ]
         );
@@ -452,13 +465,10 @@ class WorkOrderController extends Controller
         ]);
 
         $user = auth()->user();
-
         $wo = WorkOrder::findOrFail($id);
-
         $status = strtolower(str_replace(' ', '_', $request->status));
 
-        $wo->update([
-            'status' => $status
+        $wo->update(['status' => $status
         ]);
 
         RiwayatPenangananWorkOrder::create([
@@ -487,31 +497,26 @@ class WorkOrderController extends Controller
         }
 
         $query = WorkOrder::with([
-
                 'keluhan.unit',
-
                 'keluhan.penghuni',
-
                 'departemen',
-
                 'penanggungJawab',
-
                 'riwayat'
 
             ])
 
-            // 🔥 HANYA DEPARTEMENNYA
+            // HANYA DEPARTEMENNYA
             ->where(
                 'departemen_id',
                 $karyawan->departemen_id
             )
 
             ->latest();
+        
 
         // ================= FILTER STATUS =================
 
         if ($request->filled('status')) {
-
             $query->where(
                 'status',
                 $request->status
@@ -523,13 +528,8 @@ class WorkOrderController extends Controller
             ->map(function ($item) {
 
                 return [
-
-                    'id' =>
-                        $item->id,
-
-                    'nomor_tiket' =>
-                        $item->nomor_tiket,
-
+                    'id' =>  $item->id,
+                    'nomor_tiket' =>  $item->nomor_tiket,
                     'unit' =>
                         $item->keluhan
                             ?->unit
@@ -540,11 +540,8 @@ class WorkOrderController extends Controller
                             ?->penghuni
                             ?->nama ?? '-',
 
-                    'instruksi' =>
-                        $item->instruksi,
-
-                    'status' =>
-                        $item->status,
+                    'instruksi' =>$item->instruksi,
+                    'status' => $item->status,
 
                     'tanggal' =>
                         optional(

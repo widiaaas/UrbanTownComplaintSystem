@@ -16,11 +16,7 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        /**
-         * =====================================================
-         * ROLE SYSTEM BARU
-         * =====================================================
-         */
+        // role
         $profile = match ($user->role) {
 
             'admin',
@@ -70,31 +66,21 @@ class ProfileController extends Controller
 
         /**
          * =====================================================
-         * KHUSUS UNIT
+         * UNIT
          * =====================================================
          */
         if ($user->role === 'unit') {
-
             $unit = $user->unit;
-
             $profile = [
-
-                'nomor_unit' =>
-                    $unit?->nomor_unit,
-
-                'penghuni' =>
-                    $unit?->penghuniAktif?->penghuni
+                'nomor_unit' => $unit?->nomor_unit,
+                'penghuni' => $unit?->penghuniAktif?->penghuni
             ];
         }
 
         return response()->json([
-
             'user' => $user,
-
             'profile' => $profile,
-
             'options' => [
-
                 'jenis_kelamin' => [
                     'Laki-laki',
                     'Perempuan'
@@ -124,11 +110,7 @@ class ProfileController extends Controller
 
             $karyawan = $user->karyawan;
 
-            /**
-             * =================================================
-             * VALIDASI RELASI
-             * =================================================
-             */
+            // VALIDASI 
             if (!$karyawan) {
 
                 return response()->json([
@@ -139,42 +121,17 @@ class ProfileController extends Controller
                 ], 404);
             }
 
-            /**
-             * =================================================
-             * VALIDASI
-             * =================================================
-             */
             $validator = Validator::make($request->all(), [
-
-                'nama' => [
-                    'required',
-                    'regex:/^[A-Za-z\s\.\']+$/',
-                    'max:100'
-                ],
-
-                'email' => [
-
-                    'required',
-
-                    'email',
-
-                    'max:100',
-
+                'nama' => [ 'required','regex:/^[A-Za-z\s\.\']+$/','max:100'],
+                'email' => ['required','email','max:100',
                     Rule::unique(
                         'karyawans',
                         'email'
                     )->ignore($karyawan->id)
                 ],
 
-                'no_telepon' => [
-                    'required',
-                    'regex:/^(08|\+628)[0-9]{8,11}$/'
-                ],
-
-                'jenis_kelamin' => [
-
-                    'required',
-
+                'no_telepon' => ['required','regex:/^(08|\+628)[0-9]{8,11}$/'],
+                'jenis_kelamin' => ['required',
                     Rule::in([
                         'Laki-laki',
                         'Perempuan'
@@ -182,37 +139,17 @@ class ProfileController extends Controller
                 ],
 
             ], [
-
-                'nama.required' =>
-                    'Nama wajib diisi',
-
-                'nama.regex' =>
-                    'Nama hanya boleh huruf, titik, apostrophe, dan spasi',
-
-                'email.required' =>
-                    'Email wajib diisi',
-
-                'email.email' =>
-                    'Format email tidak valid',
-
-                'email.unique' =>
-                    'Email sudah digunakan',
-
-                'no_telepon.required' =>
-                    'Nomor telepon wajib diisi',
-
-                'no_telepon.regex' =>
-                    'Nomor telepon tidak valid',
-
-                'jenis_kelamin.required' =>
-                    'Jenis kelamin wajib dipilih',
+                'nama.required' =>  'Nama wajib diisi',
+                'nama.regex' =>'Nama hanya boleh huruf, titik, apostrophe, dan spasi',
+                'email.required' =>'Email wajib diisi',
+                'email.email' =>'Format email tidak valid',
+                'email.unique' =>'Email sudah digunakan',
+                'no_telepon.required' =>'Nomor telepon wajib diisi',
+                'no_telepon.regex' =>'Nomor telepon tidak valid',
+                'jenis_kelamin.required' =>'Jenis kelamin wajib dipilih',
             ]);
 
-            /**
-             * =================================================
-             * VALIDATION ERROR
-             * =================================================
-             */
+            // VALIDASI ERROR
             if ($validator->fails()) {
 
                 return response()->json([
@@ -230,19 +167,10 @@ class ProfileController extends Controller
              */
             $karyawan->update([
 
-                'nama' =>
-                    trim($request->nama),
-
-                'email' =>
-                    strtolower(
-                        trim($request->email)
-                    ),
-
-                'no_telepon' =>
-                    trim($request->no_telepon),
-
-                'jenis_kelamin' =>
-                    $request->jenis_kelamin,
+                'nama' => trim($request->nama),
+                'email' => strtolower(trim($request->email)),
+                'no_telepon' => trim($request->no_telepon),
+                'jenis_kelamin' => $request->jenis_kelamin,
             ]);
         }
 
@@ -252,20 +180,13 @@ class ProfileController extends Controller
          * =====================================================
          */
         elseif ($user->role === 'unit') {
-
             $unit = $user->unit;
 
-            /**
-             * =================================================
-             * VALIDASI UNIT
-             * =================================================
-             */
+            // VALIDASI UNIT
             if (!$unit) {
 
                 return response()->json([
-
-                    'message' =>
-                        'Data unit tidak ditemukan'
+                    'message' =>'Data unit tidak ditemukan'
 
                 ], 404);
             }
@@ -281,56 +202,30 @@ class ProfileController extends Controller
             if (!$penghuni) {
 
                 return response()->json([
-
-                    'message' =>
-                        'Tidak ada penghuni aktif pada unit ini'
+                    'message' =>'Tidak ada penghuni aktif pada unit ini'
 
                 ], 404);
             }
 
-            /**
-             * =================================================
-             * VALIDASI
-             * =================================================
-             */
+            // VALIDASI 
             $validator = Validator::make($request->all(), [
 
-                'nama' => [
-                    'required',
-                    'regex:/^[A-Za-z\s\.\']+$/',
-                    'max:100'
-                ],
-
+                'nama' => ['required','regex:/^[A-Za-z\s\.\']+$/','max:100'],
                 'nik' => ['required','digits:16',  
                     Rule::unique(
                         'penghunis',
                         'nik'
                     )->ignore($penghuni->id)
                 ],
-
-                'email' => [
-
-                    'nullable',
-
-                    'email',
-
-                    'max:100',
-
+                'email' => ['nullable', 'email','max:100',
                     Rule::unique(
                         'penghunis',
                         'email'
                     )->ignore($penghuni->id)
                 ],
-
-                'no_telepon' => [
-                    'required',
-                    'regex:/^(08|\+628)[0-9]{8,11}$/'
-                ],
-
+                'no_telepon' => ['required','regex:/^(08|\+628)[0-9]{8,11}$/' ],
                 'jenis_kelamin' => [
-
                     'required',
-
                     Rule::in([
                         'Laki-laki',
                         'Perempuan'
@@ -339,46 +234,22 @@ class ProfileController extends Controller
 
             ], [
 
-                'nama.required' =>
-                    'Nama wajib diisi',
-
-                'nama.regex' =>
-                    'Nama hanya boleh huruf, titik, apostrophe, dan spasi',
-                
-                'nik.required' =>
-                    'NIK wajib diisi',
-
-                'nik.digits' =>
-                    'NIK harus 16 digit angka',
-
-                'nik.unique' =>
-                    'NIK sudah digunakan',
-
-                'email.email' =>
-                    'Format email tidak valid',
-
-                'email.unique' =>
-                    'Email sudah digunakan',
-
-                'no_telepon.required' =>
-                    'Nomor telepon wajib diisi',
-
-                'no_telepon.regex' =>
-                    'Nomor telepon tidak valid',
-
-                'jenis_kelamin.required' =>
-                    'Jenis kelamin wajib dipilih',
+                'nama.required' => 'Nama wajib diisi',
+                'nama.regex' => 'Nama hanya boleh huruf, titik, apostrophe, dan spasi',
+                'nik.required' =>'NIK wajib diisi',
+                'nik.digits' => 'NIK harus 16 digit angka',
+                'nik.unique' =>'NIK sudah digunakan',
+                'email.email' =>'Format email tidak valid',
+                'email.unique' =>'Email sudah digunakan',
+                'no_telepon.required' => 'Nomor telepon wajib diisi',
+                'no_telepon.regex' => 'Nomor telepon tidak valid',
+                'jenis_kelamin.required' =>'Jenis kelamin wajib dipilih',
             ]);
 
-            /**
-             * =================================================
-             * VALIDATION ERROR
-             * =================================================
-             */
+            // VALIDASI ERROR
             if ($validator->fails()) {
 
                 return response()->json([
-
                     'errors' =>
                         $validator->errors()
 
@@ -391,13 +262,8 @@ class ProfileController extends Controller
              * =================================================
              */
             $penghuni->update([
-                
-                'nama' =>
-                    trim($request->nama),
-
-                'nik' =>
-                    trim($request->nik),
-
+                'nama' => trim($request->nama),
+                'nik' =>trim($request->nik),
                 'email' =>
                     $request->email
                         ? strtolower(
@@ -405,18 +271,13 @@ class ProfileController extends Controller
                         )
                         : null,
 
-                'no_telepon' =>
-                    trim($request->no_telepon),
-
-                'jenis_kelamin' =>
-                    $request->jenis_kelamin,
+                'no_telepon' =>trim($request->no_telepon),
+                'jenis_kelamin' =>$request->jenis_kelamin,
             ]);
         }
 
         return response()->json([
-
-            'message' =>
-                'Profil berhasil diperbarui'
+            'message' => 'Profil berhasil diperbarui'
         ]);
     }
 
@@ -427,70 +288,30 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        /**
-         * =====================================================
-         * VALIDASI
-         * =====================================================
-         */
+        // VALIDASI 
         $validator = Validator::make($request->all(), [
 
-            'password_lama' => [
-                'required'
-            ],
-
-            'password_baru' => [
-
-                'required',
-
-                'string',
-
-                'min:6',
-
-                'confirmed',
-
-                'regex:/[A-Z]/',
-
-                'regex:/[0-9]/',
+            'password_lama' => ['required'],
+            'password_baru' => ['required', 'string','min:6','confirmed', 'regex:/[A-Z]/', 'regex:/[0-9]/',
             ],
 
         ], [
-
-            'password_lama.required' =>
-                'Password lama wajib diisi',
-
-            'password_baru.required' =>
-                'Kata Sandi baru wajib diisi',
-
-            'password_baru.min' =>
-                'Kata Sandi minimal 6 karakter',
-
-            'password_baru.confirmed' =>
-                'Konfirmasi Kata Sandi tidak cocok',
-
-            'password_baru.regex' =>
-                'Kata Sandi harus mengandung huruf besar dan angka',
+            'password_lama.required' =>'Password lama wajib diisi',
+            'password_baru.required' => 'Kata Sandi baru wajib diisi',
+            'password_baru.min' =>'Kata Sandi minimal 6 karakter',
+            'password_baru.confirmed' =>'Konfirmasi Kata Sandi tidak cocok',
+            'password_baru.regex' => 'Kata Sandi harus mengandung huruf besar dan angka',
         ]);
 
-        /**
-         * =====================================================
-         * VALIDATION ERROR
-         * =====================================================
-         */
+       // Validasi error
         if ($validator->fails()) {
-
             return response()->json([
-
                 'errors' =>
                     $validator->errors()
-
             ], 422);
         }
 
-        /**
-         * =====================================================
-         * PASSWORD LAMA SALAH
-         * =====================================================
-         */
+        // PAASSWORD LAMA SALAH
         if (
             !Hash::check(
                 $request->password_lama,
@@ -499,52 +320,32 @@ class ProfileController extends Controller
         ) {
 
             return response()->json([
-
                 'errors' => [
-
-                    'password_lama' => [
-                        'Kata Sandi lama tidak sesuai'
+                    'password_lama' => [ 'Kata Sandi lama tidak sesuai'
                     ]
                 ]
 
             ], 422);
         }
-
-        /**
-         * =====================================================
-         * PASSWORD BARU SAMA
-         * =====================================================
-         */
+       // PASSWORD BARU SAMA 
         if (
             Hash::check(
                 $request->password_baru,
                 $user->password
             )
         ) {
-
             return response()->json([
-
                 'errors' => [
-
-                    'password_baru' => [
-                        'Kata Sandi baru tidak boleh sama dengan password lama'
+                    'password_baru' => [ 'Kata Sandi baru tidak boleh sama dengan password lama'
                     ]
                 ]
-
             ], 422);
         }
 
-        /**
-         * =====================================================
-         * UPDATE PASSWORD
-         * =====================================================
-         */
+        // UPDATE PASSWORD
         $user->update([
-
             'password' => Hash::make(
-                trim($request->password_baru)
-            ),
-
+                trim($request->password_baru)),
             'must_change_password' => false,
         ]);
         $request->session()->regenerate();
@@ -553,7 +354,6 @@ class ProfileController extends Controller
         ]);
 
         return response()->json([
-
             'message' =>
                 'Kata Sandi berhasil diubah'
         ]);

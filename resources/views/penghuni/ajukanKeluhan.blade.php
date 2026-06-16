@@ -515,15 +515,17 @@ function keluhanForm() {
         // ================= HANDLE FILE =================
         handleFile(e) {
 
-            const files =
-                Array.from(e.target.files);
+            const files = Array.from(e.target.files);
 
             this.form.lampiran = [
                 ...this.form.lampiran,
                 ...files
             ];
 
-        },
+            // reset value input
+            e.target.value = null;
+
+            },
 
         removeFile(index) {
 

@@ -57,6 +57,15 @@ class UnitController extends Controller
             });
         }
 
+        // ================= FILTER STATUS =================
+        if ($request->filled('status')) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
         // FILTER LANTAI 
         if ($request->filled('lantai')) {
             $query->where(
@@ -82,15 +91,19 @@ class UnitController extends Controller
     // GET AVAILABLE PENGHUNI 
     public function getAvailablePenghuni()
     {
-        return Penghuni::whereDoesntHave('riwayatHunian',
+        return Penghuni::whereDoesntHave(
+            'riwayatHunian',
             function ($q) {
                 $q->where('status', 'Aktif');
             }
         )
-
-            ->where('status', 'Aktif')
-            ->select('id','nama','no_telepon','email')
-            ->get();
+        ->select(
+            'id',
+            'nama',
+            'no_telepon',
+            'email'
+        )
+        ->get();
     }
 
 
@@ -162,8 +175,8 @@ class UnitController extends Controller
                     'username' =>$validated['nomor_unit'],
                     'password' =>Hash::make($password),
                     'role' => 'unit',
-                    'is_active' => false,
-                    'must_change_password' => false,
+                    'is_active' => true,
+                    'must_change_password' => true,
                 ]);
 
                 // Buat unit
@@ -199,49 +212,21 @@ class UnitController extends Controller
         try {
 
             $validated = $request->validate([
-
-                'nomor_unit' => [
-
-                    'required',
-
-                    'string',
-
-                    'max:15',
-
+                'nomor_unit' => ['required','string','max:10',
                     Rule::unique(
                         'units',
                         'nomor_unit'
                     )->ignore($unit->id)
                 ],
 
-                'gedung' => [
-                    'required',
-                    'string',
-                    'regex:/^Tower\s[A-Z]$/'
-                ],
-
-                'lantai' => [
-                    'string',
-                    'required', 
-                    'regex:/^[0-9]+$/','max:2',
-                ],
-
-                'nomor_kamar' => [
-                    'string',
-                    'required', 
-                    'regex:/^[0-9]+$/','max:2',
-                ],
+                'gedung' => [ 'required','string', 'regex:/^Tower\s[A-Z]$/'],
+                'lantai' => [ 'string','required', 'regex:/^[0-9]+$/','max:2',],
+                'nomor_kamar' => ['string','required', 'regex:/^[0-9]+$/','max:2',],
             ], [
-
-                'gedung.regex' =>
-                    'Format gedung harus seperti Tower A.'
+                'gedung.regex' =>'Format gedung harus seperti Tower A.'
             ]);
 
-            /**
-             * =====================================================
-             * VALIDASI GEDUNG DARI NOMOR UNIT
-             * =====================================================
-             */
+            // validasi gedung dari nomor unit
             $nomorUnit = strtoupper(
                 trim($validated['nomor_unit'])
             );
@@ -258,8 +243,7 @@ class UnitController extends Controller
 
             $prefix = substr($nomorUnit, 0, 1);
 
-            $expectedGedung =
-                'Tower ' . $prefix;
+            $expectedGedung = 'Tower ' . $prefix;
 
             if (
                 $validated['gedung'] !==
@@ -268,8 +252,7 @@ class UnitController extends Controller
 
                 throw ValidationException::withMessages([
 
-                    'gedung' => [
-                        "Gedung harus sesuai dengan nomor unit ({$expectedGedung})."
+                    'gedung' => ["Gedung harus sesuai dengan nomor unit ({$expectedGedung})."
                     ]
                 ]);
             }
@@ -290,51 +273,26 @@ class UnitController extends Controller
             $validated
         ) {
 
-            /**
-             * =================================================
-             * UPDATE USERNAME LOGIN
-             * =================================================
-             */
+            // UPDATE USERNAME LOGIN
             $unit->pengguna->update([
-
                 'username' =>
                     strtoupper(
                         $validated['nomor_unit']
                     ),
-                'is_active' =>
-                        $unit->status === 'Aktif'
+                'is_active' => $unit->status === 'Aktif'
             ]);
 
-            /**
-             * =================================================
-             * UPDATE UNIT
-             * =================================================
-             */
+            // Update unit
             $unit->update([
-
-                'nomor_unit' =>
-                    strtoupper(
-                        $validated['nomor_unit']
-                    ),
-
-                'gedung' =>
-                    $validated['gedung'],
-
-                'lantai' =>
-                    $validated['lantai'],
-
-                'nomor_kamar' =>
-                    $validated['nomor_kamar'],
-
+                'nomor_unit' =>strtoupper( $validated['nomor_unit']),
+                'gedung' => $validated['gedung'],
+                'lantai' =>$validated['lantai'],
+                'nomor_kamar' =>$validated['nomor_kamar'],
             ]);
 
             return response()->json([
-
                 'success' => true,
-
-                'message' =>
-                    'Unit berhasil diperbarui',
-
+                'message' =>'Unit berhasil diperbarui',
                 'unit' => $unit->fresh([
                     'pengguna',
                     'penghuniAktif'
@@ -352,19 +310,14 @@ class UnitController extends Controller
         return DB::transaction(function () use ($unit) {
 
             $newPassword = $this->generatePassword();
-
             $unit->pengguna->update([
-
                 'password' =>
                     Hash::make($newPassword),
-
                 'must_change_password' => true,
             ]);
 
             return response()->json([
-
                 'success' => true,
-
                 'new_password' => $newPassword
             ]);
         });
@@ -373,14 +326,9 @@ class UnitController extends Controller
     /**
      * ================= GANTI PENGHUNI =================
      */
-    public function gantiPenghuni(
-        Request $request,
-        Unit $unit
-    ) {
+    public function gantiPenghuni(Request $request,Unit $unit) {
         $request->validate([
-
-            'penghuni_id' =>
-                'required|exists:penghunis,id',
+            'penghuni_id' =>'required|exists:penghunis,id',
         ]);
 
         return DB::transaction(function () use (
@@ -393,91 +341,46 @@ class UnitController extends Controller
             );
 
            // cek sudah punya unit
-            $masihAktif = RiwayatHunian::where(
-                'penghuni_id',
-                $penghuniBaru->id
-                )
-        
+            $masihAktif = RiwayatHunian::where('penghuni_id',$penghuniBaru->id)
                 ->where('status', 'Aktif')
                 ->exists();
-        
+
             if ($masihAktif) {
-            
                 return response()->json([
-            
                     'success' => false,
-            
-                    'message' =>
-                        'Penghuni masih menempati unit lain.'
-            
+                    'message' =>'Penghuni masih menempati unit lain.'
                 ], 422);
             }
 
-            /**
-             * =================================================
-             * NONAKTIFKAN PENGHUNI LAMA
-             * =================================================
-             */
-            RiwayatHunian::where(
-                'unit_id',
-                $unit->id
-            )
-        
+            // Nonalktifkan penghuni lama 
+            RiwayatHunian::where('unit_id',$unit->id)
             ->where('status', 'Aktif')
-        
             ->update([
-        
                 'status' => 'Nonaktif',
-        
                 'tanggal_keluar' => now(),
             ]);
 
-            /**
-             * =================================================
-             * SET PENGHUNI BARU
-             * =================================================
-             */
+            // SET PENGHUNI BARI 
             RiwayatHunian::create([
-
-                'penghuni_id' =>
-                    $penghuniBaru->id,
-            
-                'unit_id' =>
-                    $unit->id,
-            
+                'penghuni_id' =>$penghuniBaru->id,
+                'unit_id' =>$unit->id,
                 'status' => 'Aktif',
-            
                 'tanggal_masuk' => now(),
             ]);
 
-            /**
-             * =================================================
-             * RESET PASSWORD LOGIN UNIT
-             * =================================================
-             */
+            // Reset password untuk login akun unit 
             $passwordBaru = $this->generatePassword();
-
             $unit->pengguna->update([
-
-                'password' =>
-                    Hash::make($passwordBaru),
-
+                'password' => Hash::make($passwordBaru),
                 'must_change_password' => true,
             ]);
 
-            /**
-             * =================================================
-             * AKTIFKAN UNIT
-             * =================================================
-             */
+            // Aktifkan unit
             $unit->update([
                 'status' => 'Aktif'
             ]);
-
             return response()->json([
-
                 'success' => true,
-
                 'password' => $passwordBaru
             ]);
         });
@@ -489,7 +392,6 @@ class UnitController extends Controller
     public function toggleStatus(Request $request,Unit $unit) 
     {
         $request->validate([
-
             'action' =>
                 'required|in:aktif,nonaktif'
         ]);
@@ -502,36 +404,22 @@ class UnitController extends Controller
             // nonaktifkan akun 
             if ($request->action === 'nonaktif') {
 
-                $unit->update([
-                    'status' => 'Nonaktif'
-                ]);
+                $unit->update(['status' => 'Nonaktif' ]);
+                $unit->pengguna->update(['is_active' => false ]);
                 
-                $unit->pengguna->update([
-                    'is_active' => false
-                ]);
-                
-                /**
-                 * LEPAS PENGHUNI
-                 */
-                RiwayatHunian::where(
-                    'unit_id',
-                    $unit->id
+
+                // Lepas penghuni
+                RiwayatHunian::where('unit_id',$unit->id
                 )
-            
                 ->where('status', 'Aktif')
-            
                 ->update([
-            
                     'status' => 'Nonaktif',
-            
                     'tanggal_keluar' => now(),
                 ]);
 
             } else {
 
-                /**
-                 * AKTIFKAN UNIT
-                 */
+               // aktifkan unit
                 $unit->update(['status' => 'Aktif']);
                 $unit->pengguna->update(['is_active' => true]);
             }

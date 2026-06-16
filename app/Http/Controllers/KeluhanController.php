@@ -23,7 +23,7 @@ class KeluhanController extends Controller
     {
         $user = auth()->user();
 
-        // ================= CEK UNIT =================
+        // CEK UNIT
         $unit = $user->unit;
 
         if (!$unit) {
@@ -32,14 +32,10 @@ class KeluhanController extends Controller
             ], 404);
         }
 
-        // ================= CEK PENGHUNI =================
+        // CEK PENGHUNI
         $riwayatAktif = $unit->penghuniAktif;
 
-            if (
-                !$riwayatAktif ||
-                !$riwayatAktif->penghuni
-            ) {
-
+            if (!$riwayatAktif || !$riwayatAktif->penghuni) {
                 return response()->json([
                     'message' => 'Penghuni aktif tidak ditemukan'
                 ], 404);
@@ -47,7 +43,7 @@ class KeluhanController extends Controller
 
             $penghuni = $riwayatAktif->penghuni;
 
-        // ================= VALIDASI =================
+        // VALIDASI
         $validator = Validator::make($request->all(), [
             'judul' => ['required', 'string', 'max:150'],
             'deskripsi' => ['required', 'string', 'min:10'],
@@ -68,7 +64,7 @@ class KeluhanController extends Controller
             ], 422);
         }
 
-        // ================= UPLOAD FILE =================
+        // UPLOAD FILE 
         $filesPath = [];
 
         if ($request->hasFile('lampiran')) {
@@ -80,7 +76,7 @@ class KeluhanController extends Controller
             }
         }
 
-        // ================= GENERATE TICKET =================
+        // GENERATE NOMOR TIKET
         $tahun = date('Y');
 
         //hps spasi
@@ -266,7 +262,7 @@ class KeluhanController extends Controller
                 $karyawan->id
             );
 
-        // ================= FILTER STATUS =================
+        // ================= FILTER KEKLUHAN =================
         if ($request->filled('status')) {
 
             $statuses = explode(',', $request->status);
@@ -320,22 +316,13 @@ class KeluhanController extends Controller
                 return [
 
                     'id' => $k->id,
-
-                    'nomor_tiket' =>
-                        $k->nomor_tiket,
-
+                    'nomor_tiket' =>$k->nomor_tiket,
                     'waktu' =>
                         optional($k->created_at)
                             ->format('d-m-Y H:i'),
-
-                    'penghuni' =>
-                        $k->penghuni->nama ?? '-',
-
-                    'unit' =>
-                        $k->unit->nomor_unit ?? '-',
-
-                    'status' =>
-                        $k->status_label,
+                    'penghuni' =>$k->penghuni->nama ?? '-',
+                    'unit' =>$k->unit->nomor_unit ?? '-',
+                    'status' => $k->status_label,
                 ];
             });
 
@@ -349,14 +336,14 @@ class KeluhanController extends Controller
     {
         $keluhan = Keluhan::findOrFail($id);
 
-        // ❗ JANGAN BOLEH UPDATE KALAU SUDAH CLOSE
+        // gaboleh update kalo udah close
         if ($keluhan->status === 'close') {
             return response()->json([
                 'message' => 'Keluhan sudah ditutup dan tidak bisa diubah'
             ], 403);
         }
 
-        // ================= VALIDASI =================
+        // validasi
         $validator = Validator::make($request->all(), [
             'status' => ['required', 'in:open,on_progress'],
             'catatan' => ['nullable', 'string']
@@ -371,12 +358,10 @@ class KeluhanController extends Controller
         // ================= NORMALISASI =================
         $status = str_replace(' ', '_', strtolower($request->status));
 
-        // ================= UPDATE DB =================
-        $keluhan->update([
-            'status' => $status
-        ]);
+        // update
+        $keluhan->update(['status' => $status]);
 
-        // ================= SIMPAN RIWAYAT =================
+        // SIMPAN RIWAYAT
         if ($request->catatan) {
             RiwayatPenangananKeluhan::create([
                 'keluhan_id' => $keluhan->id,
@@ -440,7 +425,7 @@ class KeluhanController extends Controller
             'status' => strtolower(str_replace('_',' ', $keluhan->status ?? 'unassigned')),
             'waktu' => optional($keluhan->created_at)->format('d-m-Y H:i'),
             
-            // 🔥 PENGAJUAN
+            // PENGAJUAN
             'pengajuan' => [
                 'judul' => $keluhan->judul,
                 'deskripsi' => $keluhan->deskripsi,
@@ -448,7 +433,7 @@ class KeluhanController extends Controller
                 'lampiran' => $keluhan->lampiran_pengajuan ?? [],
             ],
             
-            // 🔥 RIWAYAT
+            // RIWAYAT
             'riwayat_penanganan' => $keluhan->riwayatPenanganan
                 ->sortByDesc('waktu')
                 ->map(function ($r) {
@@ -461,12 +446,10 @@ class KeluhanController extends Controller
                     ];
                 })->values(),
             
-            // Keputusan akhir 
+            // KEPUTUSAN AKHIR
             'keputusan_akhir' => $keluhan->keputusan,
-
             'tanggal_keputusan_format' => optional($keluhan->tanggal_keputusan)
                                             ->format('d-m-Y H:i'),
-
             'lampiran_keputusan' => $keluhan->lampiran_keputusan ?? [],
 
             'work_orders' => $keluhan->workOrders->map(function ($wo) {
@@ -519,13 +502,12 @@ class KeluhanController extends Controller
         if ($keluhan->status === 'close') {
 
             return response()->json([
-        
                 'message' =>
                     'Keluhan sudah ditutup'
         
             ], 403);
         }
-        // ================= VALIDASI =================
+        // VALIDASI
         $validator = Validator::make($request->all(), [
             'keputusan' => ['required', 'string', 'min:5'],
             'lampiran' => ['nullable', 'array'],
@@ -547,7 +529,7 @@ class KeluhanController extends Controller
             ], 422);
         }
 
-        // ================= UPLOAD FILE =================
+        // UPLOAD FILE
         $filesPath = [];
 
         if ($request->hasFile('lampiran')) {
@@ -559,7 +541,7 @@ class KeluhanController extends Controller
             }
         }
 
-        // ================= SIMPAN KE KELUHAN =================
+        // SIMPAN KELUHAN 
         $keluhan->update([
             'keputusan' => trim($request->keputusan),
             'tanggal_keputusan' => now(),
@@ -570,7 +552,8 @@ class KeluhanController extends Controller
             'status' => 'close'
         ]);
         $keluhan->refresh(); 
-        
+
+        // SIMPAN RIWAYAT
         RiwayatPenangananKeluhan::create([
             'keluhan_id' => $keluhan->id,
             'judul' => 'Keluhan Selesai',
@@ -628,35 +611,18 @@ class KeluhanController extends Controller
                 return [
 
                     'id' => $item->id,
-
-                    'nomor_tiket' =>
-                        $item->nomor_tiket,
-
-                    'unit' =>
-                        $item->unit
-                            ?->nomor_unit ?? '-',
-
-                    'penghuni' =>
-                        $item->penghuni
-                            ?->nama ?? '-',
-
-                    'judul' =>
-                        $item->judul,
-
-                    'status' =>
-                        $item->status,
-
+                    'nomor_tiket' =>$item->nomor_tiket,
+                    'unit' =>$item->unit?->nomor_unit ?? '-',
+                    'penghuni' => $item->penghuni ?->nama ?? '-',
+                    'judul' => $item->judul,
+                    'status' => $item->status,
                     'tanggal' =>
                         optional(
                             $item->created_at
                         )->format('d-m-Y H:i'),
 
-                    'work_orders' =>
-                        $item->workOrders ?? [],
-                        
-                    'tr' =>
-                        $item->penanggungJawab
-                    ?->nama ?? '-',
+                    'work_orders' =>$item->workOrders ?? [],
+                    'tr' =>$item->penanggungJawab?->nama ?? '-',
                     ];
             });
 

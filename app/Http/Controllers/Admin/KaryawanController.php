@@ -32,6 +32,7 @@ class KaryawanController extends Controller
     
     /**
      * ================== INDEX ==================
+     * 
      */
     public function index(Request $request)
     {
@@ -50,6 +51,15 @@ class KaryawanController extends Controller
         // ================= FILTER NAMA =================
         if ($request->filled('nama')) {
             $query->where('nama', 'LIKE', '%' . trim($request->nama) . '%');
+        }
+
+        // ================= FILTER STATUS =================
+        if ($request->filled('status')) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
         }
 
         // ================= FILTER KATEGORI =================
@@ -87,10 +97,8 @@ class KaryawanController extends Controller
                 );
             }
         }
-        // ================= DATA =================
+        // Data
         $karyawans = $query->latest()->get();
-
-        // ================= LIST DEPARTEMEN =================
         $departemens = Departemen::orderBy('nama_departemen')->get();
 
         return view('admin.karyawan.index', compact('karyawans', 'departemens'));
@@ -108,11 +116,7 @@ class KaryawanController extends Controller
             'no_telepon' => ['required','regex:/^08[0-9]{8,11}$/'],
             'nama' => ['required','string','max:100','regex:/^[A-Za-z\s\.\']+$/'],
             'email' => 'required|email|max:100|unique:karyawans,email|unique:penggunas,username',
-
-            // 🔥 ROLE
             'role' => 'required|in:tenant_relation,departemen',
-
-            // 🔥 DEPARTEMEN (tidak selalu wajib)
             'departemen_id' => [
                 'nullable',
                 'exists:departemens,id'
@@ -125,7 +129,7 @@ class KaryawanController extends Controller
             'email.email' => 'Format email tidak valid.',
         ]);
 
-        // ================= VALIDATION ERROR =================
+        // validasi error
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -138,7 +142,7 @@ class KaryawanController extends Controller
         try {
             $validated = $validator->validated();
 
-            // 🔥 VALIDASI TAMBAHAN (LOGIC BISNIS)
+            // validasi tambahan
             if ($validated['role'] === 'departemen' && empty($validated['departemen_id'] ?? null)) {
                 return response()->json([
                     'success' => false,
@@ -148,12 +152,12 @@ class KaryawanController extends Controller
                 ], 422);
             }
 
-            // 🔑 Generate username & password
+            // Generate username & password
             $username = $validated['nip'];
             $newPassword = $this->generatePassword();
            
 
-            // ================= CREATE USER =================
+            // create user
             $pengguna = Pengguna::create([
                 'username' => $username,
                 'password' => Hash::make($newPassword),
@@ -162,20 +166,16 @@ class KaryawanController extends Controller
                 'must_change_password' => true,
             ]);
 
-            // ================= CREATE KARYAWAN =================
+            // create karyawan
             $karyawan = Karyawan::create([
                 'pengguna_id' => $pengguna->id,
                 'nip' => $validated['nip'],
                 'nama' => $validated['nama'],
                 'no_telepon' => $validated['no_telepon'],
                 'email' => $validated['email'],
-                
-
-                // 🔥 LOGIC UTAMA
                 'departemen_id' => $validated['role'] === 'departemen'
                     ? $validated['departemen_id']
                     : null,
-
                 'jenis_kelamin' => $validated['jenis_kelamin'],
                 'status' => 'Aktif'
             ]);
@@ -208,10 +208,7 @@ class KaryawanController extends Controller
     public function update(Request $request, Karyawan $karyawan)
     {   
 
-        if (
-            $karyawan->pengguna->role === 'admin'
-        ) {
-        
+        if ($karyawan->pengguna->role === 'admin') {
             abort(403);
         }
 
@@ -228,33 +225,14 @@ class KaryawanController extends Controller
                     Rule::unique('penggunas', 'username')->ignore($karyawan->pengguna_id),
                 ],
             
-                'nama' => [
-                    'required',
-                    'string',
-                    'max:100',
-                    'regex:/^[A-Za-z\s\.\']+$/'
-                ],
+                'nama' => ['required','string', 'max:100','regex:/^[A-Za-z\s\.\']+$/'],
+                'no_telepon' => [ 'required','regex:/^08[0-9]{8,11}$/'],
             
-                'no_telepon' => [
-                    'required',
-                    'regex:/^08[0-9]{8,11}$/'
-                ],
-            
-                'email' => [
-                    'required',
-                    'email',
-                    'max:100',
-                    Rule::unique('karyawans', 'email')->ignore($karyawan->id),
-                ],
-            
+                'email' => ['required','email','max:100',
+                    Rule::unique('karyawans', 'email')->ignore($karyawan->id), ],
                 'role' => 'required|in:tenant_relation,departemen',
-            
-                'departemen_id' => [
-                    'nullable', 'exists:departemens,id'
-                ],
-            
+                'departemen_id' => ['nullable', 'exists:departemens,id' ],
                 'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
-            
                 'status' => 'required|in:Aktif,Nonaktif'
             
             ], [
@@ -262,13 +240,13 @@ class KaryawanController extends Controller
                 'no_telepon.regex' => 'No. Telepon harus diawali 08 dan 10-13 digit.',
             ]);
 
-            if (
-                $validated['role'] !== 'departemen'
-            ) {
-            
+            if ( $validated['role'] !== 'departemen') 
+            {
                 $validated['departemen_id'] = null;
             }
+            
 
+            //Update 
             $karyawan->pengguna->update([
                 'username' => $validated['nip'],
                 'role' => $validated['role'],
@@ -308,10 +286,7 @@ class KaryawanController extends Controller
      */
     public function resetPassword(Karyawan $karyawan)
     {
-        if (
-            $karyawan->pengguna->role === 'admin'
-        ) {
-        
+        if ( $karyawan->pengguna->role === 'admin') {
             abort(403);
         }
 
@@ -320,6 +295,7 @@ class KaryawanController extends Controller
         try {
             $newPassword = 'Tmp-' . strtoupper(Str::random(5));
 
+            // update
             $karyawan->pengguna->update([
                 'password' => Hash::make($newPassword),
                 'must_change_password' => true,

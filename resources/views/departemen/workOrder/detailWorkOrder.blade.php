@@ -208,26 +208,45 @@
                         x-for="(file, i) in wo.lampiran"
                         :key="i">
 
-                        <button
-                            @click="openPreviewFile(file)"
-                            title="Preview Lampiran"
-                            class="inline-flex items-center gap-1.5
-                            px-2 py-1 rounded-lg
-                            bg-blue-50 text-blue-700
-                            text-xs font-medium
-                            hover:bg-blue-100 transition">
+                        <div class="flex items-center gap-1">
 
-                            @include('components.buttons.btn-view')
+                            {{-- PREVIEW --}}
+                            <button
+                                @click="openPreviewFile(file)"
+                                title="Preview Lampiran"
+                                class="inline-flex items-center gap-1.5
+                                px-2 py-1 rounded-lg
+                                bg-blue-50 text-blue-700
+                                text-xs font-medium
+                                hover:bg-blue-100 transition">
 
-                            <span
-                                x-text="
-                                    wo.lampiran.length > 1
-                                    ? 'Lampiran ' + (i + 1)
-                                    : 'Lampiran'
-                                ">
-                            </span>
+                                @include('components.buttons.btn-view')
 
-                        </button>
+                                <span
+                                    x-text="
+                                        wo.lampiran.length > 1
+                                        ? 'Lampiran ' + (i + 1)
+                                        : 'Lampiran'
+                                    ">
+                                </span>
+
+                            </button>
+
+                            {{-- DOWNLOAD --}}
+                            <a
+                                :href="'/storage/' + file"
+                                :download="file.split('/').pop()"
+                                title="Unduh Lampiran"
+                                class="inline-flex items-center justify-center
+                                w-8 h-8 rounded-lg
+                                bg-green-50 text-green-600
+                                hover:bg-green-100 transition">
+
+                                @include('components.icons.download')
+
+                            </a>
+
+                        </div>
 
                     </template>
 

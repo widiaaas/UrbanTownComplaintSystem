@@ -319,8 +319,24 @@
                 <div class="mt-6">
 
                     <!-- IMAGE -->
-                    <template x-if="previewUrl.endsWith('.jpg') || previewUrl.endsWith('.png') || previewUrl.endsWith('.jpeg')">
-                        <img :src="'/storage/' + previewUrl" class="w-full rounded">
+                    <template
+                        x-if="
+                            previewUrl.endsWith('.jpg') ||
+                            previewUrl.endsWith('.png') ||
+                            previewUrl.endsWith('.jpeg')
+                        ">
+
+                        <div
+                            class="flex justify-center items-center
+                            max-h-[75vh] overflow-auto">
+
+                            <img
+                                :src="'/storage/' + previewUrl"
+                                class="max-w-full max-h-[75vh]
+                                object-contain rounded-2xl shadow">
+
+                        </div>
+
                     </template>
 
                     <!-- PDF -->

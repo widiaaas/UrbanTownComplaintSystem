@@ -34,31 +34,42 @@ class DashboardController extends Controller
          * =========================================================
          */
         if ($role === 'admin') {
-
+           
             $stats = [
-
-                'unit' => Unit::where(
-                    'status',
-                    'Aktif'
+                
+                // UNIT
+                'unit_aktif' => Unit::where('status', 'Aktif')->count(),
+                'unit_tidak_aktif' => Unit::where('status', 'Nonaktif')->count(),
+        
+                // PENGHUNI
+                'penghuni_aktif' => Penghuni::whereHas(
+                    'riwayatHunian',
+                    function ($q) {
+                        $q->where('status', 'Aktif');
+                    }
                 )->count(),
-
-                'penghuni' => Penghuni::where(
-                    'status',
-                    'Aktif'
+                
+                'penghuni_tidak_aktif' => Penghuni::whereDoesntHave(
+                    'riwayatHunian',
+                    function ($q) {
+                        $q->where('status', 'Aktif');
+                    }
                 )->count(),
-
-                'karyawan' => Karyawan::where(
-                    'status',
-                    'Aktif'
-                )
-                    ->whereHas(
-                        'pengguna', function($q){
-                            $q->where ('role','!=','admin');
-                        }
-                    )
-                ->count(),
+        
+                // KARYAWAN (selain admin)
+                'karyawan_aktif' => Karyawan::where('status', 'Aktif')
+                    ->whereHas('pengguna', function ($q) {
+                        $q->where('role', '!=', 'admin');
+                    })
+                    ->count(),
+        
+                'karyawan_tidak_aktif' => Karyawan::where('status', 'Nonaktif')
+                    ->whereHas('pengguna', function ($q) {
+                        $q->where('role', '!=', 'admin');
+                    })
+                    ->count(),
             ];
-
+        
             return view('admin.dashboard', compact(
                 'stats',
                 'karyawan'
@@ -165,9 +176,7 @@ class DashboardController extends Controller
                 ])
 
                 ->latest()
-
                 ->take(3)
-
                 ->get();
 
             return view('tenantrelation.dashboard', compact(
@@ -239,9 +248,7 @@ class DashboardController extends Controller
              * ================= OVERDUE =================
              */
             $overdue = (clone $query)
-
                 ->where('status', '!=', 'close')
-
                 ->where(
                     'created_at',
                     '<',
@@ -268,9 +275,7 @@ class DashboardController extends Controller
                 ])
 
                 ->latest()
-
                 ->take(5)
-
                 ->get();
 
             return view('departemen.dashboard', compact(

@@ -141,9 +141,7 @@ use App\Http\Controllers\LaporanController;
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/tesKB', function () {
-    return view('tesKB');
-});
+
 // ==================== AUTHENTICATED ROUTES ====================
 Route::middleware(['auth','active'])->group(function () {
 
@@ -151,7 +149,7 @@ Route::middleware(['auth','active'])->group(function () {
     Route::get('/ganti-password', [AuthController::class, 'showChangeForm'])->name('password.change');
     Route::post('/ganti-password', [AuthController::class, 'change']);
 
-    // ================= PROFILE UNIVERSAL =================
+    // ================= PROFILE=================
     Route::get('/profile', [ProfileController::class, 'index']); // view
     Route::get('/profile/show', [ProfileController::class, 'show']); // JSON API
     Route::put('/profile/update', [ProfileController::class, 'update']);
@@ -188,35 +186,20 @@ Route::middleware(['auth','active'])->group(function () {
     });
 
     // ================= TENANT RELATION =================
-    // ================= TENANT RELATION =================
     Route::middleware(['role:tenant_relation'])->group(function () {
 
         // Route::get('/dashboardTenantRelation', [DashboardController::class, 'tenantRelation']);
 
-        // 🔥 KELUHAN
+        // KELUHAN
         Route::get('/keluhan-masuk', [KeluhanController::class, 'keluhanMasuk'])->name('tr.keluhan.masuk');
         Route::post('/keluhan/{id}/ambil', [KeluhanController::class, 'ambilKeluhan'])->name('tr.keluhan.ambil');
-
-        // 🔥 DAFTAR PENANGANAN
         Route::get('/daftar-penanganan', [KeluhanController::class, 'daftarPenanganan'])->name('tr.penanganan');
-
-        // 🔥 DETAIL
         Route::get('/keluhan/{id}', [KeluhanController::class, 'show'])->name('tr.keluhan.detail');
-
-        // 🔥 UPDATE STATUS (WAJIB)
         Route::post('/keluhan/{id}/status', [KeluhanController::class, 'updateStatus']);
-
         // Penanganan 
-
         Route::post('/keluhan/{id}/penanganan', [RiwayatPenangananKeluhanController::class, 'simpanPenanganan']);
-
-        // 🔥 KEPUTUSAN AKHIR
         Route::post('/keluhan/{id}/keputusan-akhir', [KeluhanController::class, 'keputusanAkhir']);
-
-        // WORK ORDER
         Route::post('/keluhan/{id}/work-order', [WorkOrderController::class, 'store']);
-        
-        // riwayat unit
         Route::get('/riwayat-keluhan',[KeluhanController::class, 'riwayatKeluhan']);
         
        

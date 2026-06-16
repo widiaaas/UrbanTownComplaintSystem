@@ -17,18 +17,26 @@ class PenghuniController extends Controller
     public function index(Request $request)
     {
         $query = Penghuni::with('riwayatHunian.unit');
+        $penghunis = $query->latest()->get();
+        $jenisKelamin = ['Laki-laki','Perempuan'];
 
+         // ================= FILTER STATUS =================
+        if ($request->filled('status')) {
 
-        // DATA
-        $penghunis = $query
-            ->latest()
-            ->get();
+            if ($request->status == 'Aktif') {
 
-        $jenisKelamin = [
-            'Laki-laki',
-            'Perempuan'
-        ];
+                $query->whereHas('riwayatHunian.unit', function ($q) {
+                    $q->where('status', 'Aktif');
+                });
 
+            } elseif ($request->status == 'Nonaktif') {
+
+                $query->whereDoesntHave('riwayatHunian.unit', function ($q) {
+                    $q->where('status', 'Nonaktif');
+                });
+
+            }
+        }
         return view(
             'admin.penghuni.index',
             compact(
@@ -36,6 +44,7 @@ class PenghuniController extends Controller
                 'jenisKelamin'
             )
         );
+
     }
 
     /**
@@ -43,7 +52,7 @@ class PenghuniController extends Controller
      */
     public function store(Request $request)
     {
-        // VALIDASI AJAX
+        // validasi
         if (!$request->expectsJson()) {
             abort(404);
         }
@@ -67,7 +76,7 @@ class PenghuniController extends Controller
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
         ]);
 
-        // VALIDATION ERROR
+        // validasi error
         if ($validator->fails()) {
 
             return response()->json([
@@ -91,22 +100,15 @@ class PenghuniController extends Controller
             DB::commit();
 
             return response()->json([
-
                 'success' => true,
-
                 'message' => 'Penghuni berhasil ditambahkan',
-
                 'data' => $penghuni
             ]);
 
         } catch (\Exception $e) {
-
             DB::rollBack();
-
             return response()->json([
-
                 'success' => false,
-
                 'errors' => [
                     'system' => [$e->getMessage()]
                 ]
@@ -136,7 +138,7 @@ class PenghuniController extends Controller
             'email.email' => 'Format email tidak valid.',
         ]);
 
-        // VALIDATION ERROR
+        // validator error
         if ($validator->fails()) {
 
             return response()->json([
@@ -162,11 +164,8 @@ class PenghuniController extends Controller
             DB::commit();
 
             return response()->json([
-
                 'success' => true,
-
                 'message' => 'Penghuni berhasil diperbarui',
-
                 'data' => $penghuni
             ]);
 
@@ -213,87 +212,46 @@ class PenghuniController extends Controller
 
     public function riwayatHunian(Request $request)
     {
-        $riwayat = RiwayatHunian::with([
-    
-                'penghuni',
-    
-                'unit'
-    
-            ])
-    
+        $riwayat = RiwayatHunian::with([ 'penghuni','unit' ])
             ->latest()
-    
             ->get()
-    
             ->map(function ($r) {
-    
                 $penghuni = $r->penghuni;
-    
                 $unit = $r->unit;
-    
                 return [
-    
                     'id' => $r->id,
+
+                    // data penghuni
+                    'penghuni' => $penghuni?->nama ?? '-',
+                    'nik' =>$penghuni?->nik ?? '-',
+                    'email' =>$penghuni?->email ?? '-',
+                    'no_telepon' =>$penghuni?->no_telepon ?? '-',
+                    'jenis_kelamin' => $penghuni?->jenis_kelamin ?? '-',
+                    'alamat_asal' => $penghuni?->alamat_asal ?? '-',
+                    
+                    // data unit
+                    'unit' => $unit?->nomor_unit ?? '-',
+                    'gedung' => $unit?->gedung ?? '-',
+                    'lantai' =>$unit?->lantai ?? '-',
     
-                    // ================= PENGHUNI =================
-    
-                    'penghuni' =>
-                        $penghuni?->nama ?? '-',
-    
-                    'nik' =>
-                        $penghuni?->nik ?? '-',
-    
-                    'email' =>
-                        $penghuni?->email ?? '-',
-    
-                    'no_telepon' =>
-                        $penghuni?->no_telepon ?? '-',
-    
-                    'jenis_kelamin' =>
-                        $penghuni?->jenis_kelamin ?? '-',
-    
-                    'alamat_asal' =>
-                        $penghuni?->alamat_asal ?? '-',
-    
-                    // ================= UNIT =================
-    
-                    'unit' =>
-                        $unit?->nomor_unit ?? '-',
-    
-                    'gedung' =>
-                        $unit?->gedung ?? '-',
-    
-                    'lantai' =>
-                        $unit?->lantai ?? '-',
-    
-                    // ================= RIWAYAT =================
-    
+                    // riwayat
                     'tanggal_masuk' =>
-    
                         $r->tanggal_masuk
-    
                             ? \Carbon\Carbon::parse(
                                 $r->tanggal_masuk
                             )->format('d M Y')
-    
                             : '-',
     
                     'tanggal_keluar' =>
-    
                         $r->tanggal_keluar
-    
                             ? \Carbon\Carbon::parse(
                                 $r->tanggal_keluar
                             )->format('d M Y')
     
                             : '-',
     
-                    'status' =>
-                        $r->status,
-    
-                    'created_at' =>
-    
-                        optional($r->created_at)
+                    'status' =>$r->status,
+                    'created_at' => optional($r->created_at)
                             ->format('d M Y H:i'),
                 ];
             })
@@ -301,9 +259,7 @@ class PenghuniController extends Controller
             ->values();
     
         return view(
-    
             'admin.penghuni.riwayatHunian',
-    
             compact('riwayat')
         );
     }

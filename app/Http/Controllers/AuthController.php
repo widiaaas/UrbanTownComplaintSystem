@@ -18,7 +18,7 @@ class AuthController extends Controller
     // ================= LOGIN =================
     public function login(Request $request)
     {
-        // alidasi 
+        // validasi 
         $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
@@ -180,11 +180,8 @@ class AuthController extends Controller
         if (!$user->is_active) {
 
             Auth::logout();
-        
             request()->session()->invalidate();
-        
             request()->session()->regenerateToken();
-        
             return redirect('/')
                 ->withErrors([
                     'username' =>
@@ -194,14 +191,7 @@ class AuthController extends Controller
 
         // VALIDASI PASSWORD
         $request->validate([
-            'password' => [
-                'required',
-                'string',
-                'min:6',
-                'confirmed',
-                'regex:/[A-Z]/',
-                'regex:/[0-9]/',
-            ]
+            'password' => ['required', 'string','min:6','confirmed', 'regex:/[A-Z]/','regex:/[0-9]/',]
         ], [
             'password.required' => 'Password wajib diisi',
             'password.min' => 'Password minimal 6 karakter',
@@ -253,11 +243,9 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
+        
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
-
         return redirect('/');
     }
 }

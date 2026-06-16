@@ -269,7 +269,7 @@
 
                             {{-- DELETE --}}
                             <button
-                                @click="hapusLampiranKeputusan(index)"
+                                @click="hapusLampiranKeputusanAkhir(index)"
                                 title="Hapus Lampiran"
                                 class="hover:scale-105 transition">
 
@@ -305,11 +305,11 @@
                 </div>
                 <div>
                     <label class="text-sm font-medium mb-1 block">Lampiran Dokumentasi</label>
-                    <input type="file" multiple x-ref="fileKeputusan"
-                    @change="previewFiles = [
-                            ...previewFiles,
-                            ...Array.from($event.target.files)
-                        ]"
+                    <input
+                        type="file"
+                        multiple
+                        x-ref="fileKeputusan"
+                        @change="handleUploadKeputusanAkhir"
                         class="text-sm">
                     <div class="flex flex-wrap gap-2 mt-2">
                         <template x-for="(file, index) in previewFiles" :key="index">
@@ -339,7 +339,7 @@
 
                             {{-- DELETE --}}
                             <button
-                                @click="hapusLampiranKeputusan(index)"
+                                @click="hapusLampiranKeputusanAkhir(index)"
                                 title="Hapus Lampiran"
                                 class="hover:scale-105 transition">
 
@@ -743,14 +743,63 @@
                             <div class="relative pl-5 py-3 rounded-md" :class="statusClassRiwayat(lapor.status)">
                                 <p class="font-medium text-gray-800" x-text="lapor.judul"></p>
                                 <p class="text-gray-600 mt-1" x-text="lapor.deskripsi"></p>
-                                <div class="flex flex-wrap gap-2 mt-2"
+                                <div
+                                    class="flex flex-wrap gap-2 mt-2"
                                     x-show="lapor.lampiran && lapor.lampiran.length">
-                                    <template x-for="(file, i) in lapor.lampiran" :key="i">
-                                        <button @click="openPreviewFile(file)"
-                                            class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                            <span x-text="file.split('/').pop()"></span>
-                                        </button>
-                                    </template>
+
+                                    <div
+                                        class="flex flex-wrap gap-2 mt-2"
+                                        x-show="lapor.lampiran && lapor.lampiran.length">
+
+                                        <template
+                                            x-for="(file, i) in lapor.lampiran"
+                                            :key="i">
+
+                                            <div
+                                                class="flex items-center gap-1">
+
+                                                {{-- PREVIEW --}}
+                                                <button
+                                                    @click="openPreviewFile(file)"
+                                                    title="Preview Lampiran"
+                                                    class="inline-flex items-center gap-1.5
+                                                    px-2 py-1 rounded-lg
+                                                    bg-blue-50 text-blue-700
+                                                    text-xs font-medium
+                                                    hover:bg-blue-100 transition">
+
+                                                    @include('components.buttons.btn-view')
+
+                                                    <span
+                                                        x-text="
+                                                            lapor.lampiran.length > 1
+                                                            ? 'Lampiran ' + (i + 1)
+                                                            : 'Lampiran'
+                                                        ">
+                                                    </span>
+
+                                                </button>
+
+                                                {{-- DOWNLOAD --}}
+                                                <a
+                                                    :href="'/storage/' + file"
+                                                    :download="file.split('/').pop()"
+                                                    title="Unduh Lampiran"
+                                                    class="inline-flex items-center justify-center
+                                                    w-8 h-8 rounded-lg
+                                                    bg-green-50 text-green-600
+                                                    hover:bg-green-100 transition">
+
+                                                    @include('components.icons.download')
+
+                                                </a>
+
+                                            </div>
+
+                                        </template>
+
+                                    </div>
+
                                 </div>
                                 <p class="text-xs text-gray-400 mt-2" x-text="lapor.waktu"></p>
                             </div>
@@ -1198,15 +1247,14 @@ function detailKeluhanApp() {
                 this.keputusanAkhir.keputusan
             );
 
-            let files = this.$refs.fileKeputusan.files;
-
-            for (let i = 0; i < files.length; i++) {
+            this.previewFiles.forEach(file => {
 
                 formData.append(
                     'lampiran[]',
-                    files[i]
+                    file
                 );
-            }
+
+            });
 
             fetch(
                 `/keluhan/${this.keluhan.id}/keputusan-akhir`,
@@ -1289,6 +1337,22 @@ function detailKeluhanApp() {
             });
         });
         },
+
+        hapusLampiranKeputusanAkhir(index) {
+
+            this.previewFiles.splice(index, 1);
+
+            },
+        
+        handleUploadKeputusanAkhir(event) {
+
+            this.previewFiles.push(
+                ...Array.from(event.target.files)
+            );
+
+            // reset input supaya file lama tidak tersimpan browser
+            event.target.value = null;
+            },
 
         /* ================= WORK ORDER ================= */
         kirimWO() {

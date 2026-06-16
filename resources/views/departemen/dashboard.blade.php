@@ -95,25 +95,25 @@
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-                <a href="/daftarWorkOrder?status=open"
+                <a href="/daftar-work-order?status=open"
                 class="p-4 bg-blue-100 rounded-lg hover:shadow transition block">
                     <p class="text-sm">Open</p>
                     <p class="text-2xl font-bold">{{ $statsWO['open'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=on_progress"
+                <a href="/daftar-work-order?status=on_progress"
                 class="p-4 bg-yellow-50 rounded-lg hover:shadow transition block">
                     <p class="text-sm">On Progress</p>
                     <p class="text-2xl font-bold">{{ $statsWO['on_progress'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=waiting"
+                <a href="/daftar-work-order?status=waiting"
                 class="p-4 bg-orange-50 rounded-lg hover:shadow transition block">
                     <p class="text-sm">Waiting</p>
                     <p class="text-2xl font-bold">{{ $statsWO['waiting'] }}</p>
                 </a>
 
-                <a href="/daftarWorkOrder?status=close"
+                <a href="/daftar-work-order?status=close"
                 class="p-4 bg-green-50 rounded-lg hover:shadow transition block">
                     <p class="text-sm">Close</p>
                     <p class="text-2xl font-bold">{{ $statsWO['close'] }}</p>

@@ -13,55 +13,21 @@ class RiwayatPenangananWOController extends Controller
     {
         try {
 
-            /**
-             * ============================================
-             * VALIDASI
-             * ============================================
-             */
+            // VALIDASI 
             $validator = Validator::make($request->all(), [
-
-                'judul' => [
-                    'required',
-                    'string',
-                    'max:100'
-                ],
-
-                'deskripsi' => [
-                    'required',
-                    'string',
-                    'min:5'
-                ],
-
-                'lampiran' => [
-                    'nullable',
-                    'array'
-                ],
-
-                'lampiran.*' => [
-                    'file',
-                    'mimes:jpg,jpeg,png,pdf',
-                    'max:1024'
-                ]
+                'judul' => ['required','string', 'max:100'],
+                'deskripsi' => ['required', 'string','min:5' ],
+                'lampiran' => [ 'nullable','array' ],
+                'lampiran.*' => [ 'file','mimes:jpg,jpeg,png,pdf', 'max:1024']
 
             ], [
 
-                'judul.required' =>
-                    'Judul wajib diisi',
-
-                'judul.max' =>
-                    'Judul maksimal 100 karakter',
-
-                'deskripsi.required' =>
-                    'Deskripsi wajib diisi',
-
-                'deskripsi.min' =>
-                    'Deskripsi minimal 5 karakter',
-
-                'lampiran.*.mimes' =>
-                    'Lampiran hanya boleh JPG, PNG, atau PDF',
-
-                'lampiran.*.max' =>
-                    'Ukuran file maksimal 1MB',
+                'judul.required' =>'Judul wajib diisi',
+                'judul.max' =>'Judul maksimal 100 karakter',
+                'deskripsi.required' => 'Deskripsi wajib diisi',
+                'deskripsi.min' =>'Deskripsi minimal 5 karakter',
+                'lampiran.*.mimes' =>'Lampiran hanya boleh JPG, PNG, atau PDF',
+                'lampiran.*.max' =>'Ukuran file maksimal 1MB',
             ]);
 
             // VALIDATION ERROR
@@ -75,51 +41,27 @@ class RiwayatPenangananWOController extends Controller
                 ], 422);
             }
 
-            /**
-             * ============================================
-             * AUTH
-             * ============================================
-             */
+            // AUTH
             $user = auth()->user();
 
             if (!$user) {
-
                 return response()->json([
-
-                    'message' =>
-                        'User tidak login'
-
+                    'message' =>'User tidak login'
                 ], 401);
             }
 
             $karyawan = $user->karyawan;
-
             if (!$karyawan) {
-
                 return response()->json([
-
-                    'message' =>
-                        'Data karyawan tidak ditemukan'
-
+                    'message' =>'Data karyawan tidak ditemukan'
                 ], 404);
             }
 
-            /**
-             * ============================================
-             * AMBIL WORK ORDER
-             * ============================================
-             */
+            // AMBIL WO 
             $wo = WorkOrder::findOrFail($id);
 
-            /**
-             * ============================================
-             * VALIDASI PETUGAS
-             * ============================================
-             */
-            if (
-                $wo->penanggung_jawab_id !==
-                $karyawan->id
-            ) {
+            // VALIDASI PETUGAS
+            if ( $wo->penanggung_jawab_id !== $karyawan->id) {
 
                 return response()->json([
 
@@ -129,18 +71,10 @@ class RiwayatPenangananWOController extends Controller
                 ], 403);
             }
 
-            /**
-             * ============================================
-             * STATUS WO
-             * ============================================
-             */
+            // Status WO
             $status = $wo->status;
 
-            /**
-             * ============================================
-             * UPLOAD FILE
-             * ============================================
-             */
+           // Upload file 
             $lampiran = [];
 
             if ($request->hasFile('lampiran')) {
@@ -160,78 +94,37 @@ class RiwayatPenangananWOController extends Controller
                 }
             }
 
-            /**
-             * ============================================
-             * SIMPAN RIWAYAT
-             * ============================================
-             */
+            //Simpan riwayat
             $riwayat =
                 RiwayatPenangananWorkOrder::create([
-
-                    'work_order_id' =>
-                        $wo->id,
-
-                    'status' =>
-                        $status,
-
-                    'judul' =>
-                        trim($request->judul),
-
-                    'deskripsi' =>
-                        trim($request->deskripsi),
-
-                    'lampiran' =>
-                        $lampiran,
-                    
+                    'work_order_id' => $wo->id,
+                    'status' => $status,
+                    'judul' => trim($request->judul),
+                    'deskripsi' => trim($request->deskripsi),
+                    'lampiran' => $lampiran,
                     'waktu' => now(),
                 ]);
 
-            /**
-             * ============================================
-             * UPDATE WO
-             * ============================================
-             */
+            // UPDATE WO 
             $updateData = [
-
-                'status' =>
-                    $status
+                'status' => $status
             ];
-
             if ($status === 'close') {
-
                 $updateData['tanggal_selesai'] =
                     now();
             }
 
             $wo->update($updateData);
 
-            /**
-             * ============================================
-             * RESPONSE
-             * ============================================
-             */
+            // JSON
             return response()->json([
-
-                'message' =>
-                    'Penanganan berhasil disimpan',
-
+                'message' => 'Penanganan berhasil disimpan',
                 'data' => [
-
-                    'id' =>
-                        $riwayat->id,
-
-                    'judul' =>
-                        $riwayat->judul,
-
-                    'deskripsi' =>
-                        $riwayat->deskripsi,
-
-                    'status' =>
-                        $riwayat->status,
-
-                    'lampiran' =>
-                        $riwayat->lampiran ?? [],
-
+                    'id' => $riwayat->id,
+                    'judul' => $riwayat->judul,
+                    'deskripsi' => $riwayat->deskripsi,
+                    'status' => $riwayat->status,
+                    'lampiran' => $riwayat->lampiran ?? [],
                     'waktu' =>
                         optional(
                             $riwayat->created_at
@@ -242,11 +135,8 @@ class RiwayatPenangananWOController extends Controller
         } catch (\Throwable $e) {
 
             return response()->json([
-
                 'message' =>'Terjadi kesalahan pada server',
                 'error' =>$e->getMessage(),
-
-
             ], 500);
         }
     }

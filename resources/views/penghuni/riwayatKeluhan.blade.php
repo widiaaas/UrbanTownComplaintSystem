@@ -73,11 +73,15 @@
     </div>
 
     {{-- MODAL DETAIL --}}
-    <div x-show="openModal" x-cloak
+    <div
+        x-show="openModal"
+        x-cloak
+        @click="closeModal()"
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
+       
         <div class="bg-white max-w-2xl w-full rounded-lg p-6 space-y-4"
-            @click.outside="closeModal()">
+            @click.stop>
+            
 
             <div class="flex justify-between border-b pb-2">
                 <div>
@@ -168,10 +172,22 @@
     </div>
 
     <!-- ================= MODAL PREVIEW FILE ================= -->
-    <div x-show="previewOpen" x-cloak
-        class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
+    <div
+        x-show="previewOpen"
+        x-cloak
+        class="fixed inset-0
+        bg-black/70
+        flex items-center justify-center
+        p-4
+        z-[9999]">
 
-        <div class="bg-white w-full max-w-3xl rounded-lg p-4 relative">
+        <div
+            class="bg-white
+            w-full max-w-5xl
+            rounded-3xl
+            shadow-2xl
+            p-6
+            relative">
 
             <!-- CLOSE -->
             <button 
@@ -183,9 +199,22 @@
             <!-- CONTENT -->
             <div class="mt-6">
 
+            
                 <!-- IMAGE -->
                 <template x-if="previewFile.match(/\.(jpg|jpeg|png|gif)$/i)">
-                    <img :src="previewFile" class="max-h-[70vh] mx-auto rounded">
+
+                <div
+                    class="flex justify-center items-center
+                    bg-gray-50 rounded-3xl
+                    h-[80vh]">
+
+                    <img
+                        :src="previewFile"
+                        class="max-w-full max-h-full
+                        object-contain rounded-2xl">
+
+                </div>
+
                 </template>
 
                 <!-- PDF -->
